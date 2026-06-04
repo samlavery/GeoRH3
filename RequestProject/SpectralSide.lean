@@ -11,7 +11,7 @@ companion to `HelixProjection` (the geometric side).
 For a zero `ρ` the **Möbius spectral value** is `w(ρ) = 1 − 1/ρ` (the helix operation).
 The diagonal operator `W = diag(w(ρ_k))` on a finite zero-set is:
 
-* **unitary** ⟺ every `‖w(ρ_k)‖ = 1` ⟺ every `Re(ρ_k) = ½`  (`spectral_unitary_iff_RH`)
+* every `‖w(ρ_k)‖ = 1` ⟺ every `Re(ρ_k) = ½` (per-element, finite set — `spectral_unitary_iff_on_line`, NOT RH)
 * its **Li trace** is `λ_n = Σ_ρ (1 − w(ρ)ⁿ) = tr(I − Wⁿ)`
 * on the unit circle each mode's energy is a **square** `‖1 − wⁿ‖² = 2(1 − Re wⁿ) ≥ 0`
 * the **functional equation** pairs spectral values reciprocally: `w(ρ)·w(1−ρ) = 1`
@@ -34,9 +34,12 @@ theorem w_unit_iff_half (ρ : ℂ) (hρ : ρ ≠ 0) :
     Complex.normSq (w ρ) = 1 ↔ ρ.re = 1 / 2 := by
   unfold w; exact HelixEmpiricalCores.liMap_unit_iff_half ρ hρ
 
-/-- **The Möbius spectral operator is unitary ⟺ RH** for the zero-set: every spectral
-    value on the unit circle ⟺ every zero on the line. -/
-theorem spectral_unitary_iff_RH (zeros : Finset ℂ) (h0 : ∀ ρ ∈ zeros, ρ ≠ 0) :
+/-- **Finite-set spectral-unitary ⟺ on the line.** For an arbitrary finite set of
+    nonzero points, every spectral value on the unit circle ⟺ every point has `Re = ½`.
+    This is `w_unit_iff_half` aggregated over a `Finset` — it is **not** RH (no
+    `riemannZeta`, no actual zeros). The RH statement is
+    `riemannHypothesis_iff_spectral_unitary`. -/
+theorem spectral_unitary_iff_on_line (zeros : Finset ℂ) (h0 : ∀ ρ ∈ zeros, ρ ≠ 0) :
     (∀ ρ ∈ zeros, Complex.normSq (w ρ) = 1) ↔ (∀ ρ ∈ zeros, ρ.re = 1 / 2) :=
   ⟨fun h ρ hρ => (w_unit_iff_half ρ (h0 ρ hρ)).mp (h ρ hρ),
    fun h ρ hρ => (w_unit_iff_half ρ (h0 ρ hρ)).mpr (h ρ hρ)⟩
@@ -75,6 +78,6 @@ theorem riemannHypothesis_iff_spectral_unitary :
 
 end SpectralSide
 
-#print axioms SpectralSide.spectral_unitary_iff_RH
+#print axioms SpectralSide.spectral_unitary_iff_on_line
 #print axioms SpectralSide.spectral_energy_nonneg_of_unit
 #print axioms SpectralSide.w_FE_reciprocal

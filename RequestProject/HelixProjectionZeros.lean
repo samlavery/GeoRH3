@@ -55,6 +55,7 @@ We formalize:
 noncomputable section
 
 open Complex Real
+open scoped ComplexConjugate
 
 /-! ## Part 1: The sixth root of unity -/
 
@@ -146,6 +147,54 @@ theorem helix_point_exp_six_mul (x : ℝ) (hx : 0 < x) :
     The loss is the magnitude `x^σ`. -/
 def projection_3d_to_2d (x sigma : ℝ) : ℂ :=
   helix_point x  -- the unit-circle projection
+
+/-- The 3D→2D helix projection lands on the 2D unit circle, unconditionally. -/
+theorem projection_3d_to_2d_unit_circle (x sigma : ℝ) :
+    ‖projection_3d_to_2d x sigma‖ = 1 := by
+  simpa [projection_3d_to_2d] using helix_point_norm x
+
+/-- Coordinate form of `projection_3d_to_2d_unit_circle`: the projected point has
+unit circle energy in the 2D angular plane. -/
+theorem projection_3d_to_2d_circle_energy (x sigma : ℝ) :
+    (projection_3d_to_2d x sigma).re ^ 2 +
+      (projection_3d_to_2d x sigma).im ^ 2 = 1 := by
+  unfold projection_3d_to_2d helix_point
+  rw [Complex.exp_mul_I]
+  norm_num [Complex.ext_iff]
+  exact Real.cos_sq_add_sin_sq (helix_angle x)
+
+/-- The projected 2D helix point is a unitary circle element: its inverse is its
+complex conjugate. -/
+theorem projection_3d_to_2d_mul_conj (x sigma : ℝ) :
+    projection_3d_to_2d x sigma * conj (projection_3d_to_2d x sigma) = 1 := by
+  have hsq : Complex.normSq (projection_3d_to_2d x sigma) = 1 := by
+    rw [Complex.normSq_apply]
+    nlinarith [projection_3d_to_2d_circle_energy x sigma]
+  rw [Complex.mul_conj]
+  norm_num [hsq]
+
+/-- The conjugate also gives the left inverse of the projected 2D helix point. -/
+theorem projection_3d_to_2d_conj_mul (x sigma : ℝ) :
+    conj (projection_3d_to_2d x sigma) * projection_3d_to_2d x sigma = 1 := by
+  rw [mul_comm]
+  exact projection_3d_to_2d_mul_conj x sigma
+
+/-- Geometry-side unitarity: multiplication by the projected 2D helix point
+preserves norm on the real 2D plane `ℂ`. -/
+theorem projection_3d_to_2d_unitary_norm (x sigma : ℝ) (z : ℂ) :
+    ‖projection_3d_to_2d x sigma * z‖ = ‖z‖ := by
+  rw [Complex.norm_mul, projection_3d_to_2d_unit_circle, one_mul]
+
+/-- Bundled geometry-side unitary statement for the 3D→2D helix projection. -/
+theorem projection_3d_to_2d_unitary_geometry (x sigma : ℝ) :
+    ‖projection_3d_to_2d x sigma‖ = 1 ∧
+      projection_3d_to_2d x sigma * conj (projection_3d_to_2d x sigma) = 1 ∧
+      conj (projection_3d_to_2d x sigma) * projection_3d_to_2d x sigma = 1 ∧
+      ∀ z : ℂ, ‖projection_3d_to_2d x sigma * z‖ = ‖z‖ :=
+  ⟨projection_3d_to_2d_unit_circle x sigma,
+    projection_3d_to_2d_mul_conj x sigma,
+    projection_3d_to_2d_conj_mul x sigma,
+    projection_3d_to_2d_unitary_norm x sigma⟩
 
 def radial_loss (x sigma : ℝ) : ℝ :=
   x ^ sigma  -- what the 3D→2D projection discards (the envelope)
