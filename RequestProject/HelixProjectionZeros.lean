@@ -115,6 +115,26 @@ theorem helix_point_mul (x y : ℝ) (hx : 0 < x) (hy : 0 < y) :
   unfold helix_point;
   rw [ ← Complex.exp_add, helix_angle, helix_angle, helix_angle, Real.log_mul hx.ne' hy.ne' ] ; push_cast ; ring
 
+/-- Multiplying the source radius by `e^6` advances the helix angle by one
+    full turn. This is native radial growth of the helix, not drift. -/
+theorem helix_angle_exp_six_mul (x : ℝ) (hx : 0 < x) :
+    helix_angle (Real.exp 6 * x) = helix_angle x + 2 * Real.pi := by
+  unfold helix_angle
+  rw [Real.log_mul (Real.exp_pos 6).ne' hx.ne', Real.log_exp]
+  ring
+
+/-- One full native radial growth step `x ↦ e^6 x` leaves the lower-dimensional
+    circle projection unchanged. -/
+theorem helix_point_exp_six_mul (x : ℝ) (hx : 0 < x) :
+    helix_point (Real.exp 6 * x) = helix_point x := by
+  unfold helix_point
+  rw [helix_angle_exp_six_mul x hx]
+  rw [show ((↑(helix_angle x + 2 * Real.pi) : ℂ) * Complex.I) =
+      (↑(helix_angle x) : ℂ) * Complex.I + 2 * ↑Real.pi * Complex.I by
+    push_cast
+    ring]
+  rw [Complex.exp_add, Complex.exp_two_pi_mul_I, mul_one]
+
 /-! ## Part 3: Projection operators -/
 
 /-- **3D → 2D projection**: Keep the angle, discard the height.

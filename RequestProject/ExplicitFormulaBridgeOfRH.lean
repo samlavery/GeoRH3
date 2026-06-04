@@ -31,7 +31,7 @@ Unconditionally (only mathlib-standard axioms):
 
   `RiemannHypothesis → ∀ ψ, ExplicitFormulaBridge ψ`
 
-i.e., **if RH holds, every test function admits a bridge**. The bridge's
+i.e., **if RH holds, every test function has a bridge**. The bridge's
 field `zero_forces_vanishing` reduces to `averageEnergyDefect ψ (1/2) = 0`,
 which is direct from `energyDefect_zero_on_line` (no Parseval needed).
 
@@ -95,7 +95,7 @@ now proved unconditionally from Mathlib Plancherel. -/
 
 /-! ### Narrow Weil factoring
 
-We factor the single bridge axiom into two pieces:
+We factor the single bridge input into two pieces:
 
 * `WeilGaussianBridge` — the narrow analytic input: at every nontrivial
   zero `ρ`, the Gaussian channel at height `ρ` is balanced (both the
@@ -127,6 +127,24 @@ Citation: A. Weil, *Sur les "formules explicites" de la théorie des
 nombres premiers*, 1952. -/
 def WeilGaussianBridge : Prop :=
   ∀ ρ : ℂ, ρ ∈ ZD.NontrivialZeros → BalancedChannel gaussianKernel ρ
+
+/-- The legacy explicit-formula bridge for the Gaussian kernel supplies the
+    pointwise Gaussian Weil bridge used by the envelope closure. -/
+theorem weilGaussianBridge_of_explicitFormulaBridge
+    (bridge : ExplicitFormulaBridge gaussianKernel) :
+    WeilGaussianBridge := by
+  intro ρ hρ
+  exact bridge.zero_forces_vanishing ρ hρ
+
+/-- If every nontrivial zero is on the balance line, the Gaussian channel is
+    balanced at every nontrivial zero. -/
+theorem weilGaussianBridge_of_nontrivialZeros_on_line
+    (hline : ∀ ρ : ℂ, ρ ∈ ZD.NontrivialZeros → ρ.re = CoshBalance) :
+    WeilGaussianBridge := by
+  intro ρ hρ
+  unfold BalancedChannel
+  rw [hline ρ hρ, CoshBalance_eq_half]
+  exact averageEnergyDefect_zero_on_line gaussianKernel
 
 /-- **Structural extraction.** By definition `BalancedChannel ψ ρ` *is*
 `averageEnergyDefect ψ ρ.re = 0`. -/

@@ -1,6 +1,9 @@
 import Mathlib
 import RequestProject.VonMangoldtExplicitFormula
 import RequestProject.NoOfflineZeros
+import RequestProject.SpectralIdentification
+import RequestProject.UniversalRH
+import RequestProject.ExplicitFormulaBridgeOfRH
 
 /-!
 # RH from the Von Mangoldt Explicit Formula
@@ -79,6 +82,24 @@ theorem envelope_bounded_iff_on_critical_line (β : ℝ) :
 
 /-! ## Part 2: Envelope Boundedness from the Explicit Formula -/
 
+/-- The Gaussian Weil bridge supplies the reflected-pair envelope bound for
+    every nontrivial zero. -/
+theorem envelope_bounded_from_weil_gaussian_bridge
+    (hW : ZD.WeilGaussianBridge) :
+    ∀ ρ : ℂ, ρ ∈ ZD.NontrivialZeros →
+      ∃ M : ℝ, ∀ θ : ℝ, reflectedPairEnvelope ρ.re θ ≤ M := by
+  intro ρ hρ
+  refine (envelope_bounded_iff_on_critical_line ρ.re).mpr ?_
+  rw [← CoshBalance_eq_half]
+  by_contra hne
+  have hzero : ZD.averageEnergyDefect ZD.gaussianKernel ρ.re = 0 :=
+    ZD.zeroEnergy_of_weil_gaussian_bridge hW
+      (fun ρ _hρ hB =>
+        ZD.averageEnergyDefect_of_BalancedChannel ZD.gaussianKernel ρ hB) ρ hρ
+  have hpos : 0 < ZD.averageEnergyDefect ZD.gaussianKernel ρ.re :=
+    ZD.gaussianKernel_averageEnergyDefect_pos_offline ρ.re hne
+  linarith
+
 /-- **Bounded envelopes from the explicit formula** (the proof target).
 
     The von Mangoldt explicit formula, combined with:
@@ -94,6 +115,25 @@ theorem envelope_bounded_from_ef :
     ∀ ρ : ℂ, ρ ∈ ZD.NontrivialZeros →
       ∃ M : ℝ, ∀ θ : ℝ, reflectedPairEnvelope ρ.re θ ≤ M := by
   sorry
+
+/-- A helix spectral identification for a nontrivial zero bounds its reflected
+    pair envelope. -/
+theorem envelope_bounded_from_spectral_identification
+    (ρ : ℂ) (_hρ : ρ ∈ ZD.NontrivialZeros) (hγ : ρ.im ≠ 0)
+    (hspec : HasSpectralIdentification ρ.re ρ.im) :
+    ∃ M : ℝ, ∀ θ : ℝ, reflectedPairEnvelope ρ.re θ ≤ M := by
+  exact (envelope_bounded_iff_on_critical_line ρ.re).mpr
+    (spectral_id_forces_half ρ.re ρ.im hγ hspec)
+
+/-- Uniform helix spectral identification bounds the reflected envelope of every
+    nontrivial zero with nonzero imaginary part. -/
+theorem envelopes_bounded_from_spectral_identification
+    (hspec : ∀ ρ : ℂ, ρ ∈ ZD.NontrivialZeros → ρ.im ≠ 0 →
+      HasSpectralIdentification ρ.re ρ.im) :
+    ∀ ρ : ℂ, ρ ∈ ZD.NontrivialZeros → ρ.im ≠ 0 →
+      ∃ M : ℝ, ∀ θ : ℝ, reflectedPairEnvelope ρ.re θ ≤ M := by
+  intro ρ hρ hγ
+  exact envelope_bounded_from_spectral_identification ρ hρ hγ (hspec ρ hρ hγ)
 
 /-! ## Part 3: RH for Nontrivial Zeros -/
 
@@ -113,6 +153,25 @@ theorem envelope_bounded_from_rh :
       ∃ M : ℝ, ∀ θ : ℝ, reflectedPairEnvelope ρ.re θ ≤ M := by
   intro ρ hρ
   exact (envelope_bounded_iff_on_critical_line ρ.re).mpr
+    (rh_nontrivial_zeros_on_critical_line ρ hρ)
+
+/-- Spectral identification makes the reflected paired Li coefficient nonnegative. -/
+theorem paired_li_nonneg_from_spectral_identification
+    (ρ : ℂ) (_hρ : ρ ∈ ZD.NontrivialZeros)
+    (hspec : HasSpectralIdentification ρ.re ρ.im) :
+    ∀ n : ℕ,
+      0 ≤ (li_helix_term ρ.re ρ.im n).re +
+        (li_helix_term (1 - ρ.re) (-ρ.im) n).re := by
+  intro n
+  exact spectral_id_forces_nonneg ρ.re ρ.im hspec n
+
+/-- A single nontrivial zero has its reflected paired Li terms bounded below. -/
+theorem single_zero_li_bounded_from_explicit_formula
+    (ρ : ℂ) (hρ : ρ ∈ ZD.NontrivialZeros) (hγ : ρ.im ≠ 0) :
+    ∃ C : ℝ, ∀ n : ℕ,
+      C ≤ (li_helix_term ρ.re ρ.im n).re +
+        (li_helix_term (1 - ρ.re) (-(ρ.im)) n).re := by
+  exact (critical_line_iff_bounded_li ρ.re ρ.im hγ).mp
     (rh_nontrivial_zeros_on_critical_line ρ hρ)
 
 /-! ## Part 4: Bridge to Mathlib's RiemannHypothesis -/

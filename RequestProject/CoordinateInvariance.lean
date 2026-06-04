@@ -135,7 +135,7 @@ def moebius_w (σ γ : ℝ) : ℂ :=
 The norm squared of w(ρ) expressed in terms of σ and γ.
     This is a direct algebraic computation.
 -/
-theorem moebius_norm_sq (σ γ : ℝ) (hσγ : σ ≠ 0 ∨ γ ≠ 0) :
+theorem moebius_w_norm_sq (σ γ : ℝ) (hσγ : σ ≠ 0 ∨ γ ≠ 0) :
     ‖moebius_w σ γ‖ ^ 2 =
       ((σ - 1) ^ 2 + γ ^ 2) / (σ ^ 2 + γ ^ 2) := by
   rw [ ← Complex.normSq_eq_norm_sq ];
@@ -148,7 +148,7 @@ theorem moebius_norm_sq (σ γ : ℝ) (hσγ : σ ≠ 0 ∨ γ ≠ 0) :
 -/
 theorem moebius_unit_iff_half (σ γ : ℝ) (hγ : γ ≠ 0) :
     ‖moebius_w σ γ‖ = 1 ↔ σ = 1 / 2 := by
-  rw [ ← sq_eq_sq₀ ] <;> norm_num [ moebius_norm_sq, hγ ];
+  rw [ ← sq_eq_sq₀ ] <;> norm_num [ moebius_w_norm_sq, hγ ];
   exact ⟨ fun h => by rw [ div_eq_iff <| by positivity ] at h; nlinarith, fun h => by rw [ h, div_eq_iff <| by positivity ] ; ring ⟩
 
 /-

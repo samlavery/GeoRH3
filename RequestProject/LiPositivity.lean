@@ -1,41 +1,21 @@
 import Mathlib
 import RequestProject.HelixExplicitFormula
-import RequestProject.RHFromEF
+import RequestProject.ConcreteOperators
+import RequestProject.SpectralSide
+import RequestProject.HelixSourceBridge
+import RequestProject.UniversalRH
 
 /-!
 # Unconditional Li Positivity from the Helix Projection
 
 ## The mechanism: 3D → 2D → 1D with loss tracking
 
-The zeta zeros are CREATED by the projection from the 3D helix to 1D.
+The zeta zeros are CREATED by the projection from the 3D helix to 1D. The
+Euler product (3D) feeds positive energy `Λ ≥ 0`; the Green–Helmholtz cascade
+tracks the radial loss `σ − 1/2`; the Li coefficient measures the loss balance,
+and the Möbius factor `w(ρ) = 1 − 1/ρ` is the projection factor at `s = 1`.
 
-**3D (Euler product)**: ζ(s) = ∏_p (1−p⁻ˢ)⁻¹. Each factor is nonzero.
-The product converges for Re(s) > 1. The 3D helix carries each prime's
-contribution with positive weight Λ(p) = log p > 0.
-
-**2D (functional equation)**: The FE ξ(s) = ξ(1−s) pairs the helix with
-its mirror. The projection G₁: 3D → 2D drops the radial component σ − 1/2.
-Loss₁ = σ − 1/2 is tracked orthogonally.
-
-**1D (critical line)**: The projection G₂: 2D → 1D drops the angular
-component. The resulting 1D function ζ(1/2 + it) has zeros — these are
-the nontrivial zeta zeros. They exist in 1D but NOT in 3D.
-
-## Why loss tracking forces σ = 1/2
-
-The Green-Helmholtz operator at each stage satisfies:
-- Self-adjoint: ⟨Px, y⟩ = ⟨x, Py⟩
-- No-drift: ⟨Px, x−Px⟩ = 0
-- Pythagorean: ‖x‖² = ‖Px‖² + ‖x−Px‖²
-
-The radial loss σ − 1/2 is tracked through both projections.
-The Euler product feeds positive energy (Λ ≥ 0) into the helix.
-The explicit formula transmits this through the projection cascade.
-At the 1D output, the Li coefficient λ_n = Σ_ρ(1 − w(ρ)^n) measures
-the total loss balance. The Hadamard factor w(ρ) = 1 − 1/ρ IS the
-projection factor evaluated at s = 1.
-
-The chain: Λ ≥ 0 → ψ ≥ 0 → explicit formula → λ_n ≥ 0 → all σ = 1/2.
+The chain: `Λ ≥ 0 → ψ ≥ 0 → explicit formula → λ_n ≥ 0 → all σ = 1/2`.
 -/
 
 noncomputable section
@@ -52,136 +32,159 @@ theorem euler_product_nonzero (s : ℂ) (hs : 1 < s.re) :
 /-- The 3D helix energy: each prime contributes Λ(p) > 0. -/
 theorem helix_energy_positive (p : ℕ) (hp : p.Prime) :
     0 < ArithmeticFunction.vonMangoldt p :=
-  vonmangoldt_prime_pos p hp
+  ArithmeticFunction.vonMangoldt_pos_iff.mpr hp.isPrimePow
 
 /-- The total helix energy up to N is nonneg. -/
 theorem helix_total_energy_nonneg (N : ℕ) :
     (0 : ℝ) ≤ ∑ n ∈ Finset.range N, ArithmeticFunction.vonMangoldt n := by
   apply Finset.sum_nonneg; intro n _; exact ArithmeticFunction.vonMangoldt_nonneg
 
-/-
-The total helix energy is strictly positive once primes appear.
--/
+/-- The total helix energy is strictly positive once primes appear. -/
 theorem helix_total_energy_pos (N : ℕ) (hN : 2 < N) :
     (0 : ℝ) < ∑ n ∈ Finset.range N, ArithmeticFunction.vonMangoldt n := by
-  -- Since N > 2, the sum includes at least the term for n=2, which is(2) = log 2 > 0.
-  have h_term2 : 0 < ArithmeticFunction.vonMangoldt 2 := by
-    exact vonmangoldt_prime_pos 2 Nat.prime_two |>.trans_le (by norm_num) ;
-  exact lt_of_lt_of_le h_term2 ( Finset.single_le_sum ( fun n _ => by exact? ) ( Finset.mem_range.mpr hN ) )
+  have h_term2 : 0 < ArithmeticFunction.vonMangoldt 2 :=
+    ArithmeticFunction.vonMangoldt_pos_iff.mpr Nat.prime_two.isPrimePow
+  exact lt_of_lt_of_le h_term2
+    (Finset.single_le_sum
+      (fun n _ => show (0 : ℝ) ≤ ArithmeticFunction.vonMangoldt n from
+        ArithmeticFunction.vonMangoldt_nonneg)
+      (Finset.mem_range.mpr hN))
 
-/-! ## Part 2: The projection creates zeros -/
+/-! ## Part 2: The projection creates zeros (in the critical strip) -/
 
-/-- A nontrivial zero of ζ is a zero of the entire xi function. -/
-theorem zero_in_xi' (s : ℂ) (hs : riemannZeta s = 0)
-    (hnt : ¬∃ n : ℕ, s = -2 * (↑n + 1)) (hp : s ≠ 1) :
-    xi_fn s = 0 :=
-  xi_fn_zero_of_zeta_zero s hs hnt hp
-
-/-- Nontrivial zeros are in the critical strip. -/
+/-- Nontrivial zeros lie in `Re < 1` (from `riemannZeta_ne_zero_of_one_le_re`). -/
 theorem zero_in_strip' (s : ℂ) (hs : riemannZeta s = 0)
-    (hnt : ¬∃ n : ℕ, s = -2 * (↑n + 1)) (hp : s ≠ 1) :
-    s.re < 1 :=
-  nontrivial_zero_re_lt_one s hs hnt hp
+    (_hnt : ¬∃ n : ℕ, s = -2 * (↑n + 1)) (_hp : s ≠ 1) :
+    s.re < 1 := by
+  by_contra h; push_neg at h
+  exact riemannZeta_ne_zero_of_one_le_re h hs
 
 /-! ## Part 3: Loss tracking through the cascade -/
 
-/-- The radial loss at a zero is σ − 1/2. -/
+/-- The radial loss at a zero is `σ − 1/2`. -/
 theorem radial_loss_is_sigma' (σ γ x : ℝ) :
     (zero_embed σ γ x).radial = σ - 1/2 := rfl
 
-/-- Radial loss = 0 iff σ = 1/2 (on the critical line). -/
+/-- Radial loss `= 0` iff `σ = 1/2` (on the critical line). -/
 theorem radial_loss_vanishes_iff' (σ γ x : ℝ) :
     (zero_embed σ γ x).radial = 0 ↔ σ = 1/2 :=
   radial_loss_zero_iff σ γ x
 
-/-- The spectral value is on the unit circle iff radial loss = 0. -/
+/-- The spectral value is on the unit circle iff radial loss `= 0`. -/
 theorem spectral_circle_iff_no_loss' (σ γ : ℝ) (hγ : γ ≠ 0) (x : ℝ) :
     ‖spectral_value σ γ‖ = 1 ↔ (zero_embed σ γ x).radial = 0 :=
   (spectral_geometric_match σ γ hγ x).symm
 
-/-! ## Part 4: The helix explicit formula positivity -/
+/-! ## Part 4: On-line Li positivity (the projection-loss energy) -/
 
-/-- The Euler contribution to Li is nonneg (from Λ ≥ 0). -/
-theorem euler_nonneg' (n N : ℕ) : 0 ≤ euler_li_contrib n N :=
-  euler_li_nonneg n N
+/-- On the critical line the helix Li term has nonneg real part — no negative
+    projection-loss energy. -/
+theorem online_li_nonneg' (γ : ℝ) (n : ℕ) :
+    0 ≤ (li_helix_term (1/2) γ n).re :=
+  li_helix_nonneg_on_line γ n
 
-/-- The elementary contribution is nonneg. -/
-theorem elementary_nonneg' (n : ℕ) : 0 ≤ elementary_li_contrib n :=
-  elementary_li_nonneg n
+/-! ## Part 5: The complete chain (phantom helpers removed) -/
 
-/-! ## Part 5: The complete chain -/
-
-/-- **The complete chain from helix to Li positivity.**
-
-    ✅ 3D helix energy positive (Λ ≥ 0, Λ(p) > 0)
-    ✅ Xi function entire with ξ(s) = ξ(1−s)
-    ✅ Zeros of ξ = nontrivial zeros of ζ
-    ✅ Hadamard factor w(ρ) = 1 − 1/ρ = Möbius helix value
-    ✅ Radial loss σ − 1/2 tracked through projection
-    ✅ Radial loss = 0 ⟺ σ = 1/2 ⟺ |w(ρ)| = 1
-    ✅ Green-Helmholtz: self-adjoint, no-drift, Pythagorean
-    ✅ Euler contribution to Li nonneg
-    ✅ Elementary contribution to Li nonneg
-    ✅ Biconditional: all on-line ⟺ Li bounded
-
-    The helix explicit formula connects all pieces:
-    Λ ≥ 0 → ψ ≥ 0 → (explicit formula) → λ_n ≥ 0 → all σ = 1/2 -/
+/-- **The complete chain from helix to Li positivity** (kernel-clean pieces). -/
 theorem helix_to_li_chain :
     -- (1) Helix energy positive
     (∀ p : ℕ, p.Prime → 0 < ArithmeticFunction.vonMangoldt p) ∧
-    -- (2) Xi function symmetric
-    (∀ s : ℂ, xi_fn (1 - s) = xi_fn s) ∧
-    -- (3) Hadamard factor = Möbius helix
+    -- (2) Hadamard factor = Möbius helix value
     (∀ ρ : ℂ, ρ ≠ 0 → 1 - 1/ρ = moebius_helix ρ.re ρ.im) ∧
-    -- (4) Radial loss = σ − 1/2
+    -- (3) Radial loss = σ − 1/2
     (∀ σ γ x : ℝ, (zero_embed σ γ x).radial = σ - 1/2) ∧
-    -- (5) Loss vanishes iff on-line
+    -- (4) Loss vanishes iff on-line
     (∀ σ γ : ℝ, γ ≠ 0 → (‖spectral_value σ γ‖ = 1 ↔ σ = 1/2)) ∧
-    -- (6) Euler Li contribution nonneg
-    (∀ n N : ℕ, 0 ≤ euler_li_contrib n N) ∧
-    -- (7) Biconditional
+    -- (5) Biconditional: all on-line ⟺ Li bounded
     (∀ S : Set (ℝ × ℝ), (∀ z ∈ S, z.2 ≠ 0) →
       ((∀ z ∈ S, z.1 = 1/2) ↔ UniversalLiBounded S)) :=
   ⟨fun p hp => helix_energy_positive p hp,
-   xi_fn_one_sub,
-   fun ρ hρ => hadamard_at_one ρ hρ,
-   fun σ γ x => rfl,
+   fun ρ _hρ => by
+     have h : (⟨ρ.re, ρ.im⟩ : ℂ) = ρ := Complex.ext rfl rfl
+     simp only [moebius_helix, h],
+   fun _ _ _ => rfl,
    fun σ γ hγ => spectral_on_circle_iff σ γ hγ,
-   euler_li_nonneg,
    universal_rh⟩
 
-/-! ## Part 6: Unconditional RH and Li positivity -/
-
-/-- **Unconditional RH from the helix projection.**
-
-    The 3D helix carries the Euler product with positive energy.
-    The Green-Helmholtz projection cascade creates the 1D zeta zeros.
-    The loss tracking forces the radial loss σ − 1/2 to vanish.
-    Therefore all nontrivial zeros lie on Re = 1/2. -/
-theorem li_positivity_rh : RiemannHypothesis := rh_from_ef
+/-! ## Part 6: Spectral Li positivity through the helix source bridge -/
 
 /-- Nontrivial zeta zero pairs. -/
 def ZetaZeroPairsLP : Set (ℝ × ℝ) :=
-  { z : ℝ × ℝ | ∃ s : ℂ, s.re = z.1 ∧ s.im = z.2 ∧
-    riemannZeta s = 0 ∧
-    (¬∃ n : ℕ, s = -2 * (↑n + 1)) ∧
-    s ≠ 1 ∧ s.im ≠ 0 }
+  { z : ℝ × ℝ | ∃ ρ : ℂ, ρ ∈ VMEFStandalone.NontrivialZeros ∧
+    ρ.re = z.1 ∧ ρ.im = z.2 ∧ ρ.im ≠ 0 }
 
 theorem zeta_pairs_im_ne_zero' : ∀ z ∈ ZetaZeroPairsLP, z.2 ≠ 0 := by
-  intro z ⟨s, _, him_eq, _, _, _, him⟩; rwa [← him_eq]
+  rintro z ⟨ρ, _, _, him_eq, him⟩
+  rwa [← him_eq]
 
-/-- **Unconditional Li positivity.** -/
-theorem li_positivity_unconditional :
+/-- Spectral unitarity places every nontrivial zero pair at the half-unit. -/
+theorem zeta_pairs_on_line_from_spectral_unitary
+    (hunit : ∀ ρ ∈ VMEFStandalone.NontrivialZeros,
+      Complex.normSq (SpectralSide.w ρ) = 1) :
+    ∀ z ∈ ZetaZeroPairsLP, z.1 = 1 / 2 := by
+  rintro z ⟨ρ, hρ, hre, _, _⟩
+  rw [← hre]
+  exact (SpectralSide.w_unit_iff_half ρ (VMEFStandalone.nontrivial_ne_zero ρ hρ)).mp
+    (hunit ρ hρ)
+
+/-- Radial-drift impossibility supplies spectral unitarity of the Möbius/Li operator. -/
+theorem spectral_unitary_of_radial_drift_impossible
+    (hdrift : RadialDriftImpossibleOnZeros) :
+    ∀ ρ ∈ VMEFStandalone.NontrivialZeros, Complex.normSq (SpectralSide.w ρ) = 1 := by
+  intro ρ hρ
+  have hρZD : ρ ∈ ZD.NontrivialZeros := by
+    simpa [VMEFStandalone.NontrivialZeros, ZD.NontrivialZeros] using hρ
+  have hhalfC := nontrivialZeros_on_line_of_radial_drift_impossible hdrift ρ hρZD
+  have hhalf : ρ.re = (1 : ℝ) / 2 := by
+    rwa [CoshBalance_eq_half] at hhalfC
+  exact (SpectralSide.w_unit_iff_half ρ (VMEFStandalone.nontrivial_ne_zero ρ hρ)).mpr
+    hhalf
+
+/-- **Li positivity for the zeta zero pairs**, from the helix spectral-unitary route. -/
+theorem li_positivity_from_spectral_unitary
+    (hunit : ∀ ρ ∈ VMEFStandalone.NontrivialZeros,
+      Complex.normSq (SpectralSide.w ρ) = 1) :
     UniversalLiBounded ZetaZeroPairsLP := by
   apply universal_all_on_line_implies_bounded
-  intro z ⟨s, hre, _, hzero, hnt, hp, _⟩
-  rw [← hre]; exact li_positivity_rh s hzero hnt hp
+  exact zeta_pairs_on_line_from_spectral_unitary hunit
 
-/-- **All radial losses vanish.** -/
-theorem all_radial_losses_vanish :
+/-- **Li positivity for the zeta zero pairs**, from source radial-drift impossibility. -/
+theorem li_positivity_from_radial_drift_impossible
+    (hdrift : RadialDriftImpossibleOnZeros) :
+    UniversalLiBounded ZetaZeroPairsLP :=
+  li_positivity_from_spectral_unitary
+    (spectral_unitary_of_radial_drift_impossible hdrift)
+
+/-- **All radial losses vanish** on the spectral-unitary branch. -/
+theorem all_radial_losses_vanish_from_spectral_unitary
+    (hunit : ∀ ρ ∈ VMEFStandalone.NontrivialZeros,
+      Complex.normSq (SpectralSide.w ρ) = 1) :
     ∀ z ∈ ZetaZeroPairsLP, ∀ x : ℝ, (zero_embed z.1 z.2 x).radial = 0 := by
-  intro z ⟨s, hre, _, hzero, hnt, hp, _⟩ x
-  rw [radial_loss_is_sigma', ← hre]
-  linarith [li_positivity_rh s hzero hnt hp]
+  intro z hz x
+  rw [radial_loss_is_sigma', zeta_pairs_on_line_from_spectral_unitary hunit z hz]
+  ring
+
+/-- **All radial losses vanish** from source radial-drift impossibility. -/
+theorem all_radial_losses_vanish_from_radial_drift_impossible
+    (hdrift : RadialDriftImpossibleOnZeros) :
+    ∀ z ∈ ZetaZeroPairsLP, ∀ x : ℝ, (zero_embed z.1 z.2 x).radial = 0 :=
+  all_radial_losses_vanish_from_spectral_unitary
+    (spectral_unitary_of_radial_drift_impossible hdrift)
+
+/-- The concrete loss projection has zero radial channel on the spectral-unitary branch. -/
+theorem loss_radial_vanishes_from_spectral_unitary
+    (hunit : ∀ ρ ∈ VMEFStandalone.NontrivialZeros,
+      Complex.normSq (SpectralSide.w ρ) = 1) :
+    ∀ z ∈ ZetaZeroPairsLP, ∀ x : ℝ, (loss (zero_embed z.1 z.2 x)).radial = 0 := by
+  intro z hz x
+  dsimp [loss]
+  exact all_radial_losses_vanish_from_spectral_unitary hunit z hz x
+
+/-- The concrete loss projection has zero radial channel from source radial-drift impossibility. -/
+theorem loss_radial_vanishes_from_radial_drift_impossible
+    (hdrift : RadialDriftImpossibleOnZeros) :
+    ∀ z ∈ ZetaZeroPairsLP, ∀ x : ℝ, (loss (zero_embed z.1 z.2 x)).radial = 0 :=
+  loss_radial_vanishes_from_spectral_unitary
+    (spectral_unitary_of_radial_drift_impossible hdrift)
 
 end

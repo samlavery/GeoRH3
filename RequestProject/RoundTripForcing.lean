@@ -183,7 +183,7 @@ theorem round_trip_forcing (S : Set (ℝ × ℝ))
       ‖x‖ ^ 2 = ‖K.starProjection x‖ ^ 2 + ‖x - K.starProjection x‖ ^ 2) :=
   ⟨universal_rh S h_nt,
    fun bad hbad hoff => universal_offline_breaks_boundedness S h_nt bad hbad hoff,
-   fun p hp => vonmangoldt_prime_pos p hp,
+   fun p hp => ArithmeticFunction.vonMangoldt_pos_iff.mpr hp.isPrimePow,
    fun K _ x => green_helmholtz_pythagorean K x⟩
 
 /-! ## Part 5: The key lemma — explicit formula as round-trip -/

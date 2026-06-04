@@ -31,15 +31,13 @@ def paired_li_sum (pairs : Finset (ℝ × ℝ)) (n : ℕ) : ℝ :=
   ∑ z ∈ pairs, ((li_helix_term z.1 z.2 n).re +
                  (li_helix_term (1 - z.1) (-z.2) n).re)
 
-/-! ## Forward direction: all on-line ⟹ bounded below -/
+/-- The paired Li sum over a finite index set, preserving repeated `(σ, γ)` values. -/
+def indexed_paired_li_sum {ι : Type*} (idx : Finset ι) (sigma gamma : ι → ℝ)
+    (n : ℕ) : ℝ :=
+  ∑ i ∈ idx, ((li_helix_term (sigma i) (gamma i) n).re +
+               (li_helix_term (1 - sigma i) (-(gamma i)) n).re)
 
-/-- On-line paired Li is nonneg for each pair. -/
-theorem on_line_pair_nonneg (γ : ℝ) (n : ℕ) :
-    0 ≤ (li_helix_term (1/2) γ n).re +
-        (li_helix_term (1 - 1/2) (-γ) n).re := by
-  have h1 := li_helix_nonneg_on_line γ n
-  have h2 := li_helix_nonneg_on_line (-γ) n
-  convert add_nonneg h1 h2 using 1; norm_num
+/-! ## Forward direction: all on-line ⟹ bounded below -/
 
 /-- **Forward direction**: All pairs on-line ⟹ paired Li sum ≥ 0. -/
 theorem all_on_line_implies_li_nonneg (pairs : Finset (ℝ × ℝ))
@@ -242,6 +240,81 @@ theorem any_offline_breaks_sum (pairs : Finset (ℝ × ℝ))
     linarith [ pow_le_pow_right₀ hr.1.le hn₁ ]
   linarith [h_sum]
 
+/- **Indexed general reverse**: any off-line indexed pair breaks the indexed sum,
+preserving repeated `(σ, γ)` values. -/
+theorem any_offline_breaks_indexed_sum {ι : Type*} [DecidableEq ι]
+    (idx : Finset ι) (sigma gamma : ι → ℝ)
+    (h_nontrivial : ∀ i ∈ idx, gamma i ≠ 0)
+    (bad : ι) (hbad_mem : bad ∈ idx) (hbad_off : sigma bad ≠ 1/2) :
+    ∀ M : ℝ, ∃ n : ℕ, indexed_paired_li_sum idx sigma gamma n < M := by
+  intro M
+  set δ := (1 : ℝ) / 2
+  obtain ⟨r, hr⟩ : ∃ r > 1,
+      r = ‖moebius_helix (sigma bad) (gamma bad)‖ ∨
+      r = ‖moebius_helix (1 - sigma bad) (-(gamma bad))‖ := by
+    have := one_partner_gt_one (sigma bad) (gamma bad) hbad_off
+      (h_nontrivial bad hbad_mem)
+    aesop
+  obtain ⟨N₀, hN₀⟩ : ∃ N₀ : ℕ, 2 * (idx.card + 2 - M) + 1 < r ^ N₀ := by
+    exact pow_unbounded_of_one_lt _ hr.1 |> fun ⟨N₀, hN₀⟩ => ⟨N₀, hN₀⟩
+  obtain ⟨n, hn₁, hn₂⟩ : ∃ n ≥ N₀, ∀ i ∈ idx,
+      ‖(moebius_helix (sigma i) (gamma i) /
+        (‖moebius_helix (sigma i) (gamma i)‖ : ℂ)) ^ n - 1‖ < δ := by
+    let I : Type _ := Subtype (fun i : ι => i ∈ idx)
+    let u : I → ℂ := fun i =>
+      moebius_helix (sigma i.val) (gamma i.val) /
+        (‖moebius_helix (sigma i.val) (gamma i.val)‖ : ℂ)
+    have hrec : ∃ n, N₀ ≤ n ∧ ∀ i : I, ‖u i ^ n - 1‖ < (2⁻¹ : ℝ) := by
+      exact multi_recur_cofinal u (by
+        intro i
+        dsimp [u]
+        norm_num
+        exact moebius_helix_ne_zero (sigma i.val) (gamma i.val)
+          (h_nontrivial i.val i.property)) (by norm_num) N₀
+    rcases hrec with ⟨n, hnN, hclose⟩
+    exact ⟨n, hnN, fun i hi => by simpa [δ, u] using hclose ⟨i, hi⟩⟩
+  use n
+  have h_sum : indexed_paired_li_sum idx sigma gamma n ≤ (idx.card : ℝ) + 2 - r ^ n / 2 := by
+    have h_sum : indexed_paired_li_sum idx sigma gamma n ≤
+        indexed_paired_li_sum (idx.erase bad) sigma gamma n + (2 - r ^ n / 2) := by
+      have h_bad : (li_helix_term (sigma bad) (gamma bad) n).re +
+          (li_helix_term (1 - sigma bad) (-(gamma bad)) n).re ≤ 2 - r ^ n / 2 := by
+        have h_offline_bound : (li_helix_term (sigma bad) (gamma bad) n).re +
+            (li_helix_term (1 - sigma bad) (-(gamma bad)) n).re ≤
+            2 - (1 - δ) * (‖moebius_helix (sigma bad) (gamma bad)‖ ^ n +
+              ‖moebius_helix (1 - sigma bad) (-(gamma bad))‖ ^ n) := by
+          apply synced_combine_sharp (sigma bad) (gamma bad)
+            (h_nontrivial bad hbad_mem) (by norm_num) n (hn₂ bad hbad_mem)
+        generalize_proofs at *
+        rcases hr.2 with (rfl | rfl) <;> norm_num at * <;>
+          linarith [pow_nonneg (norm_nonneg (moebius_helix (sigma bad) (gamma bad))) n,
+            pow_nonneg
+              (norm_nonneg (moebius_helix (1 - sigma bad) (-(gamma bad)))) n]
+      unfold indexed_paired_li_sum
+      rw [← Finset.sum_erase_add _ _ hbad_mem]
+      linarith
+    have h_sum_erase : indexed_paired_li_sum (idx.erase bad) sigma gamma n ≤
+        (idx.erase bad).card := by
+      have h_sum_erase : ∀ i ∈ idx.erase bad,
+          (li_helix_term (sigma i) (gamma i) n).re +
+            (li_helix_term (1 - sigma i) (-(gamma i)) n).re ≤ 1 := by
+        intro i hi
+        have h_sync : ‖(moebius_helix (sigma i) (gamma i) /
+            (‖moebius_helix (sigma i) (gamma i)‖ : ℂ)) ^ n - 1‖ < δ := by
+          exact hn₂ i (Finset.mem_of_mem_erase hi)
+        generalize_proofs at *
+        have := synced_pair_le (sigma i) (gamma i)
+          (h_nontrivial i (Finset.mem_of_mem_erase hi)) (by norm_num) (by norm_num) n h_sync
+        norm_num at *
+        linarith
+      exact le_trans (Finset.sum_le_sum h_sum_erase) (by norm_num)
+    generalize_proofs at *
+    linarith [show ((idx.erase bad).card : ℝ) ≤ idx.card by
+      exact_mod_cast Finset.card_le_card (Finset.erase_subset _ _)]
+  have h_final : idx.card + 2 - r ^ n / 2 < M := by
+    linarith [pow_le_pow_right₀ hr.1.le hn₁]
+  linarith [h_sum]
+
 /-! ## The full biconditional -/
 
 /-- **Finite RH Theorem**: all on-line ⟺ Li bounded below.
@@ -258,6 +331,28 @@ theorem finite_rh (pairs : Finset (ℝ × ℝ))
     obtain ⟨bad, hbad_mem, hbad_off⟩ := h
     exact absurd (hM _) (not_le.mpr
       (any_offline_breaks_sum pairs h_nontrivial bad hbad_mem hbad_off M).choose_spec)
+
+/-- **Indexed finite RH theorem**: all indexed pairs are on-line iff the indexed
+Li sum is bounded below. This preserves repeated `(σ, γ)` values. -/
+theorem finite_rh_indexed {ι : Type*} [DecidableEq ι]
+    (idx : Finset ι) (sigma gamma : ι → ℝ)
+    (h_nontrivial : ∀ i ∈ idx, gamma i ≠ 0) :
+    (∀ i ∈ idx, sigma i = 1/2) ↔
+    ∃ M : ℝ, ∀ n : ℕ, M ≤ indexed_paired_li_sum idx sigma gamma n := by
+  constructor
+  · intro h
+    refine ⟨0, fun n => ?_⟩
+    unfold indexed_paired_li_sum
+    apply Finset.sum_nonneg
+    intro i hi
+    rw [h i hi]
+    exact on_line_pair_nonneg (gamma i) n
+  · intro ⟨M, hM⟩
+    by_contra h
+    push Not at h
+    obtain ⟨bad, hbad_mem, hbad_off⟩ := h
+    exact absurd (hM _) (not_le.mpr
+      (any_offline_breaks_indexed_sum idx sigma gamma h_nontrivial bad hbad_mem hbad_off M).choose_spec)
 
 /-- **Three-way spectral chain** for finite zero sets. -/
 theorem finite_spectral_chain (pairs : Finset (ℝ × ℝ))

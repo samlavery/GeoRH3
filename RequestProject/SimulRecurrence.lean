@@ -1,4 +1,5 @@
 import Mathlib
+import RequestProject.HelixConvergence
 import RequestProject.HelixRoundTrip
 
 /-!
@@ -52,7 +53,7 @@ theorem simul_circle_recurrence {ι : Type*} [Fintype ι] (u : ι → ℂ) (hu :
     intro i; rw [ mul_sub, mul_one, ← pow_add, Nat.add_sub_of_le ( ha.choose_spec.1.monotone ( Nat.le_succ _ ) ) ] ;
   refine' h ⟨ m, _, _ ⟩;
   · exact Nat.sub_pos_of_lt ( ha.choose_spec.1 ( Nat.lt_succ_self K ) );
-  · intro i; specialize h_triangle i; rw [ h_factor i ] at h_triangle; simp_all +decide [ norm_mul ] ;
+  · intro i; specialize h_triangle i; rw [ h_factor i ] at h_triangle; simp_all +decide ;
 
 /-
 Cofinal version of simultaneous recurrence.
@@ -65,10 +66,10 @@ theorem multi_recur_cofinal {ι : Type*} [Fintype ι] (u : ι → ℂ) (hu : ∀
     exact simul_circle_recurrence u hu ( by positivity );
   -- Set n = m * (N + 1). Then n � ≥� N (since m ≥ 1).
   use m * (N + 1);
-  -- By `pow_sub_one_le'` (from Helix �Round�Trip): ‖((u i)^m)^(N+1) - 1‖ ≤ (N+1) * ‖(u i)^m - 1‖ < (N+1) * ε/(N+1) = ε.
+  -- By the public unit-circle power bound: ‖((u i)^m)^(N+1) - 1‖ ≤ (N+1) * ‖(u i)^m - 1‖.
   have h_pow_sub_one_le : ∀ i, ‖(u i) ^ (m * (N + 1)) - 1‖ ≤ (N + 1) * ‖(u i) ^ m - 1‖ := by
     intro i
-    have := pow_sub_one_le' (u i ^ m) (by
+    have := norm_pow_sub_one_le_unit (u i ^ m) (by
     simp +decide [ hu ]) (N + 1)
     simp_all +decide [ pow_mul ];
   exact ⟨ by nlinarith, fun i => lt_of_le_of_lt ( h_pow_sub_one_le i ) ( by nlinarith [ hm i, mul_div_cancel₀ ε ( by positivity : ( N : ℝ ) + 1 ≠ 0 ) ] ) ⟩

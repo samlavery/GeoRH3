@@ -1,6 +1,8 @@
 import Mathlib
 import RequestProject.Log7Comparison
 import RequestProject.NoOfflineZeros
+import RequestProject.UniversalRH
+import RequestProject.GreenHelmholtz
 
 /-!
 # Log(7) Helix, Anti-Vectors, Self-Adjointness, and Conditional RH

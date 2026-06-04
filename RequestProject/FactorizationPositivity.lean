@@ -129,7 +129,7 @@ theorem weil_diagonal_pos_fact (f : ℕ → ℝ) (S : Finset ℕ)
     (p : ℕ) (hp : p.Prime) (hpS : p ∈ S) (hfp : f p ≠ 0) :
     (0 : ℝ) < ∑ n ∈ S, f n ^ 2 * ArithmeticFunction.vonMangoldt n := by
   rw [ Finset.sum_eq_add_sum_diff_singleton p _ (fun hnot => absurd hpS hnot) ];
-  exact add_pos_of_pos_of_nonneg ( mul_pos ( sq_pos_of_ne_zero hfp ) ( by simpa using vonmangoldt_prime_pos p hp ) ) ( Finset.sum_nonneg fun x hx => mul_nonneg ( sq_nonneg _ ) ( by simp ) )
+  exact add_pos_of_pos_of_nonneg ( mul_pos ( sq_pos_of_ne_zero hfp ) ( by simpa using ArithmeticFunction.vonMangoldt_pos_iff.mpr hp.isPrimePow ) ) ( Finset.sum_nonneg fun x hx => mul_nonneg ( sq_nonneg _ ) ( by simp ) )
 
 /-! ## Part 3: The Norm-Trace Gap — Precisely Located -/
 

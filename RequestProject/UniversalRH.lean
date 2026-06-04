@@ -128,6 +128,11 @@ def UniversalLiBounded (S : Set (ℝ × ℝ)) : Prop :=
   ∀ (F : Finset (ℝ × ℝ)), (↑F : Set (ℝ × ℝ)) ⊆ S →
     ∃ M : ℝ, ∀ n : ℕ, M ≤ universal_paired_li_sum F n
 
+/-- Von Mangoldt spectral bridge: von Mangoldt nonnegativity supplies universal
+Li boundedness for the zero set. -/
+def VonMangoldtSpectralBridge (S : Set (ℝ × ℝ)) : Prop :=
+  (∀ n : ℕ, (0 : ℝ) ≤ ArithmeticFunction.vonMangoldt n) → UniversalLiBounded S
+
 /-! ## Part 3: Forward Direction (All On-Line ⟹ Bounded) -/
 
 /-- On-line paired Li is nonneg for each pair. -/
