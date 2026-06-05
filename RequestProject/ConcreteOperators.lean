@@ -196,6 +196,31 @@ theorem cascade_eq (v : HelixVector) :
     apply_G2 (apply_G1 v) = apply_cascade v := by
   simp [apply_G1, apply_G2, apply_cascade]
 
+/-- The coordinate energy of a helix vector. -/
+def helixEnergy (v : HelixVector) : ℝ :=
+  v.proj ^ 2 + v.angular ^ 2 + v.radial ^ 2
+
+/-- Pythagorean split for the first projection: total energy is retained energy
+    plus the dropped radial-channel energy. -/
+theorem G1_energy_pythagorean (v : HelixVector) :
+    helixEnergy v = helixEnergy (apply_G1 v) + v.radial ^ 2 := by
+  simp [helixEnergy, apply_G1]
+
+/-- The first projection preserves helix energy exactly iff the radial channel
+    already vanishes. This is the Pythagorean loss term made explicit. -/
+theorem G1_energy_preserved_iff_radial_zero (v : HelixVector) :
+    helixEnergy (apply_G1 v) = helixEnergy v ↔ v.radial = 0 := by
+  constructor
+  · intro h
+    have h' : v.proj ^ 2 + v.angular ^ 2 =
+        v.proj ^ 2 + v.angular ^ 2 + v.radial ^ 2 := by
+      simpa [helixEnergy, apply_G1] using h
+    have hs : v.radial ^ 2 = 0 := by
+      nlinarith [sq_nonneg v.radial]
+    exact sq_eq_zero_iff.mp hs
+  · intro h
+    simp [helixEnergy, apply_G1, h]
+
 /-- **Loss = signal − cascade.** -/
 def loss (v : HelixVector) : HelixVector where
   proj := 0                -- no projected loss (it's kept)
@@ -268,3 +293,6 @@ theorem complete_spectral_summary :
    fun σ γ hg => single_pair_biconditional σ γ hg⟩
 
 end
+
+#print axioms G1_energy_pythagorean
+#print axioms G1_energy_preserved_iff_radial_zero

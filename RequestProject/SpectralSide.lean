@@ -34,6 +34,35 @@ theorem w_unit_iff_half (ρ : ℂ) (hρ : ρ ≠ 0) :
     Complex.normSq (w ρ) = 1 ↔ ρ.re = 1 / 2 := by
   unfold w; exact HelixEmpiricalCores.liMap_unit_iff_half ρ hρ
 
+/-- If a nonzero natural power of a complex norm is `1`, then the base norm is `1`. -/
+theorem norm_pow_eq_one_forces_norm_eq_one (z : ℂ) (M : ℕ) (hM : M ≠ 0)
+    (h : ‖z‖ ^ M = 1) :
+    ‖z‖ = 1 :=
+  (pow_eq_one_iff_of_nonneg (norm_nonneg z) hM).mp h
+
+/-- Unit norm for a nonzero natural power forces unit normSq of the base. -/
+theorem normSq_eq_one_of_norm_pow_eq_one (z : ℂ) (M : ℕ) (hM : M ≠ 0)
+    (h : ‖z‖ ^ M = 1) :
+    Complex.normSq z = 1 := by
+  rw [Complex.normSq_eq_norm_sq, norm_pow_eq_one_forces_norm_eq_one z M hM h]
+  norm_num
+
+/-- If a nonzero natural winding power of `w ρ` has norm `1`, then the raw
+    Möbius spectral value is unitary. -/
+theorem w_unit_of_power_norm_eq_one (ρ : ℂ) (M : ℕ) (hM : M ≠ 0)
+    (h : ‖w ρ ^ M‖ = 1) :
+    Complex.normSq (w ρ) = 1 := by
+  have hpow : ‖w ρ‖ ^ M = 1 := by
+    simpa [norm_pow] using h
+  exact normSq_eq_one_of_norm_pow_eq_one (w ρ) M hM hpow
+
+/-- If a nonzero natural winding power of `w ρ` has norm `1`, then the zero is
+    at the half-unit readout. -/
+theorem half_of_w_power_norm_eq_one (ρ : ℂ) (hρ : ρ ≠ 0) (M : ℕ) (hM : M ≠ 0)
+    (h : ‖w ρ ^ M‖ = 1) :
+    ρ.re = 1 / 2 :=
+  (w_unit_iff_half ρ hρ).mp (w_unit_of_power_norm_eq_one ρ M hM h)
+
 /-- **Finite-set spectral-unitary ⟺ on the line.** For an arbitrary finite set of
     nonzero points, every spectral value on the unit circle ⟺ every point has `Re = ½`.
     This is `w_unit_iff_half` aggregated over a `Finset` — it is **not** RH (no
@@ -79,5 +108,9 @@ theorem riemannHypothesis_iff_spectral_unitary :
 end SpectralSide
 
 #print axioms SpectralSide.spectral_unitary_iff_on_line
+#print axioms SpectralSide.norm_pow_eq_one_forces_norm_eq_one
+#print axioms SpectralSide.normSq_eq_one_of_norm_pow_eq_one
+#print axioms SpectralSide.w_unit_of_power_norm_eq_one
+#print axioms SpectralSide.half_of_w_power_norm_eq_one
 #print axioms SpectralSide.spectral_energy_nonneg_of_unit
 #print axioms SpectralSide.w_FE_reciprocal

@@ -116,6 +116,27 @@ theorem helix_point_mul (x y : ℝ) (hx : 0 < x) (hy : 0 < y) :
   unfold helix_point;
   rw [ ← Complex.exp_add, helix_angle, helix_angle, helix_angle, Real.log_mul hx.ne' hy.ne' ] ; push_cast ; ring
 
+/-- Multiplication adds helix angles before reducing modulo the full turn. -/
+theorem helix_angle_mul (x y : ℝ) (hx : 0 < x) (hy : 0 < y) :
+    helix_angle (x * y) = helix_angle x + helix_angle y := by
+  unfold helix_angle
+  rw [Real.log_mul hx.ne' hy.ne']
+  ring
+
+/-- The e^6 helix reconstruction formula from a loop coordinate `k` and
+    within-loop angle `φ`: `log x = 6k + 3φ/π` gives angle `2πk + φ`. -/
+theorem helix_angle_of_loop_angle_reconstruction (k φ : ℝ) :
+    helix_angle (Real.exp (6 * k + 3 * φ / Real.pi)) = 2 * Real.pi * k + φ := by
+  unfold helix_angle
+  rw [Real.log_exp]
+  field_simp [Real.pi_ne_zero]
+  ring
+
+/-- The same reconstruction in source-radius form. -/
+theorem exp_loop_angle_reconstruction_log (k φ : ℝ) :
+    Real.log (Real.exp (6 * k + 3 * φ / Real.pi)) = 6 * k + 3 * φ / Real.pi := by
+  rw [Real.log_exp]
+
 /-- Multiplying the source radius by `e^6` advances the helix angle by one
     full turn. This is native radial growth of the helix, not drift. -/
 theorem helix_angle_exp_six_mul (x : ℝ) (hx : 0 < x) :
@@ -388,5 +409,11 @@ theorem energy_decomposition
     ‖v‖ ^ 2 = ‖P v‖ ^ 2 + ‖v - P v‖ ^ 2 := by
   convert norm_add_sq_real ( P v ) ( v - P v ) using 1 ; simp +decide [ * ];
   simp +decide [ hP_sa, hP_idem, inner_sub_right ]
+
+#print axioms helix_angle_mul
+#print axioms helix_angle_of_loop_angle_reconstruction
+#print axioms exp_loop_angle_reconstruction_log
+#print axioms helix_angle_exp_six_mul
+#print axioms helix_point_exp_six_mul
 
 end

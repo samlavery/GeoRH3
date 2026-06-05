@@ -1,5 +1,10 @@
 import Mathlib
 import RequestProject.GRHSpectralCriterion
+import RequestProject.HelixExplicitFormulaTermByTerm
+import RequestProject.HelixHalfUnit
+import RequestProject.HelixNonClosure
+import RequestProject.HelixSourceBridge
+import RequestProject.HelixUnitaryOperator
 import RequestProject.SpectralDualLoss
 
 /-!
@@ -40,6 +45,378 @@ structure CompletedHelixOperatorOnPoleSpectrum (χ : DirichletCharacter ℂ N) w
 def CompletedLogDerivPole (χ : DirichletCharacter ℂ N) (ρ : ℂ) : Prop :=
   ρ ∈ GRHSpectral.NontrivialZeros χ
 
+/-- The winding value determined by radial expansion `σ` and pitch `γ`. -/
+def radialPitchWinding (σ γ : ℝ) : ℂ :=
+  (σ : ℂ) + (γ : ℂ) * Complex.I
+
+/-- The winding-loss readout attached to a pole. It keeps the full winding rate:
+    radial expansion as the real coordinate and pitch as the imaginary coordinate. -/
+def windingLossReadout (ρ : ℂ) : ℂ :=
+  radialPitchWinding ρ.re ρ.im
+
+/-- The full-loop winding-loss multiplier for loop exponent `M`. It records the
+    radial excess of a zero over the self-dual half-unit after one configured loop. -/
+def fullLoopWindingLoss (M : ℝ) (ρ : ℂ) : ℝ :=
+  Real.exp (M * (ρ.re - 1 / 2))
+
+/-- The winding-loss spectrum read from the completed log-derivative pole channel. -/
+def WindingLossSpectrum (χ : DirichletCharacter ℂ N) : Set ℂ :=
+  {z | ∃ ρ : ℂ, CompletedLogDerivPole χ ρ ∧ z = windingLossReadout ρ}
+
+/-- The source helix value determined by radial growth plus pitch. -/
+def sourceRadialPitchWinding (σ γ : ℝ) : Circle :=
+  helixUnitary (σ + γ)
+
+/-- Winding is radial growth plus pitch, and source multiplication is angular addition. -/
+theorem sourceRadialPitchWinding_eq_mul (σ γ : ℝ) :
+    sourceRadialPitchWinding σ γ = helixUnitary σ * helixUnitary γ := by
+  exact helixUnitary_add σ γ
+
+/-- Complex-coordinate form of radial-growth plus pitch angular addition. -/
+theorem sourceRadialPitchWinding_coe_eq_mul (σ γ : ℝ) :
+    (sourceRadialPitchWinding σ γ : ℂ) =
+      (helixUnitary σ : ℂ) * (helixUnitary γ : ℂ) := by
+  rw [sourceRadialPitchWinding_eq_mul]
+  rfl
+
+/-- The source winding value determined by radial growth plus pitch is unitary. -/
+theorem sourceRadialPitchWinding_norm (σ γ : ℝ) :
+    ‖(sourceRadialPitchWinding σ γ : ℂ)‖ = 1 :=
+  helixUnitary_norm (σ + γ)
+
+/-- Every finite winding power of the radial-growth-plus-pitch source value is
+    unitary. -/
+theorem sourceRadialPitchWinding_pow_norm (σ γ : ℝ) (M : ℕ) :
+    ‖(sourceRadialPitchWinding σ γ : ℂ) ^ M‖ = 1 :=
+  helixUnitary_pow_norm (σ + γ) M
+
+/-- Source-side readout attached to a pole: radial growth plus pitch, valued in
+    the unitary helix character. -/
+def sourceWindingLossReadout (ρ : ℂ) : Circle :=
+  sourceRadialPitchWinding ρ.re ρ.im
+
+/-- A pole's source-side radial-growth-plus-pitch winding readout is unitary. -/
+theorem sourceWindingLossReadout_pow_norm (ρ : ℂ) (M : ℕ) :
+    ‖(sourceWindingLossReadout ρ : ℂ) ^ M‖ = 1 :=
+  sourceRadialPitchWinding_pow_norm ρ.re ρ.im M
+
+/-- Source-side energy is conserved for every zero captured by the winding-loss
+    spectrum, unconditionally. -/
+theorem windingLossSpectrum_source_energy_conserved
+    (χ : DirichletCharacter ℂ N) (M : ℕ) :
+    ∀ z ∈ WindingLossSpectrum χ, ‖(sourceWindingLossReadout z : ℂ) ^ M‖ = 1 := by
+  intro z _hz
+  exact sourceWindingLossReadout_pow_norm z M
+
+/-- χ₃ form: source-side energy is conserved for every captured winding-loss zero. -/
+theorem chi3_windingLossSpectrum_source_energy_conserved
+    (χ₃ : DirichletCharacter ℂ 3) (M : ℕ) :
+    ∀ z ∈ WindingLossSpectrum χ₃, ‖(sourceWindingLossReadout z : ℂ) ^ M‖ = 1 :=
+  windingLossSpectrum_source_energy_conserved χ₃ M
+
+/-- Source-side Euler-product coherence for the helix readout.
+
+The Euler product reconstructs logarithmic prime height, multiplication is angular
+addition through the `Circle`-valued helix character, and the captured spectral
+values are read as values of that correctly parameterized source helix. -/
+structure EulerProductHelixSourceReadout (χ : DirichletCharacter ℂ N) where
+  prime_weight :
+    ∀ {p : ℕ}, p.Prime →
+      (∑ d ∈ p.divisors, ArithmeticFunction.vonMangoldt d) = Real.log p
+  angular_add :
+    ∀ s t : ℝ, helixUnitary (s + t) = helixUnitary s * helixUnitary t
+  source_readout :
+    ∀ z : ℂ, z ∈ WindingLossSpectrum χ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ)
+
+/-- Build the source readout package from the spectral-to-helix readout map; the
+    Euler-product prime weights and angular-addition law are already theorems. -/
+def eulerProductHelixSourceReadoutOfSourceReadout
+    (χ : DirichletCharacter ℂ N)
+    (hread : ∀ z : ℂ, z ∈ WindingLossSpectrum χ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ)) :
+    EulerProductHelixSourceReadout χ where
+  prime_weight := fun hp => euler_product_at_prime hp
+  angular_add := helixUnitary_add
+  source_readout := hread
+
+/-- Source readout into the Euler-product helix gives unit norm for every finite
+    winding power on the captured spectrum. -/
+theorem eulerProductHelixSourceReadout_w_power_norm_eq_one
+    (χ : DirichletCharacter ℂ N) (M : ℕ)
+    (S : EulerProductHelixSourceReadout χ) :
+    ∀ z ∈ WindingLossSpectrum χ, ‖SpectralSide.w z ^ M‖ = 1 := by
+  intro z hz
+  rcases S.source_readout z hz with ⟨t, ht⟩
+  rw [ht]
+  exact helixUnitary_pow_norm t M
+
+/-- Rebuilding a complex zero from its radial expansion and pitch gives the zero. -/
+theorem radialPitchWinding_re_im (ρ : ℂ) :
+    radialPitchWinding ρ.re ρ.im = ρ := by
+  simp [radialPitchWinding, Complex.re_add_im]
+
+/-- The winding-loss readout is the zero itself, reconstructed from radial expansion
+    and pitch. -/
+theorem windingLossReadout_eq_zero (ρ : ℂ) :
+    windingLossReadout ρ = ρ := by
+  exact radialPitchWinding_re_im ρ
+
+/-- Full-loop winding-loss invariance is exactly the half-unit readout. -/
+theorem fullLoopWindingLoss_eq_one_iff_half (M : ℝ) (hM : M ≠ 0) (ρ : ℂ) :
+    fullLoopWindingLoss M ρ = 1 ↔ ρ.re = 1 / 2 := by
+  simpa [fullLoopWindingLoss] using HelixEF.no_radial_drift_iff_half M ρ.re hM
+
+/-- Full-loop winding-loss invariance is exactly raw Möbius unitarity. -/
+theorem fullLoopWindingLoss_eq_one_iff_raw_unitary
+    (M : ℝ) (hM : M ≠ 0) (ρ : ℂ) (hρ : ρ ≠ 0) :
+    fullLoopWindingLoss M ρ = 1 ↔ Complex.normSq (SpectralSide.w ρ) = 1 := by
+  rw [fullLoopWindingLoss_eq_one_iff_half M hM ρ, SpectralSide.w_unit_iff_half ρ hρ]
+
+/-- Pythagorean preservation by the first projection is the same as full-loop
+    winding-loss invariance for the zero mode. -/
+theorem G1_energy_preserved_zero_embed_iff_fullLoopWindingLoss_eq_one
+    (M : ℝ) (hM : M ≠ 0) (ρ : ℂ) (x : ℝ) :
+    helixEnergy (apply_G1 (zero_embed ρ.re ρ.im x)) =
+        helixEnergy (zero_embed ρ.re ρ.im x) ↔
+      fullLoopWindingLoss M ρ = 1 := by
+  rw [G1_energy_preserved_iff_radial_zero,
+    fullLoopWindingLoss_eq_one_iff_half M hM ρ]
+  simp [zero_embed]
+  constructor <;> intro h <;> linarith
+
+/-- The first projection's Pythagorean energy defect for a zero mode is the
+    square of the winding radial excess. -/
+theorem G1_energy_defect_zero_embed (ρ : ℂ) (x : ℝ) :
+    helixEnergy (zero_embed ρ.re ρ.im x) -
+        helixEnergy (apply_G1 (zero_embed ρ.re ρ.im x)) =
+      (ρ.re - 1 / 2) ^ 2 := by
+  simp [helixEnergy, zero_embed, apply_G1]
+
+/-- FE reflection sends full-loop winding loss to its reciprocal. -/
+theorem fullLoopWindingLoss_FE_reciprocal (M : ℝ) (ρ : ℂ) :
+    fullLoopWindingLoss M ((1 : ℂ) - ρ) * fullLoopWindingLoss M ρ = 1 := by
+  unfold fullLoopWindingLoss
+  rw [Complex.sub_re, Complex.one_re]
+  have h : M * (1 - ρ.re - 1 / 2) = -(M * (ρ.re - 1 / 2)) := by ring
+  rw [h, Real.exp_neg]
+  exact inv_mul_cancel₀ (Real.exp_ne_zero _)
+
+/-- The two FE-paired winding losses agree exactly at the half-unit. -/
+theorem fullLoopWindingLoss_FE_pair_eq_iff_half (M : ℝ) (hM : M ≠ 0) (ρ : ℂ) :
+    fullLoopWindingLoss M ((1 : ℂ) - ρ) = fullLoopWindingLoss M ρ ↔
+      ρ.re = 1 / 2 := by
+  unfold fullLoopWindingLoss
+  rw [Complex.sub_re, Complex.one_re]
+  constructor
+  · intro h
+    have hexp : M * (1 - ρ.re - 1 / 2) = M * (ρ.re - 1 / 2) :=
+      Real.exp_injective h
+    have hzero : M * (1 - 2 * ρ.re) = 0 := by nlinarith
+    rcases mul_eq_zero.mp hzero with hM0 | hcenter
+    · exact absurd hM0 hM
+    · linarith
+  · intro h
+    rw [h]
+    ring_nf
+
+/-- A completed log-derivative pole's radial/pitch winding value is itself a
+    nontrivial zero. -/
+theorem radialPitchWinding_mem_nontrivialZeros
+    (χ : DirichletCharacter ℂ N) (ρ : ℂ)
+    (hρ : CompletedLogDerivPole χ ρ) :
+    radialPitchWinding ρ.re ρ.im ∈ GRHSpectral.NontrivialZeros χ := by
+  rwa [radialPitchWinding_re_im ρ]
+
+/-- A completed log-derivative pole's winding-loss readout is captured by the
+    corresponding nontrivial zero set. -/
+theorem windingLossReadout_mem_nontrivialZeros
+    (χ : DirichletCharacter ℂ N) (ρ : ℂ)
+    (hρ : CompletedLogDerivPole χ ρ) :
+    windingLossReadout ρ ∈ GRHSpectral.NontrivialZeros χ := by
+  rwa [windingLossReadout_eq_zero ρ]
+
+/-- The completed pole channel's winding-loss spectrum is exactly the nontrivial
+    zero set. -/
+theorem windingLossSpectrum_eq_nontrivialZeros
+    (χ : DirichletCharacter ℂ N) :
+    WindingLossSpectrum χ = GRHSpectral.NontrivialZeros χ := by
+  ext z
+  constructor
+  · rintro ⟨ρ, hρ, hz⟩
+    rw [hz, windingLossReadout_eq_zero ρ]
+    exact hρ
+  · intro hz
+    exact ⟨z, hz, (windingLossReadout_eq_zero z).symm⟩
+
+/-- The nontrivial zeros are exactly the radial-growth-plus-pitch winding-loss
+    values read from the completed pole channel. -/
+theorem nontrivialZeros_eq_windingLossSpectrum
+    (χ : DirichletCharacter ℂ N) :
+    GRHSpectral.NontrivialZeros χ = WindingLossSpectrum χ :=
+  (windingLossSpectrum_eq_nontrivialZeros χ).symm
+
+/-- A χ₃ completed pole mode bundles the zero-set membership into the mode. -/
+abbrev Chi3PoleMode (χ₃ : DirichletCharacter ℂ 3) :=
+  {ρ : ℂ // ρ ∈ GRHSpectral.NontrivialZeros χ₃}
+
+/-- χ₃ form: a pole mode's winding-loss readout is captured by the χ₃ zero set. -/
+theorem chi3PoleMode_windingLossReadout_mem_nontrivialZeros
+    (χ₃ : DirichletCharacter ℂ 3) (v : Chi3PoleMode χ₃) :
+    windingLossReadout v.1 ∈ GRHSpectral.NontrivialZeros χ₃ := by
+  rw [windingLossReadout_eq_zero]
+  exact v.2
+
+/-- χ₃ form: the winding-loss spectrum read from the log-derivative pole channel
+    is exactly the χ₃ zero set. -/
+theorem chi3_windingLossSpectrum_eq_nontrivialZeros
+    (χ₃ : DirichletCharacter ℂ 3) :
+    WindingLossSpectrum χ₃ = GRHSpectral.NontrivialZeros χ₃ :=
+  windingLossSpectrum_eq_nontrivialZeros χ₃
+
+/-- χ₃ form: the χ₃ zeros are exactly the radial-growth-plus-pitch winding-loss
+    values read from the completed pole channel. -/
+theorem chi3_nontrivialZeros_eq_windingLossSpectrum
+    (χ₃ : DirichletCharacter ℂ 3) :
+    GRHSpectral.NontrivialZeros χ₃ = WindingLossSpectrum χ₃ :=
+  nontrivialZeros_eq_windingLossSpectrum χ₃
+
+/-- The winding determined by a χ₃ pole mode's radial expansion and pitch is
+    exactly the pole's complex zero. -/
+theorem chi3PoleMode_radialPitchWinding_eq
+    (χ₃ : DirichletCharacter ℂ 3) (v : Chi3PoleMode χ₃) :
+    radialPitchWinding v.1.re v.1.im = v.1 :=
+  radialPitchWinding_re_im v.1
+
+/-- Unconditional χ₃ pole-mode form: once the input is a completed pole mode,
+    its radial/pitch winding value is in the χ₃ nontrivial zero set. -/
+theorem chi3PoleMode_radialPitchWinding_mem_nontrivialZeros
+    (χ₃ : DirichletCharacter ℂ 3) (v : Chi3PoleMode χ₃) :
+    radialPitchWinding v.1.re v.1.im ∈ GRHSpectral.NontrivialZeros χ₃ := by
+  rw [chi3PoleMode_radialPitchWinding_eq χ₃ v]
+  exact v.2
+
+/-- The completed spectral mode attached to a χ₃ pole mode. -/
+def chi3PoleModeCompletedSpectralMode
+    (χ₃ : DirichletCharacter ℂ 3) (v : Chi3PoleMode χ₃) : Chi3CompletedMode :=
+  completedSpectralMode (SpectralSide.w v.1)
+
+/-- Every χ₃ pole mode has an unconditional completed unitary spectral mode. -/
+theorem chi3PoleMode_completedSpectralMode_unitary
+    (χ₃ : DirichletCharacter ℂ 3) (v : Chi3PoleMode χ₃) :
+    Complex.normSq (chi3PoleModeCompletedSpectralMode χ₃ v : ℂ) = 1 :=
+  completedSpectralMode_unitary (SpectralSide.w v.1)
+
+/-- The completed χ₃ step preserves the norm of the completed spectral pole mode. -/
+theorem chi3PoleMode_completedStep_unitary
+    (χ₃ : DirichletCharacter ℂ 3) (v : Chi3PoleMode χ₃) :
+    ‖completedStep (chi3PoleModeCompletedSpectralMode χ₃ v)‖ =
+      ‖chi3PoleModeCompletedSpectralMode χ₃ v‖ :=
+  chi3_completed_helix_step_unitary (chi3PoleModeCompletedSpectralMode χ₃ v)
+
+/-- The completed χ₃ pole mode agrees with the raw Möbius spectral value exactly
+    when that raw value was already unit norm. -/
+theorem chi3PoleMode_completed_eq_raw_iff_raw_norm_eq_one
+    (χ₃ : DirichletCharacter ℂ 3) (v : Chi3PoleMode χ₃) :
+    (chi3PoleModeCompletedSpectralMode χ₃ v : ℂ) = SpectralSide.w v.1 ↔
+      ‖SpectralSide.w v.1‖ = 1 :=
+  completedSpectralMode_eq_raw_iff_norm_eq_one (SpectralSide.w v.1)
+
+/-- A completed log-derivative pole is read in the saved dual-loss channel:
+    the zero contributes exactly the radial defect `Re ρ - 1/2`. -/
+theorem completed_logDeriv_pole_loss_radial_defect
+    (χ : DirichletCharacter ℂ N) (ρ : ℂ)
+    (_hρ : CompletedLogDerivPole χ ρ) (x : ℝ) :
+    (loss (zero_embed ρ.re ρ.im x)).radial = ρ.re - 1 / 2 :=
+  zero_mode_dual_loss_radial ρ x
+
+/-- If the saved radial loss is zero for a χ₃ pole, then the raw Möbius spectral
+    value is unitary. -/
+theorem chi3_raw_spectral_unitary_of_saved_radial_loss_zero
+    (χ₃ : DirichletCharacter ℂ 3) (ρ : ℂ)
+    (hρ : CompletedLogDerivPole χ₃ ρ) (x : ℝ)
+    (hzero : (loss (zero_embed ρ.re ρ.im x)).radial = 0) :
+    Complex.normSq (SpectralSide.w ρ) = 1 :=
+  (spectral_circle_iff_dual_loss_radial_zero ρ
+    (GRHSpectral.nontrivial_ne_zero hρ) x).mpr hzero
+
+/-- If the source radial coordinate is zero for a χ₃ pole, then the raw Möbius
+    spectral value is unitary. -/
+theorem chi3_raw_spectral_unitary_of_source_radial_zero
+    (χ₃ : DirichletCharacter ℂ 3) (ρ : ℂ)
+    (hρ : CompletedLogDerivPole χ₃ ρ) (x : ℝ)
+    (hzero : (zero_embed ρ.re ρ.im x).radial = 0) :
+    Complex.normSq (SpectralSide.w ρ) = 1 :=
+  chi3_raw_spectral_unitary_of_saved_radial_loss_zero χ₃ ρ hρ x (by
+    simpa [loss] using hzero)
+
+/-- χ₃ GRH from zero saved radial loss on every log-derivative pole. -/
+theorem GRH_chi3_of_saved_radial_loss_zero
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hzero : ∀ ρ : ℂ, CompletedLogDerivPole χ₃ ρ → ∀ x : ℝ,
+      (loss (zero_embed ρ.re ρ.im x)).radial = 0) :
+    GRHSpectral.GRH χ₃ := by
+  intro ρ hρ
+  have hrad : (loss (zero_embed ρ.re ρ.im 1)).radial = 0 := hzero ρ hρ 1
+  rw [zero_mode_dual_loss_radial] at hrad
+  linarith
+
+/-- χ₃ GRH from zero source radial coordinate on every log-derivative pole. -/
+theorem GRH_chi3_of_source_radial_zero
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hzero : ∀ ρ : ℂ, CompletedLogDerivPole χ₃ ρ → ∀ x : ℝ,
+      (zero_embed ρ.re ρ.im x).radial = 0) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_chi3_of_saved_radial_loss_zero χ₃
+    (fun ρ hρ x => by simpa [loss] using hzero ρ hρ x)
+
+/-- Pythagorean energy route: if the first projection preserves the helix energy
+    of every χ₃ pole mode, then every saved radial loss is zero. -/
+theorem chi3_saved_radial_loss_zero_of_G1_energy_preserved
+    (χ₃ : DirichletCharacter ℂ 3)
+    (henergy : ∀ ρ : ℂ, CompletedLogDerivPole χ₃ ρ → ∀ x : ℝ,
+      helixEnergy (apply_G1 (zero_embed ρ.re ρ.im x)) =
+        helixEnergy (zero_embed ρ.re ρ.im x)) :
+    ∀ ρ : ℂ, CompletedLogDerivPole χ₃ ρ → ∀ x : ℝ,
+      (loss (zero_embed ρ.re ρ.im x)).radial = 0 := by
+  intro ρ hρ x
+  have hrad : (zero_embed ρ.re ρ.im x).radial = 0 :=
+    (G1_energy_preserved_iff_radial_zero (zero_embed ρ.re ρ.im x)).mp
+      (henergy ρ hρ x)
+  simpa [loss] using hrad
+
+/-- χ₃ GRH from Pythagorean energy preservation of the first projection on every pole. -/
+theorem GRH_chi3_of_G1_energy_preserved
+    (χ₃ : DirichletCharacter ℂ 3)
+    (henergy : ∀ ρ : ℂ, CompletedLogDerivPole χ₃ ρ → ∀ x : ℝ,
+      helixEnergy (apply_G1 (zero_embed ρ.re ρ.im x)) =
+        helixEnergy (zero_embed ρ.re ρ.im x)) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_chi3_of_saved_radial_loss_zero χ₃
+    (chi3_saved_radial_loss_zero_of_G1_energy_preserved χ₃ henergy)
+
+/-- Geometry-side source data for each completed log-derivative pole: the pole's
+    radial exponent is the exponent of a nonzero-energy helix signal whose
+    multiplicative dilation action is isometric at every positive scale. -/
+structure PoleHelixIsometryData (χ : DirichletCharacter ℂ N) where
+  signal : ∀ ρ : ℂ, CompletedLogDerivPole χ ρ → ℝ → ℝ
+  positive_energy :
+    ∀ ρ (hρ : CompletedLogDerivPole χ ρ),
+      0 < ∫ x in Set.Ioi (0 : ℝ), (signal ρ hρ x) ^ 2
+  isometry :
+    ∀ ρ (hρ : CompletedLogDerivPole χ ρ), ∀ lam : ℝ, 0 < lam →
+      (∫ x in Set.Ioi (0 : ℝ), (lam ^ ρ.re * signal ρ hρ (lam * x)) ^ 2)
+        = ∫ x in Set.Ioi (0 : ℝ), (signal ρ hρ x) ^ 2
+
+/-- Source-chain no-drift data for the completed log-derivative pole spectrum.
+    The source embedding has zero radial coordinate; the imported helix-source
+    theorem then proves the retained projections and saved loss do not create
+    radial drift. -/
+structure PoleHelixNoRadialDriftChain (χ : DirichletCharacter ℂ N) where
+  source_no_drift :
+    ∀ ρ : ℂ, CompletedLogDerivPole χ ρ → ∀ x : ℝ,
+      (zero_embed ρ.re ρ.im x).radial = 0
+
 /-- Zero drift is definitional for a completed helix pole operator: it is the subtype
     property of its core-valued readout. -/
 theorem completed_helix_operator_zero_drift
@@ -73,6 +450,144 @@ theorem GRH_iff_helix_reads_zeros_on_circle (χ : DirichletCharacter ℂ N) :
       (∀ ρ ∈ GRHSpectral.NontrivialZeros χ,
         Complex.normSq (SpectralSide.w ρ) = 1) :=
   GRHSpectral.GRH_iff_spectral_unitary χ
+
+/-- If the winding-loss spectrum read from the completed pole channel is unitary,
+    then every χ-zero is on the GRH line. -/
+theorem GRH_of_windingLossSpectrum_unitary
+    (χ : DirichletCharacter ℂ N)
+    (hunit : ∀ z ∈ WindingLossSpectrum χ, Complex.normSq (SpectralSide.w z) = 1) :
+    GRHSpectral.GRH χ := by
+  exact (GRH_iff_helix_reads_zeros_on_circle χ).mpr (by
+    intro ρ hρ
+    exact hunit ρ (by rwa [windingLossSpectrum_eq_nontrivialZeros χ]))
+
+/-- χ₃ form of the winding-loss spectrum bridge. -/
+theorem GRH_chi3_of_windingLossSpectrum_unitary
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hunit : ∀ z ∈ WindingLossSpectrum χ₃, Complex.normSq (SpectralSide.w z) = 1) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_of_windingLossSpectrum_unitary χ₃ hunit
+
+/-- A nonzero natural winding power with norm `1` on the captured spectrum
+    forces raw Möbius unitarity on that spectrum. -/
+theorem windingLossSpectrum_unitary_of_w_power_norm_eq_one
+    (χ : DirichletCharacter ℂ N) (M : ℕ) (hM : M ≠ 0)
+    (hpow : ∀ z ∈ WindingLossSpectrum χ, ‖SpectralSide.w z ^ M‖ = 1) :
+    ∀ z ∈ WindingLossSpectrum χ, Complex.normSq (SpectralSide.w z) = 1 := by
+  intro z hz
+  exact SpectralSide.w_unit_of_power_norm_eq_one z M hM (hpow z hz)
+
+/-- GRH from unit norm of a nonzero natural winding power on the captured spectrum. -/
+theorem GRH_of_windingLossSpectrum_w_power_norm_eq_one
+    (χ : DirichletCharacter ℂ N) (M : ℕ) (hM : M ≠ 0)
+    (hpow : ∀ z ∈ WindingLossSpectrum χ, ‖SpectralSide.w z ^ M‖ = 1) :
+    GRHSpectral.GRH χ :=
+  GRH_of_windingLossSpectrum_unitary χ
+    (windingLossSpectrum_unitary_of_w_power_norm_eq_one χ M hM hpow)
+
+/-- χ₃ form of the winding-power bridge. -/
+theorem GRH_chi3_of_windingLossSpectrum_w_power_norm_eq_one
+    (χ₃ : DirichletCharacter ℂ 3) (M : ℕ) (hM : M ≠ 0)
+    (hpow : ∀ z ∈ WindingLossSpectrum χ₃, ‖SpectralSide.w z ^ M‖ = 1) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_of_windingLossSpectrum_w_power_norm_eq_one χ₃ M hM hpow
+
+/-- GRH from Euler-product source readout: once each captured spectral value is
+    read as a correctly parameterized source-helix value, source unitarity gives
+    the finite winding-power premise and the raw Möbius operator is unitary. -/
+theorem GRH_of_eulerProductHelixSourceReadout
+    (χ : DirichletCharacter ℂ N) (M : ℕ) (hM : M ≠ 0)
+    (S : EulerProductHelixSourceReadout χ) :
+    GRHSpectral.GRH χ :=
+  GRH_of_windingLossSpectrum_w_power_norm_eq_one χ M hM
+    (eulerProductHelixSourceReadout_w_power_norm_eq_one χ M S)
+
+/-- χ₃ form of the Euler-product source-readout bridge. -/
+theorem GRH_chi3_of_eulerProductHelixSourceReadout
+    (χ₃ : DirichletCharacter ℂ 3) (M : ℕ) (hM : M ≠ 0)
+    (S : EulerProductHelixSourceReadout χ₃) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_of_eulerProductHelixSourceReadout χ₃ M hM S
+
+/-- Full-loop winding-loss invariance on the captured spectrum is exactly raw
+    Möbius unitarity on that same spectrum. -/
+theorem windingLossSpectrum_fullLoop_invariant_iff_unitary
+    (χ : DirichletCharacter ℂ N) (M : ℝ) (hM : M ≠ 0) :
+    (∀ z ∈ WindingLossSpectrum χ, fullLoopWindingLoss M z = 1) ↔
+      (∀ z ∈ WindingLossSpectrum χ, Complex.normSq (SpectralSide.w z) = 1) := by
+  constructor
+  · intro hloop z hz
+    have hnz : z ∈ GRHSpectral.NontrivialZeros χ := by
+      rwa [windingLossSpectrum_eq_nontrivialZeros χ] at hz
+    exact (fullLoopWindingLoss_eq_one_iff_raw_unitary M hM z
+      (GRHSpectral.nontrivial_ne_zero hnz)).mp (hloop z hz)
+  · intro hunit z hz
+    have hnz : z ∈ GRHSpectral.NontrivialZeros χ := by
+      rwa [windingLossSpectrum_eq_nontrivialZeros χ] at hz
+    exact (fullLoopWindingLoss_eq_one_iff_raw_unitary M hM z
+      (GRHSpectral.nontrivial_ne_zero hnz)).mpr (hunit z hz)
+
+/-- Pythagorean preservation by the first projection on the captured spectrum is
+    exactly raw Möbius unitarity on that spectrum. -/
+theorem windingLossSpectrum_G1_energy_preserved_iff_unitary
+    (χ : DirichletCharacter ℂ N) (M : ℝ) (hM : M ≠ 0) :
+    (∀ z ∈ WindingLossSpectrum χ, ∀ x : ℝ,
+        helixEnergy (apply_G1 (zero_embed z.re z.im x)) =
+          helixEnergy (zero_embed z.re z.im x)) ↔
+      (∀ z ∈ WindingLossSpectrum χ, Complex.normSq (SpectralSide.w z) = 1) := by
+  constructor
+  · intro henergy z hz
+    have hnz : z ∈ GRHSpectral.NontrivialZeros χ := by
+      rwa [windingLossSpectrum_eq_nontrivialZeros χ] at hz
+    have hloop : fullLoopWindingLoss M z = 1 :=
+      (G1_energy_preserved_zero_embed_iff_fullLoopWindingLoss_eq_one M hM z 1).mp
+        (henergy z hz 1)
+    exact (fullLoopWindingLoss_eq_one_iff_raw_unitary M hM z
+      (GRHSpectral.nontrivial_ne_zero hnz)).mp hloop
+  · intro hunit z hz x
+    have hnz : z ∈ GRHSpectral.NontrivialZeros χ := by
+      rwa [windingLossSpectrum_eq_nontrivialZeros χ] at hz
+    have hloop : fullLoopWindingLoss M z = 1 :=
+      (fullLoopWindingLoss_eq_one_iff_raw_unitary M hM z
+        (GRHSpectral.nontrivial_ne_zero hnz)).mpr (hunit z hz)
+    exact (G1_energy_preserved_zero_embed_iff_fullLoopWindingLoss_eq_one M hM z x).mpr
+      hloop
+
+/-- GRH from full-loop winding-loss invariance on the captured spectrum. -/
+theorem GRH_of_fullLoopWindingLoss_invariant
+    (χ : DirichletCharacter ℂ N) (M : ℝ) (hM : M ≠ 0)
+    (hloop : ∀ z ∈ WindingLossSpectrum χ, fullLoopWindingLoss M z = 1) :
+    GRHSpectral.GRH χ :=
+  GRH_of_windingLossSpectrum_unitary χ
+    ((windingLossSpectrum_fullLoop_invariant_iff_unitary χ M hM).mp hloop)
+
+/-- χ₃ form: GRH from full-loop winding-loss invariance at the configured
+    `M = 6` loop. -/
+theorem GRH_chi3_of_fullLoopWindingLoss_invariant
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hloop : ∀ z ∈ WindingLossSpectrum χ₃, fullLoopWindingLoss 6 z = 1) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_of_fullLoopWindingLoss_invariant χ₃ 6 (by norm_num) hloop
+
+/-- GRH from Pythagorean preservation by the first projection on the captured
+    winding-loss spectrum. -/
+theorem GRH_of_G1_energy_preserved_on_windingLossSpectrum
+    (χ : DirichletCharacter ℂ N) (M : ℝ) (hM : M ≠ 0)
+    (henergy : ∀ z ∈ WindingLossSpectrum χ, ∀ x : ℝ,
+      helixEnergy (apply_G1 (zero_embed z.re z.im x)) =
+        helixEnergy (zero_embed z.re z.im x)) :
+    GRHSpectral.GRH χ :=
+  GRH_of_windingLossSpectrum_unitary χ
+    ((windingLossSpectrum_G1_energy_preserved_iff_unitary χ M hM).mp henergy)
+
+/-- χ₃ form: GRH from Pythagorean preservation at the configured `M = 6` loop. -/
+theorem GRH_chi3_of_G1_energy_preserved_on_windingLossSpectrum
+    (χ₃ : DirichletCharacter ℂ 3)
+    (henergy : ∀ z ∈ WindingLossSpectrum χ₃, ∀ x : ℝ,
+      helixEnergy (apply_G1 (zero_embed z.re z.im x)) =
+        helixEnergy (zero_embed z.re z.im x)) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_of_G1_energy_preserved_on_windingLossSpectrum χ₃ 6 (by norm_num) henergy
 
 /-- **The helix reads a χ-zero as a pole of `L'/L`.** A zero of `L(·,χ)` of order `n ≥ 1`
     at `ρ` makes the log-derivative have principal part `n/(s−ρ)` — the helix loss/residue
@@ -131,6 +646,68 @@ theorem completed_helix_operator_unitary_iff_zero_drift_on_pole_spectrum
     exact (spectral_circle_iff_dual_loss_radial_zero ρ
       (GRHSpectral.nontrivial_ne_zero hρ) 1).mpr (h ρ hρ 1)
 
+/-- Per-pole helix isometry data is a source for zero radial drift on the completed
+    log-derivative pole spectrum. -/
+theorem zero_drift_on_logderiv_poles_of_pole_helix_isometry
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixIsometryData χ) :
+    ∀ ρ : ℂ, CompletedLogDerivPole χ ρ → ∀ x : ℝ,
+      (loss (zero_embed ρ.re ρ.im x)).radial = 0 := by
+  intro ρ hρ x
+  have hhalf : ρ.re = 1 / 2 :=
+    (HelixHalfUnit.helix_forces_half ρ.re (D.signal ρ hρ)
+      (D.positive_energy ρ hρ)).mp (D.isometry ρ hρ)
+  rw [zero_mode_dual_loss_radial]
+  linarith
+
+/-- If the source pole readout has zero radial drift, the whole concrete helix
+    projection/loss chain has zero drift in every retained and saved radial slot. -/
+theorem pole_helix_chain_no_radial_drift_audit
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixNoRadialDriftChain χ) :
+    ∀ ρ : ℂ, CompletedLogDerivPole χ ρ → ∀ x : ℝ,
+      let v := zero_embed ρ.re ρ.im x
+      v.radial = 0 ∧
+      (apply_G1 v).radial = 0 ∧
+      (apply_G2 (apply_G1 v)).radial = 0 ∧
+      (apply_cascade v).radial = 0 ∧
+      (loss v).radial = 0 := by
+  intro ρ hρ x
+  dsimp
+  have hsrc : (zero_embed ρ.re ρ.im x).radial = 0 := D.source_no_drift ρ hρ x
+  exact ⟨hsrc,
+    (source_no_radial_drift_propagates_through_helix
+      (zero_embed ρ.re ρ.im x) hsrc).1,
+    (source_no_radial_drift_propagates_through_helix
+      (zero_embed ρ.re ρ.im x) hsrc).2.1,
+    (source_no_radial_drift_propagates_through_helix
+      (zero_embed ρ.re ρ.im x) hsrc).2.2.1,
+    (source_no_radial_drift_propagates_through_helix
+      (zero_embed ρ.re ρ.im x) hsrc).2.2.2⟩
+
+/-- The retained concrete helix projection chain has zero radial coordinate by
+    construction. This does not use pole unitarity, a completed operator, or a
+    geometric readout hypothesis. -/
+theorem retained_pole_helix_chain_no_radial_drift_by_construction
+    (χ : DirichletCharacter ℂ N) :
+    ∀ ρ : ℂ, CompletedLogDerivPole χ ρ → ∀ x : ℝ,
+      let v := zero_embed ρ.re ρ.im x
+      (apply_G1 v).radial = 0 ∧
+      (apply_G2 (apply_G1 v)).radial = 0 ∧
+      (apply_cascade v).radial = 0 := by
+  intro ρ hρ x
+  exact dimensional_projections_create_no_radial_drift (zero_embed ρ.re ρ.im x)
+
+/-- The no-drift source chain supplies the saved-loss zero-radial readout used by
+    the completed pole-spectrum operator. -/
+theorem zero_drift_on_logderiv_poles_of_no_radial_drift_chain
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixNoRadialDriftChain χ) :
+    ∀ ρ : ℂ, CompletedLogDerivPole χ ρ → ∀ x : ℝ,
+      (loss (zero_embed ρ.re ρ.im x)).radial = 0 := by
+  intro ρ hρ x
+  exact (pole_helix_chain_no_radial_drift_audit χ D ρ hρ x).2.2.2.2
+
 /-- Construct the completed pole-spectrum operator from the pole-unitarity theorem.
     The core-valued readout is the concrete helix embedding, with zero drift obtained
     by Layer B from unitary Möbius readout. -/
@@ -154,6 +731,245 @@ def chi3CompletedHelixOperatorOnPoleSpectrumOfUnitary
       Complex.normSq (SpectralSide.w ρ) = 1) :
     CompletedHelixOperatorOnPoleSpectrum χ₃ :=
   completedHelixOperatorOnPoleSpectrumOfUnitary χ₃ hunitary
+
+/-- Construct the completed pole-spectrum operator directly from per-pole helix
+    isometry data. This is the non-`hunitary` source constructor. -/
+def completedHelixOperatorOnPoleSpectrumOfIsometryData
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixIsometryData χ) :
+    CompletedHelixOperatorOnPoleSpectrum χ where
+  readPole := fun ρ hρ x =>
+    ⟨zero_embed ρ.re ρ.im x,
+      zero_drift_on_logderiv_poles_of_pole_helix_isometry χ D ρ hρ x⟩
+  reads_pole := by
+    intro ρ hρ x
+    rfl
+
+/-- χ₃ completed pole-spectrum operator built directly from per-pole helix
+    isometry data. -/
+def chi3CompletedHelixOperatorOnPoleSpectrumOfIsometryData
+    (χ₃ : DirichletCharacter ℂ 3)
+    (D : PoleHelixIsometryData χ₃) :
+    CompletedHelixOperatorOnPoleSpectrum χ₃ :=
+  completedHelixOperatorOnPoleSpectrumOfIsometryData χ₃ D
+
+/-- Construct the completed pole-spectrum operator directly from the no-drift
+    source chain. -/
+def completedHelixOperatorOnPoleSpectrumOfNoRadialDriftChain
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixNoRadialDriftChain χ) :
+    CompletedHelixOperatorOnPoleSpectrum χ where
+  readPole := fun ρ hρ x =>
+    ⟨zero_embed ρ.re ρ.im x,
+      zero_drift_on_logderiv_poles_of_no_radial_drift_chain χ D ρ hρ x⟩
+  reads_pole := by
+    intro ρ hρ x
+    rfl
+
+/-- χ₃ completed pole-spectrum operator built directly from the no-drift source chain. -/
+def chi3CompletedHelixOperatorOnPoleSpectrumOfNoRadialDriftChain
+    (χ₃ : DirichletCharacter ℂ 3)
+    (D : PoleHelixNoRadialDriftChain χ₃) :
+    CompletedHelixOperatorOnPoleSpectrum χ₃ :=
+  completedHelixOperatorOnPoleSpectrumOfNoRadialDriftChain χ₃ D
+
+/-- Geometric bridge from log-derivative poles to the helix unitary character:
+    every pole's Möbius spectral value is a value of the already-constructed
+    geometric helix unitary. -/
+def GeometricHelixUnitaryReadoutOnLogDerivPoles
+    (χ : DirichletCharacter ℂ N) : Prop :=
+  ∀ ρ : ℂ, CompletedLogDerivPole χ ρ →
+    ∃ t : ℝ, SpectralSide.w ρ = (helixUnitary t : ℂ)
+
+/-- Winding-rate version of the geometric readout: every pole's explicit-formula
+    winding rate is a value of the already-constructed helix unitary. -/
+def Chi3WindingRateReadoutOnLogDerivPoles
+    (χ₃ : DirichletCharacter ℂ 3) : Prop :=
+  ∀ ρ : ℂ, CompletedLogDerivPole χ₃ ρ →
+    ∃ t : ℝ, HelixEF.windRate ρ = (helixUnitary t : ℂ)
+
+/-- The Möbius spectral value and the explicit-formula winding rate are the
+    same value away from the zero denominator. -/
+theorem spectral_w_eq_windRate (ρ : ℂ) (hρ : ρ ≠ 0) :
+    SpectralSide.w ρ = HelixEF.windRate ρ := by
+  unfold SpectralSide.w HelixEF.windRate
+  field_simp [hρ]
+
+/-- A χ₃ winding-rate readout supplies the geometric Möbius readout directly. -/
+theorem geometric_readout_on_logderiv_poles_of_windRate_readout
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hread : Chi3WindingRateReadoutOnLogDerivPoles χ₃) :
+    GeometricHelixUnitaryReadoutOnLogDerivPoles χ₃ := by
+  intro ρ hρ
+  rcases hread ρ hρ with ⟨t, ht⟩
+  refine ⟨t, ?_⟩
+  rw [spectral_w_eq_windRate ρ (GRHSpectral.nontrivial_ne_zero hρ), ht]
+
+/-- The explicit-formula winding readout gives unitary Möbius values on χ₃
+    log-derivative poles. -/
+theorem chi3_pole_modes_unitary_of_windRate_readout
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hread : Chi3WindingRateReadoutOnLogDerivPoles χ₃)
+    (ρ : ℂ)
+    (hρ : ρ ∈ GRHSpectral.NontrivialZeros χ₃) :
+    Complex.normSq (SpectralSide.w ρ) = 1 := by
+  rcases hread ρ hρ with ⟨t, ht⟩
+  have hhalf : ρ.re = 1 / 2 :=
+    HelixEF.windRate_reads_unit_imp_half ρ
+      (GRHSpectral.nontrivial_ne_zero hρ)
+      (helixUnitary_norm t) ht
+  exact (SpectralSide.w_unit_iff_half ρ
+    (GRHSpectral.nontrivial_ne_zero hρ)).mpr hhalf
+
+/-- If the explicit-formula winding readout is geometric-unitary on χ₃ poles,
+    then the entire χ₃ winding-loss spectrum is unitary. -/
+theorem chi3_windingLossSpectrum_unitary_of_windRate_readout
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hread : Chi3WindingRateReadoutOnLogDerivPoles χ₃) :
+    ∀ z ∈ WindingLossSpectrum χ₃, Complex.normSq (SpectralSide.w z) = 1 := by
+  intro z hz
+  rw [chi3_windingLossSpectrum_eq_nontrivialZeros χ₃] at hz
+  exact chi3_pole_modes_unitary_of_windRate_readout χ₃ hread z hz
+
+/-- χ₃ GRH from the geometric-unitary wind-rate readout on the captured
+    winding-loss spectrum. -/
+theorem GRH_chi3_of_windRate_readout_on_windingLossSpectrum
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hread : Chi3WindingRateReadoutOnLogDerivPoles χ₃) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_chi3_of_windingLossSpectrum_unitary χ₃
+    (chi3_windingLossSpectrum_unitary_of_windRate_readout χ₃ hread)
+
+/-- Completed pole-spectrum operator with the geometric unitary readout included
+    in the operator data. -/
+structure GeometricCompletedHelixOperatorOnPoleSpectrum
+    (χ : DirichletCharacter ℂ N)
+    extends CompletedHelixOperatorOnPoleSpectrum χ where
+  geometric_readout : GeometricHelixUnitaryReadoutOnLogDerivPoles χ
+
+/-- The geometric helix-unitary readout gives unitary Möbius values on all
+    completed log-derivative poles. -/
+theorem geometric_helix_unitary_on_logderiv_poles
+    (χ : DirichletCharacter ℂ N)
+    (hgeom : GeometricHelixUnitaryReadoutOnLogDerivPoles χ) :
+    ∀ ρ : ℂ, CompletedLogDerivPole χ ρ →
+      Complex.normSq (SpectralSide.w ρ) = 1 := by
+  intro ρ hρ
+  rcases hgeom ρ hρ with ⟨t, ht⟩
+  rw [ht]
+  exact Circle.normSq_coe (helixUnitary t)
+
+/-- χ₃ form of the geometric bridge from poles to unitary Möbius values. -/
+theorem geometric_chi3_helix_unitary_on_logderiv_poles
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hgeom : GeometricHelixUnitaryReadoutOnLogDerivPoles χ₃) :
+    ∀ ρ : ℂ, CompletedLogDerivPole χ₃ ρ →
+      Complex.normSq (SpectralSide.w ρ) = 1 :=
+  geometric_helix_unitary_on_logderiv_poles χ₃ hgeom
+
+/-- Per-pole helix isometry data gives unitary Möbius values on the completed
+    log-derivative pole spectrum. -/
+theorem unitary_on_logderiv_poles_of_pole_helix_isometry
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixIsometryData χ) :
+    ∀ ρ : ℂ, CompletedLogDerivPole χ ρ →
+      Complex.normSq (SpectralSide.w ρ) = 1 := by
+  intro ρ hρ
+  exact (completed_helix_operator_unitary_iff_zero_drift_on_pole_spectrum χ).mpr
+    (fun ρ hρ x => zero_drift_on_logderiv_poles_of_pole_helix_isometry χ D ρ hρ x)
+    ρ hρ
+
+/-- Per-pole helix isometry data gives the geometric helix-unitary readout without
+    passing through a pre-existing completed operator. -/
+theorem geometric_readout_on_logderiv_poles_of_pole_helix_isometry
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixIsometryData χ) :
+    GeometricHelixUnitaryReadoutOnLogDerivPoles χ := by
+  intro ρ hρ
+  have hunit : Complex.normSq (SpectralSide.w ρ) = 1 :=
+    unitary_on_logderiv_poles_of_pole_helix_isometry χ D ρ hρ
+  let z : Circle := ⟨SpectralSide.w ρ, by
+    change SpectralSide.w ρ ∈ Metric.sphere (0 : ℂ) 1
+    rw [mem_sphere_zero_iff_norm]
+    rw [Complex.normSq_eq_norm_sq] at hunit
+    nlinarith [norm_nonneg (SpectralSide.w ρ)]
+  ⟩
+  rcases helixUnitary_surjective z with ⟨t, ht⟩
+  refine ⟨t, ?_⟩
+  rw [ht]
+
+/-- The no-drift source chain gives unitary Möbius values on the completed
+    log-derivative pole spectrum. -/
+theorem unitary_on_logderiv_poles_of_no_radial_drift_chain
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixNoRadialDriftChain χ) :
+    ∀ ρ : ℂ, CompletedLogDerivPole χ ρ →
+      Complex.normSq (SpectralSide.w ρ) = 1 := by
+  intro ρ hρ
+  exact (completed_helix_operator_unitary_iff_zero_drift_on_pole_spectrum χ).mpr
+    (fun ρ hρ x => zero_drift_on_logderiv_poles_of_no_radial_drift_chain χ D ρ hρ x)
+    ρ hρ
+
+/-- The no-drift source chain gives the geometric helix-unitary readout. -/
+theorem geometric_readout_on_logderiv_poles_of_no_radial_drift_chain
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixNoRadialDriftChain χ) :
+    GeometricHelixUnitaryReadoutOnLogDerivPoles χ := by
+  intro ρ hρ
+  have hunit : Complex.normSq (SpectralSide.w ρ) = 1 :=
+    unitary_on_logderiv_poles_of_no_radial_drift_chain χ D ρ hρ
+  let z : Circle := ⟨SpectralSide.w ρ, by
+    change SpectralSide.w ρ ∈ Metric.sphere (0 : ℂ) 1
+    rw [mem_sphere_zero_iff_norm]
+    rw [Complex.normSq_eq_norm_sq] at hunit
+    nlinarith [norm_nonneg (SpectralSide.w ρ)]
+  ⟩
+  rcases helixUnitary_surjective z with ⟨t, ht⟩
+  refine ⟨t, ?_⟩
+  rw [ht]
+
+/-- Upgrade the isometry-built completed operator with its derived geometric
+    helix-unitary readout. -/
+def geometricCompletedHelixOperatorOnPoleSpectrumOfIsometryData
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixIsometryData χ) :
+    GeometricCompletedHelixOperatorOnPoleSpectrum χ where
+  toCompletedHelixOperatorOnPoleSpectrum :=
+    completedHelixOperatorOnPoleSpectrumOfIsometryData χ D
+  geometric_readout := geometric_readout_on_logderiv_poles_of_pole_helix_isometry χ D
+
+/-- Upgrade the no-drift-chain-built completed operator with its derived geometric
+    helix-unitary readout. -/
+def geometricCompletedHelixOperatorOnPoleSpectrumOfNoRadialDriftChain
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixNoRadialDriftChain χ) :
+    GeometricCompletedHelixOperatorOnPoleSpectrum χ where
+  toCompletedHelixOperatorOnPoleSpectrum :=
+    completedHelixOperatorOnPoleSpectrumOfNoRadialDriftChain χ D
+  geometric_readout := geometric_readout_on_logderiv_poles_of_no_radial_drift_chain χ D
+
+/-- Construct the completed pole-spectrum operator from the geometric helix-unitary readout. -/
+def completedHelixOperatorOnPoleSpectrumOfGeometricReadout
+    (χ : DirichletCharacter ℂ N)
+    (hgeom : GeometricHelixUnitaryReadoutOnLogDerivPoles χ) :
+    CompletedHelixOperatorOnPoleSpectrum χ :=
+  completedHelixOperatorOnPoleSpectrumOfUnitary χ
+    (geometric_helix_unitary_on_logderiv_poles χ hgeom)
+
+/-- χ₃ completed pole-spectrum operator constructed from the geometric readout bridge. -/
+def chi3CompletedHelixOperatorOnPoleSpectrumOfGeometricReadout
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hgeom : GeometricHelixUnitaryReadoutOnLogDerivPoles χ₃) :
+    CompletedHelixOperatorOnPoleSpectrum χ₃ :=
+  completedHelixOperatorOnPoleSpectrumOfGeometricReadout χ₃ hgeom
+
+/-- A geometric completed pole operator is unitary on every log-derivative pole. -/
+theorem geometric_completed_helix_operator_is_unitary_on_logderiv_poles
+    (χ : DirichletCharacter ℂ N)
+    (T : GeometricCompletedHelixOperatorOnPoleSpectrum χ) :
+    ∀ ρ : ℂ, CompletedLogDerivPole χ ρ →
+      Complex.normSq (SpectralSide.w ρ) = 1 :=
+  geometric_helix_unitary_on_logderiv_poles χ T.geometric_readout
 
 /-- The completed helix operator is unitary on every log-derivative pole it reads. -/
 theorem completed_helix_operator_is_unitary_on_logderiv_poles
@@ -190,6 +1006,38 @@ theorem GRH_chi3_of_unitary_on_logderiv_poles
   GRH_chi3_of_completed_helix_operator χ₃
     (chi3CompletedHelixOperatorOnPoleSpectrumOfUnitary χ₃ hunitary)
 
+/-- χ₃ GRH from the geometric helix-unitary bridge, with `T` constructed internally. -/
+theorem GRH_chi3_of_geometric_helix_unitary_on_logderiv_poles
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hgeom : GeometricHelixUnitaryReadoutOnLogDerivPoles χ₃) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_chi3_of_unitary_on_logderiv_poles χ₃
+    (geometric_chi3_helix_unitary_on_logderiv_poles χ₃ hgeom)
+
+/-- χ₃ GRH from the geometric completed helix operator. -/
+theorem GRH_chi3_of_geometric_completed_helix_operator
+    (χ₃ : DirichletCharacter ℂ 3)
+    (T : GeometricCompletedHelixOperatorOnPoleSpectrum χ₃) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_chi3_of_unitary_on_logderiv_poles χ₃
+    (geometric_completed_helix_operator_is_unitary_on_logderiv_poles χ₃ T)
+
+/-- χ₃ GRH from the per-pole helix isometry source data. -/
+theorem GRH_chi3_of_pole_helix_isometry
+    (χ₃ : DirichletCharacter ℂ 3)
+    (D : PoleHelixIsometryData χ₃) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_chi3_of_geometric_completed_helix_operator χ₃
+    (geometricCompletedHelixOperatorOnPoleSpectrumOfIsometryData χ₃ D)
+
+/-- χ₃ GRH from the concrete no-drift helix source chain. -/
+theorem GRH_chi3_of_no_radial_drift_chain
+    (χ₃ : DirichletCharacter ℂ 3)
+    (D : PoleHelixNoRadialDriftChain χ₃) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_chi3_of_geometric_completed_helix_operator χ₃
+    (geometricCompletedHelixOperatorOnPoleSpectrumOfNoRadialDriftChain χ₃ D)
+
 /-- The same completed-operator line works for the trivial character. -/
 theorem GRH_trivial_character_of_completed_helix_operator
     (T : CompletedHelixOperatorOnPoleSpectrum (1 : DirichletCharacter ℂ N)) :
@@ -206,16 +1054,93 @@ end HelixReadsGRH
 
 #print axioms HelixReadsGRH.GRH_iff_helix_reads_zeros_on_core
 #print axioms HelixReadsGRH.helix_reads_chi_zero_as_logDeriv_pole
+#print axioms HelixReadsGRH.sourceRadialPitchWinding_eq_mul
+#print axioms HelixReadsGRH.sourceRadialPitchWinding_coe_eq_mul
+#print axioms HelixReadsGRH.sourceRadialPitchWinding_norm
+#print axioms HelixReadsGRH.sourceRadialPitchWinding_pow_norm
+#print axioms HelixReadsGRH.sourceWindingLossReadout_pow_norm
+#print axioms HelixReadsGRH.windingLossSpectrum_source_energy_conserved
+#print axioms HelixReadsGRH.chi3_windingLossSpectrum_source_energy_conserved
+#print axioms HelixReadsGRH.radialPitchWinding_re_im
+#print axioms HelixReadsGRH.windingLossReadout_eq_zero
+#print axioms HelixReadsGRH.fullLoopWindingLoss_eq_one_iff_half
+#print axioms HelixReadsGRH.fullLoopWindingLoss_eq_one_iff_raw_unitary
+#print axioms HelixReadsGRH.G1_energy_preserved_zero_embed_iff_fullLoopWindingLoss_eq_one
+#print axioms HelixReadsGRH.G1_energy_defect_zero_embed
+#print axioms HelixReadsGRH.fullLoopWindingLoss_FE_reciprocal
+#print axioms HelixReadsGRH.fullLoopWindingLoss_FE_pair_eq_iff_half
+#print axioms HelixReadsGRH.radialPitchWinding_mem_nontrivialZeros
+#print axioms HelixReadsGRH.windingLossReadout_mem_nontrivialZeros
+#print axioms HelixReadsGRH.windingLossSpectrum_eq_nontrivialZeros
+#print axioms HelixReadsGRH.nontrivialZeros_eq_windingLossSpectrum
+#print axioms HelixReadsGRH.eulerProductHelixSourceReadoutOfSourceReadout
+#print axioms HelixReadsGRH.eulerProductHelixSourceReadout_w_power_norm_eq_one
+#print axioms HelixReadsGRH.chi3PoleMode_windingLossReadout_mem_nontrivialZeros
+#print axioms HelixReadsGRH.chi3_windingLossSpectrum_eq_nontrivialZeros
+#print axioms HelixReadsGRH.chi3_nontrivialZeros_eq_windingLossSpectrum
+#print axioms HelixReadsGRH.chi3PoleMode_radialPitchWinding_eq
+#print axioms HelixReadsGRH.chi3PoleMode_radialPitchWinding_mem_nontrivialZeros
+#print axioms HelixReadsGRH.chi3PoleMode_completedSpectralMode_unitary
+#print axioms HelixReadsGRH.chi3PoleMode_completedStep_unitary
+#print axioms HelixReadsGRH.chi3PoleMode_completed_eq_raw_iff_raw_norm_eq_one
+#print axioms HelixReadsGRH.completed_logDeriv_pole_loss_radial_defect
+#print axioms HelixReadsGRH.chi3_raw_spectral_unitary_of_saved_radial_loss_zero
+#print axioms HelixReadsGRH.chi3_raw_spectral_unitary_of_source_radial_zero
+#print axioms HelixReadsGRH.GRH_chi3_of_saved_radial_loss_zero
+#print axioms HelixReadsGRH.GRH_chi3_of_source_radial_zero
+#print axioms HelixReadsGRH.chi3_saved_radial_loss_zero_of_G1_energy_preserved
+#print axioms HelixReadsGRH.GRH_chi3_of_G1_energy_preserved
+#print axioms HelixReadsGRH.GRH_of_windingLossSpectrum_unitary
+#print axioms HelixReadsGRH.GRH_chi3_of_windingLossSpectrum_unitary
+#print axioms HelixReadsGRH.windingLossSpectrum_unitary_of_w_power_norm_eq_one
+#print axioms HelixReadsGRH.GRH_of_windingLossSpectrum_w_power_norm_eq_one
+#print axioms HelixReadsGRH.GRH_chi3_of_windingLossSpectrum_w_power_norm_eq_one
+#print axioms HelixReadsGRH.GRH_of_eulerProductHelixSourceReadout
+#print axioms HelixReadsGRH.GRH_chi3_of_eulerProductHelixSourceReadout
+#print axioms HelixReadsGRH.windingLossSpectrum_fullLoop_invariant_iff_unitary
+#print axioms HelixReadsGRH.windingLossSpectrum_G1_energy_preserved_iff_unitary
+#print axioms HelixReadsGRH.GRH_of_fullLoopWindingLoss_invariant
+#print axioms HelixReadsGRH.GRH_chi3_of_fullLoopWindingLoss_invariant
+#print axioms HelixReadsGRH.GRH_of_G1_energy_preserved_on_windingLossSpectrum
+#print axioms HelixReadsGRH.GRH_chi3_of_G1_energy_preserved_on_windingLossSpectrum
 #print axioms HelixReadsGRH.completed_helix_operator_zero_drift
 #print axioms HelixReadsGRH.GRH_of_completed_helix_operator_unitary_on_pole_spectrum
 #print axioms HelixReadsGRH.GRH_of_completed_helix_operator_zero_drift_on_pole_spectrum
 #print axioms HelixReadsGRH.GRH_of_completed_helix_operator_on_pole_spectrum
 #print axioms HelixReadsGRH.completed_helix_operator_unitary_iff_zero_drift_on_pole_spectrum
+#print axioms HelixReadsGRH.zero_drift_on_logderiv_poles_of_pole_helix_isometry
+#print axioms HelixReadsGRH.pole_helix_chain_no_radial_drift_audit
+#print axioms HelixReadsGRH.retained_pole_helix_chain_no_radial_drift_by_construction
+#print axioms HelixReadsGRH.zero_drift_on_logderiv_poles_of_no_radial_drift_chain
 #print axioms HelixReadsGRH.completedHelixOperatorOnPoleSpectrumOfUnitary
 #print axioms HelixReadsGRH.chi3CompletedHelixOperatorOnPoleSpectrumOfUnitary
+#print axioms HelixReadsGRH.completedHelixOperatorOnPoleSpectrumOfIsometryData
+#print axioms HelixReadsGRH.chi3CompletedHelixOperatorOnPoleSpectrumOfIsometryData
+#print axioms HelixReadsGRH.completedHelixOperatorOnPoleSpectrumOfNoRadialDriftChain
+#print axioms HelixReadsGRH.chi3CompletedHelixOperatorOnPoleSpectrumOfNoRadialDriftChain
+#print axioms HelixReadsGRH.geometric_helix_unitary_on_logderiv_poles
+#print axioms HelixReadsGRH.geometric_chi3_helix_unitary_on_logderiv_poles
+#print axioms HelixReadsGRH.spectral_w_eq_windRate
+#print axioms HelixReadsGRH.geometric_readout_on_logderiv_poles_of_windRate_readout
+#print axioms HelixReadsGRH.chi3_pole_modes_unitary_of_windRate_readout
+#print axioms HelixReadsGRH.chi3_windingLossSpectrum_unitary_of_windRate_readout
+#print axioms HelixReadsGRH.GRH_chi3_of_windRate_readout_on_windingLossSpectrum
+#print axioms HelixReadsGRH.unitary_on_logderiv_poles_of_pole_helix_isometry
+#print axioms HelixReadsGRH.geometric_readout_on_logderiv_poles_of_pole_helix_isometry
+#print axioms HelixReadsGRH.unitary_on_logderiv_poles_of_no_radial_drift_chain
+#print axioms HelixReadsGRH.geometric_readout_on_logderiv_poles_of_no_radial_drift_chain
+#print axioms HelixReadsGRH.geometricCompletedHelixOperatorOnPoleSpectrumOfIsometryData
+#print axioms HelixReadsGRH.geometricCompletedHelixOperatorOnPoleSpectrumOfNoRadialDriftChain
+#print axioms HelixReadsGRH.completedHelixOperatorOnPoleSpectrumOfGeometricReadout
+#print axioms HelixReadsGRH.chi3CompletedHelixOperatorOnPoleSpectrumOfGeometricReadout
+#print axioms HelixReadsGRH.geometric_completed_helix_operator_is_unitary_on_logderiv_poles
 #print axioms HelixReadsGRH.completed_helix_operator_is_unitary_on_logderiv_poles
 #print axioms HelixReadsGRH.completed_chi3_helix_is_unitary_on_logderiv_poles
 #print axioms HelixReadsGRH.GRH_chi3_of_completed_helix_operator
 #print axioms HelixReadsGRH.GRH_chi3_of_unitary_on_logderiv_poles
+#print axioms HelixReadsGRH.GRH_chi3_of_geometric_helix_unitary_on_logderiv_poles
+#print axioms HelixReadsGRH.GRH_chi3_of_geometric_completed_helix_operator
+#print axioms HelixReadsGRH.GRH_chi3_of_pole_helix_isometry
+#print axioms HelixReadsGRH.GRH_chi3_of_no_radial_drift_chain
 #print axioms HelixReadsGRH.GRH_trivial_character_of_completed_helix_operator
 #print axioms HelixReadsGRH.GRH_trivial_mod3_of_completed_helix_operator
