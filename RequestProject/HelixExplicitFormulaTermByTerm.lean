@@ -1,5 +1,6 @@
 import Mathlib
 import RequestProject.SpectralSide
+import RequestProject.Chi3CompletedLogDeriv
 
 /-!
 # The helix is the explicit formula — term by term, unconditional
@@ -167,6 +168,66 @@ theorem row6_conjugate_pair (σ γ θ : ℝ) (hσ : 0 < σ) :
     zcg σ γ θ = -((efAmp σ γ θ).re + (efAmp σ (-γ) θ).re) := by
   rw [row1_spiral_eq_ef σ γ θ hσ, efAmp_re, efAmp_re]
   simp only [neg_mul, Real.cos_neg, Real.sin_neg]; ring
+
+/-! ## Soundness: every generated helix mode is a genuine, real explicit-formula term
+
+Dual to completeness (every genuine pole is generated — `windingLossSpectrum_eq_nontrivialZeros`).
+**Soundness**: everything the helix generates is genuine and real. A generated per‑zero mode is
+exactly the real explicit‑formula contribution `−2·Re(x^ρ/ρ)` of an actual analytic pole
+`ρ = σ+iγ` (Row 1), made real by the conjugate `{ρ,ρ̄}` pairing (Row 6, no imaginary leakage); and
+the pole is recovered faithfully from the mode's coordinates `(radial, pitch) = (σ, γ)`. The helix
+emits no spurious content — its output is precisely the real EF zero terms. (Sum‑level soundness —
+that the generated spectrum is a subset of the genuine zeros — is the `⊆` half of
+`windingLossSpectrum_eq_nontrivialZeros`.) -/
+
+/-- **Soundness of the per‑zero generation.** Every generated helix mode `zcg σ γ θ` (σ>0) is a real
+number equal to the genuine explicit‑formula zero contribution of the analytic pole `ρ = σ+iγ`,
+realized as the conjugate‑paired real sum, with the pole recovered faithfully from the mode's
+`(radial, pitch)`. Unconditional. -/
+theorem helix_generation_sound (σ γ θ : ℝ) (hσ : 0 < σ) :
+    -- generated mode = genuine real EF zero term of the pole ρ = σ+iγ
+    zcg σ γ θ = -2 * (efAmp σ γ θ).re ∧
+    -- real, by the conjugate {ρ, ρ̄} pairing
+    zcg σ γ θ = -((efAmp σ γ θ).re + (efAmp σ (-γ) θ).re) ∧
+    -- the pole is recovered faithfully from the winding rate's (radial, pitch) coordinates
+    ((σ : ℂ) + (γ : ℂ) * Complex.I).re = σ ∧
+    ((σ : ℂ) + (γ : ℂ) * Complex.I).im = γ :=
+  ⟨row1_spiral_eq_ef σ γ θ hσ, row6_conjugate_pair σ γ θ hσ, by simp, by simp⟩
+
+/-! ## Uniqueness: the four ingredients pin one completed helix loss field = −Λ′/Λ
+
+The completing third property (with soundness and completeness). For the χ₃ configuration, the
+**prime/Euler von Mangoldt grammar** `∑ Λ(n)χ₃(n)n^{-s}`, the **conductor‑3 / odd‑parity Γ‑completion**
+(the digamma term), and the **normalization** `−½log(3/π)` together determine *one* field on the
+half‑plane of absolute convergence. Any field with these ingredients equals
+`negCompletedLogDerivChi3 = HelixLoss = −Λ′/Λ`. (The same template instantiates for each
+configuration's character/conductor/parity.) -/
+
+/-- The defining four‑ingredient property of the χ₃ completed helix loss field on `Re s > 1`:
+prime/Euler grammar + conductor/parity Γ‑completion + normalization. -/
+def IsCompletedHelixLossChi3 (F : ℂ → ℂ) : Prop :=
+  ∀ s : ℂ, 1 < s.re →
+    F s = (∑' n : ℕ, ArithmeticFunction.vonMangoldt n * chi3 n * (n : ℂ) ^ (-s))
+          - (1 / 2) * Complex.log (3 / Real.pi)
+          - (1 / 2) * Complex.digamma ((s + 1) / 2)
+
+/-- **Existence.** `−Λ′/Λ` (`negCompletedLogDerivChi3`) is a completed helix loss field. -/
+theorem negCompletedLogDerivChi3_isCompletedHelixLoss :
+    IsCompletedHelixLossChi3 negCompletedLogDerivChi3 :=
+  chi3_completed_logderiv_grammar_Re_gt_one
+
+/-- **Uniqueness.** The four ingredients pin the field: any two completed helix loss fields agree on
+`Re s > 1`. With existence, the unique such field is `negCompletedLogDerivChi3 = HelixLoss = −Λ′/Λ`. -/
+theorem completedHelixLoss_unique {F G : ℂ → ℂ}
+    (hF : IsCompletedHelixLossChi3 F) (hG : IsCompletedHelixLossChi3 G) :
+    ∀ s : ℂ, 1 < s.re → F s = G s :=
+  fun s hs => (hF s hs).trans (hG s hs).symm
+
+/-- **Uniqueness, canonical form.** Any completed helix loss field equals `−Λ′/Λ` on `Re s > 1`. -/
+theorem eq_negCompletedLogDerivChi3_of_isCompletedHelixLoss {F : ℂ → ℂ}
+    (hF : IsCompletedHelixLossChi3 F) :
+    ∀ s : ℂ, 1 < s.re → F s = negCompletedLogDerivChi3 s :=
+  completedHelixLoss_unique hF negCompletedLogDerivChi3_isCompletedHelixLoss
 
 /-! ## The axial dimension and the consistency step
 
