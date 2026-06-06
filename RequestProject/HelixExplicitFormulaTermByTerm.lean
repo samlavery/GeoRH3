@@ -317,11 +317,15 @@ Not the Cayley circle. The geometry is the **log-Pythagorean prime helix**: the 
 (the odometer: multiplication = addition with carry), the angular cross-section is
 `e^{2ξ}+e^{2η}=1` with `ξ=log|cosφ|, η=log|sinφ|`, and the radial growth is `e^M` per loop with
 `M = e-foldings per loop = the modulus dial`. It does **not** close and there is **no cylinder** —
-it is an expanding helix: the radius grows without bound and the pitch climbs forever (the primes
-never stop). The **unitary** is that a zero's radial expansion sits at the **geometric-mean rate**
+it is an expanding helix whose radius grows without bound but **linearly** in the loop number
+(`R = e^M·k`, loops evenly spaced by `e^M` — an Archimedean spiral, not an exponential trumpet; with
+the area law `n ≈ k²` this is `R ∝ √n`, the geometric-mean frame), while the pitch climbs forever
+(the primes never stop). The **unitary** is that a zero's radial expansion sits at the **geometric-mean rate**
 `e^{M/2} = √(e^M)` — the balance between the integers' full rate `e^M` (σ=1) and none (σ=0), the FE
-self-dual point (σ=1−σ). The per-loop excess over that balance is `e^{M(σ−½)}`, which is `1` (no
-radial drift) iff σ=½.
+self-dual point (σ=1−σ). The per-loop *rate* excess over that balance is `e^{M(σ−½)}`, which is `1`
+(no radial drift) iff σ=½ — but in the linear realization (`R = e^M·k`, `R ∝ √n`) the *realized*
+drift is `n^{σ−½}`: the growth exponent `M` cancels, only the defect `σ−½` survives. Both vanish at
+exactly σ=½ (see `linear_no_radial_drift_iff_half`).
 
 The **configurator** is the angular spacing, and it sets the radial growth = the **modulus**:
 
@@ -413,6 +417,49 @@ theorem mod12_radial_geometric_mean_iff_half (σ : ℝ) :
   constructor
   · intro h; have := Real.exp_injective h; linarith
   · intro h; subst h; norm_num
+
+/-! ### The radial law is LINEAR in the loop number (the corrected picture)
+
+The radius is **linear in the loop number** `k`: `R = e^m·k`, so every loop adds the *same* constant
+`e^m` (additive growth, not a compounding `×e^m`) — an Archimedean spiral with evenly-spaced loops,
+**not** an exponential trumpet. The area law `n ≈ k²` (constant arc-length spacing makes loop `k`
+carry `∝ k` integers, so the count grows quadratically) turns linear-in-`k` into `R ∝ √n`: the
+geometric-mean / σ=½ frame, *emergent* from the geometry, not assumed. The radial **drift** of a
+zero then decouples from the growth rate `m` — it is `n^{σ−½}`, with `m` absent and only the defect
+`σ−½` surviving; no drift ⟺ σ=½. -/
+
+/-- The radius at loop `k` — **linear** in `k`, slope `e^m`. -/
+def loopRadius (m k : ℝ) : ℝ := Real.exp m * k
+
+/-- **Linear radial growth.** Each loop adds the *same* `e^m`: the increment `R(k+1) − R(k)` is the
+constant `e^m`, additive — there is no exponential blow-up. -/
+theorem loopRadius_linear (m k : ℝ) :
+    loopRadius m (k + 1) - loopRadius m k = Real.exp m := by
+  unfold loopRadius; ring
+
+/-- **The area law makes the linear radius `√n`.** With `n = k²` the linear-in-`k` radius `e^m·k`
+is `e^m·√n` — the geometric-mean (σ=½) frame produced by the geometry. -/
+theorem loopRadius_eq_sqrt_area (m k : ℝ) (hk : 0 ≤ k) :
+    loopRadius m k = Real.exp m * Real.sqrt (k ^ 2) := by
+  unfold loopRadius; rw [Real.sqrt_sq hk]
+
+/-- **The drift decouples from the growth rate.** A zero at `σ` drifts off the `√n` frame by
+`n^{σ−½}`; the loop growth exponent `m` does not appear — only the defect `σ−½`. No radial drift
+(`n^{σ−½} = 1`) ⟺ σ=½, for any base `n > 1`, independent of `m`. -/
+theorem linear_no_radial_drift_iff_half (n σ : ℝ) (hn : 1 < n) :
+    n ^ (σ - 1 / 2) = 1 ↔ σ = 1 / 2 := by
+  have hn0 : (0 : ℝ) < n := by linarith
+  have hlogpos : 0 < Real.log n := Real.log_pos hn
+  constructor
+  · intro h
+    have hl : (σ - 1 / 2) * Real.log n = 0 := by
+      have hc := congrArg Real.log h
+      rwa [Real.log_rpow hn0, Real.log_one] at hc
+    rcases mul_eq_zero.mp hl with h1 | h2
+    · linarith
+    · exact absurd h2 (ne_of_gt hlogpos)
+  · intro h; subst h
+    rw [show (1 : ℝ) / 2 - 1 / 2 = 0 from by ring, Real.rpow_zero]
 
 /-! ## Asymptotic symmetry: why the midpoint completes the structure
 

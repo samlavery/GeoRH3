@@ -3,6 +3,7 @@ import RequestProject.HelixReadsGRHZeros
 import RequestProject.HelixZeroMode
 import RequestProject.HelixExplicitFormulaTermByTerm
 import RequestProject.FENonExpansionClosure
+import RequestProject.Chi3FunctionalEquation
 
 /-!
 # Strict completed helix loss
@@ -133,10 +134,31 @@ theorem helixLossPoleSpectrum_eq_constructedCompletedHelixPoles
   exact ⟨constructedCompletedHelixPole_of_helixLossPole χ F ρ,
     helixLossPole_of_constructedCompletedHelixPole χ F ρ⟩
 
+/-- Exhaustion plus strict completion: every completed loss pole is both in the
+    constructed helix grammar spectrum and generated as a strict helix mode. -/
+theorem helixLossPole_constructed_and_generatedStrict_of_strictCompletedLossField
+    (χ : DirichletCharacter ℂ N) (F : ℂ → ℂ)
+    (H : StrictCompletedHelixLossField χ F) :
+    ∀ ρ : ℂ, HelixLossPole χ F ρ →
+      ConstructedCompletedHelixPole χ ρ ∧ GeneratedStrictHelixMode ρ := by
+  intro ρ hρ
+  exact ⟨constructedCompletedHelixPole_of_helixLossPole χ F ρ hρ,
+    H.pole_generates_strict_mode ρ hρ⟩
+
 /-- The strict-geometry arrow for a constructed completed helix pole. -/
 def StrictGeometryOnConstructedCompletedPoles
     (χ : DirichletCharacter ℂ N) : Prop :=
   ∀ ρ : ℂ, ConstructedCompletedHelixPole χ ρ → GeneratedStrictHelixMode ρ
+
+/-- All constructed modes are generated strict helix modes once the completed
+    loss field is strict and its pole spectrum is exhausted by the grammar. -/
+theorem strictGeometryOnConstructedCompletedPoles_of_strictCompletedLossField
+    (χ : DirichletCharacter ℂ N) (F : ℂ → ℂ)
+    (H : StrictCompletedHelixLossField χ F) :
+    StrictGeometryOnConstructedCompletedPoles χ := by
+  intro ρ hρ
+  exact H.pole_generates_strict_mode ρ
+    (helixLossPole_of_constructedCompletedHelixPole χ F ρ hρ)
 
 /-- Strict constructed pole geometry forces zero residual radial defect. -/
 theorem constructedCompletedHelixPole_radialDefect_zero_of_strictGeometry
@@ -154,6 +176,81 @@ theorem helixLossPole_re_half_of_strictGeometry
   intro ρ hρ
   exact generatedStrictHelixMode_forces_re_half ρ
     (hstrict ρ (constructedCompletedHelixPole_of_helixLossPole χ F ρ hρ))
+
+/-- The retained projection coordinates have no radial drift on constructed
+    completed poles, directly by the concrete projection chain. -/
+def RetainedGeometryOnConstructedCompletedPoles
+    (χ : DirichletCharacter ℂ N) : Prop :=
+  ∀ ρ : ℂ, ConstructedCompletedHelixPole χ ρ → ∀ x : ℝ,
+    let v := zero_embed ρ.re ρ.im x
+    (apply_G1 v).radial = 0 ∧
+    (apply_G2 (apply_G1 v)).radial = 0 ∧
+    (apply_cascade v).radial = 0
+
+/-- The retained projection endpoint is unconditional: `G₁`, `G₂`, and the
+    cascade do not create a retained radial coordinate. -/
+theorem retainedGeometryOnConstructedCompletedPoles_by_construction
+    (χ : DirichletCharacter ℂ N) :
+    RetainedGeometryOnConstructedCompletedPoles χ := by
+  intro ρ hρ x
+  exact HelixReadsGRH.retained_pole_helix_chain_no_radial_drift_by_construction χ ρ
+    (helixLossPole_of_constructedCompletedHelixPole χ (fun _ : ℂ => 0) ρ hρ) x
+
+/-- The same unconditional retained endpoint, pulled back along the completed
+    loss pole predicate. -/
+theorem helixLossPole_retainedGeometry_by_construction
+    (χ : DirichletCharacter ℂ N) (F : ℂ → ℂ) :
+    ∀ ρ : ℂ, HelixLossPole χ F ρ → ∀ x : ℝ,
+      let v := zero_embed ρ.re ρ.im x
+      (apply_G1 v).radial = 0 ∧
+      (apply_G2 (apply_G1 v)).radial = 0 ∧
+      (apply_cascade v).radial = 0 := by
+  intro ρ hρ
+  exact retainedGeometryOnConstructedCompletedPoles_by_construction χ ρ
+    (constructedCompletedHelixPole_of_helixLossPole χ F ρ hρ)
+
+/-- Source-coordinate no drift on constructed completed poles. Since `loss`
+    saves the source radial coordinate, this is the saved-loss endpoint. -/
+def SourceNoRadialDriftOnConstructedCompletedPoles
+    (χ : DirichletCharacter ℂ N) : Prop :=
+  ∀ ρ : ℂ, ConstructedCompletedHelixPole χ ρ → ∀ x : ℝ,
+    (zero_embed ρ.re ρ.im x).radial = 0
+
+/-- The strict generated-mode endpoint is exactly source/saved no radial drift
+    on constructed completed poles. -/
+theorem strictGeometryOnConstructedCompletedPoles_iff_sourceNoRadialDrift
+    (χ : DirichletCharacter ℂ N) :
+    StrictGeometryOnConstructedCompletedPoles χ ↔
+      SourceNoRadialDriftOnConstructedCompletedPoles χ := by
+  constructor
+  · intro hstrict ρ hρ x
+    have hloss : (loss (zero_embed ρ.re ρ.im x)).radial = 0 :=
+      (generatedStrictHelixMode_iff_loss_radial_zero ρ x).mp (hstrict ρ hρ)
+    simpa [loss] using hloss
+  · intro hsource ρ hρ
+    exact generatedStrictHelixMode_of_loss_radial_zero ρ 1 (by
+      simpa [loss] using hsource ρ hρ 1)
+
+/-- Source no-drift is the no-parameter discharger for strict constructed-pole
+    geometry once supplied as a theorem. -/
+theorem strictGeometryOnConstructedCompletedPoles_of_sourceNoRadialDrift
+    (χ : DirichletCharacter ℂ N)
+    (hsource : SourceNoRadialDriftOnConstructedCompletedPoles χ) :
+    StrictGeometryOnConstructedCompletedPoles χ :=
+  (strictGeometryOnConstructedCompletedPoles_iff_sourceNoRadialDrift χ).mpr hsource
+
+/-- Retained projection no-drift alone does not identify the saved/source
+    radial coordinate. -/
+theorem retainedGeometry_does_not_force_sourceNoRadialDrift :
+    ∃ ρ : ℂ, ∃ x : ℝ,
+      (let v := zero_embed ρ.re ρ.im x;
+        (apply_G1 v).radial = 0 ∧
+        (apply_G2 (apply_G1 v)).radial = 0 ∧
+        (apply_cascade v).radial = 0) ∧
+      (zero_embed ρ.re ρ.im x).radial ≠ 0 := by
+  refine ⟨0, 1, ?_, ?_⟩
+  · exact dimensional_projections_create_no_radial_drift (zero_embed 0 0 1)
+  · norm_num [zero_embed]
 
 /-- Raw source-readout unitarity is only phase-valued; by itself it does not
     force the residual radial defect to vanish. -/
@@ -244,6 +341,55 @@ theorem helixLossPole_re_half_of_fe_tends_towards_closure
   helixLossPole_re_half_of_strictGeometry χ F
     (strictGeometryOnConstructedCompletedPoles_of_fe_tends_towards_closure χ hFE hconv)
 
+private lemma chi3_no_gamma_pole_of_strip {s : ℂ} (hs : 0 < s.re) :
+    ∀ m : ℕ, (s + 1) / 2 ≠ -(m : ℂ) := by
+  intro m h
+  have hre : (((s + 1) / 2 : ℂ).re) = (s.re + 1) / 2 := by simp
+  have hneg : ((-(m : ℂ) : ℂ).re) = -(m : ℝ) := by simp
+  rw [h, hneg] at hre
+  have hm : (0 : ℝ) ≤ m := Nat.cast_nonneg m
+  linarith
+
+private lemma chi3_completedLFunction_zero_of_completedLChi3_zero {ρ : ℂ}
+    (hpos : 0 < ρ.re) (hzero : ChiThree.completedLChi3 ρ = 0) :
+    completedLFunction ChiThree.χ3 ρ = 0 := by
+  have heq := ChiThree.completedLChi3_eq (s := ρ) (chi3_no_gamma_pole_of_strip hpos)
+  rw [heq] at hzero
+  have hfactor : (3 : ℂ) ^ ((ρ + 1) / 2) ≠ 0 := by
+    rw [Complex.cpow_def_of_ne_zero (by norm_num : (3 : ℂ) ≠ 0)]
+    exact Complex.exp_ne_zero _
+  exact (mul_eq_zero.mp hzero).resolve_left hfactor
+
+private lemma chi3_completedLChi3_zero_one_sub_of_zero {ρ : ℂ}
+    (hpos : 0 < ρ.re) (hlt : ρ.re < 1) (hzero : ChiThree.completedLChi3 ρ = 0) :
+    ChiThree.completedLChi3 (1 - ρ) = 0 := by
+  have hstd : completedLFunction ChiThree.χ3 ρ = 0 :=
+    chi3_completedLFunction_zero_of_completedLChi3_zero hpos hzero
+  have hFE := ChiThree.chi3_functional_equation ρ
+  rw [hstd, mul_zero] at hFE
+  have hspos : 0 < (1 - ρ).re := by
+    rw [Complex.sub_re, Complex.one_re]
+    linarith
+  have heq := ChiThree.completedLChi3_eq (s := 1 - ρ) (chi3_no_gamma_pole_of_strip hspos)
+  rw [heq, hFE]
+  simp
+
+/-- χ₃ completed log-derivative poles are closed under the functional-equation reflection. -/
+theorem chi3_completedLogDerivPole_one_sub :
+    ∀ ρ : ℂ, HelixReadsGRH.CompletedLogDerivPole ChiThree.χ3 ρ →
+      HelixReadsGRH.CompletedLogDerivPole ChiThree.χ3 (1 - ρ) := by
+  intro ρ hρ
+  change ρ ∈ GRHSpectral.NontrivialZeros ChiThree.χ3 at hρ
+  change (1 - ρ) ∈ GRHSpectral.NontrivialZeros ChiThree.χ3
+  rw [ChiThree.nontrivialZeros_eq_completedLChi3_strip_zeros] at hρ ⊢
+  rcases hρ with ⟨hpos, hlt, hzero⟩
+  refine ⟨?_, ?_, ?_⟩
+  · rw [Complex.sub_re, Complex.one_re]
+    linarith
+  · rw [Complex.sub_re, Complex.one_re]
+    linarith
+  · exact chi3_completedLChi3_zero_one_sub_of_zero hpos hlt hzero
+
 /-- A strict completed loss field has zero residual radial defect at every pole. -/
 theorem strict_completed_loss_pole_radialDefect_zero
     (χ : DirichletCharacter ℂ N) (F : ℂ → ℂ)
@@ -261,6 +407,30 @@ theorem strict_completed_loss_pole_re_half
     ρ.re = 1 / 2 :=
   generatedStrictHelixMode_forces_re_half ρ
     (H.pole_generates_strict_mode ρ hρ)
+
+/-- A strict completed loss field supplies the source no-radial-drift chain:
+    strict pole modes force the saved/source radial coordinate to vanish, and
+    the concrete helix projection chain then adds no radial drift. -/
+def poleHelixNoRadialDriftChainOfStrictCompletedLossField
+    (χ : DirichletCharacter ℂ N) (F : ℂ → ℂ)
+    (H : StrictCompletedHelixLossField χ F) :
+    HelixReadsGRH.PoleHelixNoRadialDriftChain χ where
+  source_no_drift := by
+    intro ρ hρ x
+    have hstrict : GeneratedStrictHelixMode ρ := H.pole_generates_strict_mode ρ hρ
+    have hloss : (loss (zero_embed ρ.re ρ.im x)).radial = 0 :=
+      (generatedStrictHelixMode_iff_loss_radial_zero ρ x).mp hstrict
+    simpa [loss] using hloss
+
+/-- Strict completed loss gives the raw Möbius readout as a geometric helix
+    unitary value on the captured winding-loss spectrum. -/
+theorem windingLossSpectrum_raw_w_helixUnitary_of_strict_completed_loss_field
+    (χ : DirichletCharacter ℂ N) (F : ℂ → ℂ)
+    (H : StrictCompletedHelixLossField χ F) :
+    ∀ z : ℂ, z ∈ HelixReadsGRH.WindingLossSpectrum χ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ) :=
+  HelixReadsGRH.windingLossSpectrum_raw_w_helixUnitary_of_no_radial_drift_chain χ
+    (poleHelixNoRadialDriftChainOfStrictCompletedLossField χ F H)
 
 /-- A strict completed loss field has no completed pole at `7/10 + iγ`. -/
 theorem strict_completed_loss_no_re_seven_tenths_pole
@@ -331,6 +501,16 @@ theorem GRH_chi3_of_strict_completed_loss_field
     GRHSpectral.GRH χ₃ :=
   GRH_of_strict_completed_loss_field χ₃ F H.toStrictCompletedHelixLossField
 
+/-- χ₃ strict completed loss gives the raw Möbius readout as a geometric helix
+    unitary value on the captured winding-loss spectrum. -/
+theorem chi3_windingLossSpectrum_raw_w_helixUnitary_of_strict_completed_loss_field
+    (χ₃ : DirichletCharacter ℂ 3) (F : ℂ → ℂ)
+    (H : StrictChi3CompletedHelixLossField χ₃ F) :
+    ∀ z : ℂ, z ∈ HelixReadsGRH.WindingLossSpectrum χ₃ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ) :=
+  windingLossSpectrum_raw_w_helixUnitary_of_strict_completed_loss_field χ₃ F
+    H.toStrictCompletedHelixLossField
+
 /-- χ₃ GRH from the canonical completed grammar and the existing no-radial-drift chain. -/
 theorem GRH_chi3_of_strict_completed_loss_no_radial_drift_chain
     (χ₃ : DirichletCharacter ℂ 3)
@@ -348,7 +528,14 @@ end
 #print axioms HelixStrictCompletion.constructedCompletedHelixPole_of_helixLossPole
 #print axioms HelixStrictCompletion.helixLossPole_of_constructedCompletedHelixPole
 #print axioms HelixStrictCompletion.helixLossPoleSpectrum_eq_constructedCompletedHelixPoles
+#print axioms HelixStrictCompletion.helixLossPole_constructed_and_generatedStrict_of_strictCompletedLossField
+#print axioms HelixStrictCompletion.strictGeometryOnConstructedCompletedPoles_of_strictCompletedLossField
 #print axioms HelixStrictCompletion.helixLossPole_re_half_of_strictGeometry
+#print axioms HelixStrictCompletion.retainedGeometryOnConstructedCompletedPoles_by_construction
+#print axioms HelixStrictCompletion.helixLossPole_retainedGeometry_by_construction
+#print axioms HelixStrictCompletion.strictGeometryOnConstructedCompletedPoles_iff_sourceNoRadialDrift
+#print axioms HelixStrictCompletion.strictGeometryOnConstructedCompletedPoles_of_sourceNoRadialDrift
+#print axioms HelixStrictCompletion.retainedGeometry_does_not_force_sourceNoRadialDrift
 #print axioms HelixStrictCompletion.sourceWindingLossReadout_unit_does_not_force_re_half
 #print axioms HelixStrictCompletion.generatedStrictHelixMode_of_spectral_w_norm
 #print axioms HelixStrictCompletion.generatedStrictHelixMode_of_spectral_w_unit
@@ -357,8 +544,12 @@ end
 #print axioms HelixStrictCompletion.helixLossPole_re_half_of_eulerProductHelixSourceReadout
 #print axioms HelixStrictCompletion.strictGeometryOnConstructedCompletedPoles_of_fe_tends_towards_closure
 #print axioms HelixStrictCompletion.helixLossPole_re_half_of_fe_tends_towards_closure
+#print axioms HelixStrictCompletion.chi3_completedLogDerivPole_one_sub
+#print axioms HelixStrictCompletion.poleHelixNoRadialDriftChainOfStrictCompletedLossField
+#print axioms HelixStrictCompletion.windingLossSpectrum_raw_w_helixUnitary_of_strict_completed_loss_field
 #print axioms HelixStrictCompletion.strict_completed_loss_no_re_seven_tenths_pole
 #print axioms HelixStrictCompletion.strict_modes_of_no_radial_drift_chain
 #print axioms HelixStrictCompletion.GRH_of_strict_completed_loss_field
 #print axioms HelixStrictCompletion.strict_chi3_completed_loss_eq_negCompletedLogDerivChi3
+#print axioms HelixStrictCompletion.chi3_windingLossSpectrum_raw_w_helixUnitary_of_strict_completed_loss_field
 #print axioms HelixStrictCompletion.GRH_chi3_of_strict_completed_loss_no_radial_drift_chain

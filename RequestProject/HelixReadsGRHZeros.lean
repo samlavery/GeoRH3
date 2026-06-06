@@ -151,6 +151,103 @@ theorem eulerProductHelixSourceReadout_w_power_norm_eq_one
   rw [ht]
   exact helixUnitary_pow_norm t M
 
+/-- The constructed source winding readout is a value of the geometric helix
+    unitary, by definition of the source construction. -/
+theorem sourceWindingLossReadout_helixUnitary (ρ : ℂ) :
+    ∃ t : ℝ, (sourceWindingLossReadout ρ : ℂ) = (helixUnitary t : ℂ) :=
+  ⟨ρ.re + ρ.im, rfl⟩
+
+/-- Spectrum form: every constructed source readout on the captured
+    winding-loss spectrum is geometric-helix-unitary. -/
+theorem windingLossSpectrum_source_helixUnitary_by_construction
+    (χ : DirichletCharacter ℂ N) :
+    ∀ z : ℂ, z ∈ WindingLossSpectrum χ →
+      ∃ t : ℝ, (sourceWindingLossReadout z : ℂ) = (helixUnitary t : ℂ) := by
+  intro z _hz
+  exact sourceWindingLossReadout_helixUnitary z
+
+/-- χ₃ form of the construction-side source endpoint. -/
+theorem chi3_windingLossSpectrum_source_helixUnitary_by_construction
+    (χ₃ : DirichletCharacter ℂ 3) :
+    ∀ z : ℂ, z ∈ WindingLossSpectrum χ₃ →
+      ∃ t : ℝ, (sourceWindingLossReadout z : ℂ) = (helixUnitary t : ℂ) :=
+  windingLossSpectrum_source_helixUnitary_by_construction χ₃
+
+/-- Transport the construction-side source readout to the raw Möbius readout
+    once the source construction is identified with `SpectralSide.w` on the
+    captured spectrum. -/
+theorem windingLossSpectrum_raw_w_helixUnitary_of_source_identification
+    (χ : DirichletCharacter ℂ N)
+    (hidentify : ∀ z : ℂ, z ∈ WindingLossSpectrum χ →
+      SpectralSide.w z = (sourceWindingLossReadout z : ℂ)) :
+    ∀ z : ℂ, z ∈ WindingLossSpectrum χ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ) := by
+  intro z hz
+  rcases sourceWindingLossReadout_helixUnitary z with ⟨t, ht⟩
+  refine ⟨t, ?_⟩
+  rw [hidentify z hz, ht]
+
+/-- χ₃ form of the source-to-raw transport endpoint. -/
+theorem chi3_windingLossSpectrum_raw_w_helixUnitary_of_source_identification
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hidentify : ∀ z : ℂ, z ∈ WindingLossSpectrum χ₃ →
+      SpectralSide.w z = (sourceWindingLossReadout z : ℂ)) :
+    ∀ z : ℂ, z ∈ WindingLossSpectrum χ₃ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ) :=
+  windingLossSpectrum_raw_w_helixUnitary_of_source_identification χ₃ hidentify
+
+/-- A raw Möbius spectral value is read by the geometric helix unitary exactly
+    when it is already on the unit circle. -/
+theorem raw_w_helixUnitary_readout_iff_unitary (z : ℂ) :
+    (∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ)) ↔
+      Complex.normSq (SpectralSide.w z) = 1 := by
+  constructor
+  · rintro ⟨t, ht⟩
+    rw [ht]
+    exact Circle.normSq_coe (helixUnitary t)
+  · intro hunit
+    let wz : Circle := ⟨SpectralSide.w z, by
+      change SpectralSide.w z ∈ Metric.sphere (0 : ℂ) 1
+      rw [mem_sphere_zero_iff_norm]
+      rw [Complex.normSq_eq_norm_sq] at hunit
+      nlinarith [norm_nonneg (SpectralSide.w z)]
+    ⟩
+    rcases helixUnitary_surjective wz with ⟨t, ht⟩
+    refine ⟨t, ?_⟩
+    rw [ht]
+
+/-- Spectrum form of the raw-readout endpoint. -/
+theorem windingLossSpectrum_raw_w_helixUnitary_iff_unitary
+    (χ : DirichletCharacter ℂ N) :
+    (∀ z : ℂ, z ∈ WindingLossSpectrum χ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ)) ↔
+    (∀ z : ℂ, z ∈ WindingLossSpectrum χ →
+      Complex.normSq (SpectralSide.w z) = 1) := by
+  constructor
+  · intro hread z hz
+    exact (raw_w_helixUnitary_readout_iff_unitary z).mp (hread z hz)
+  · intro hunit z hz
+    exact (raw_w_helixUnitary_readout_iff_unitary z).mpr (hunit z hz)
+
+/-- χ₃-form of the raw-readout endpoint. -/
+theorem chi3_windingLossSpectrum_raw_w_helixUnitary_iff_unitary
+    (χ₃ : DirichletCharacter ℂ 3) :
+    (∀ z : ℂ, z ∈ WindingLossSpectrum χ₃ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ)) ↔
+    (∀ z : ℂ, z ∈ WindingLossSpectrum χ₃ →
+      Complex.normSq (SpectralSide.w z) = 1) :=
+  windingLossSpectrum_raw_w_helixUnitary_iff_unitary χ₃
+
+/-- Build the Euler-product source-readout package from raw unitarity on the
+    captured winding-loss spectrum. -/
+def eulerProductHelixSourceReadoutOfWindingLossSpectrumUnitary
+    (χ : DirichletCharacter ℂ N)
+    (hunit : ∀ z : ℂ, z ∈ WindingLossSpectrum χ →
+      Complex.normSq (SpectralSide.w z) = 1) :
+    EulerProductHelixSourceReadout χ :=
+  eulerProductHelixSourceReadoutOfSourceReadout χ
+    ((windingLossSpectrum_raw_w_helixUnitary_iff_unitary χ).mpr hunit)
+
 /-- Rebuilding a complex zero from its radial expansion and pitch gives the zero. -/
 theorem radialPitchWinding_re_im (ρ : ℂ) :
     radialPitchWinding ρ.re ρ.im = ρ := by
@@ -530,6 +627,24 @@ theorem GRH_chi3_of_eulerProductHelixSourceReadout
     (S : EulerProductHelixSourceReadout χ₃) :
     GRHSpectral.GRH χ₃ :=
   GRH_of_eulerProductHelixSourceReadout χ₃ M hM S
+
+/-- GRH from the raw Möbius spectral values being read by the geometric helix
+    unitary on the captured winding-loss spectrum. -/
+theorem GRH_of_windingLossSpectrum_raw_w_helixUnitary
+    (χ : DirichletCharacter ℂ N)
+    (hread : ∀ z : ℂ, z ∈ WindingLossSpectrum χ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ)) :
+    GRHSpectral.GRH χ :=
+  GRH_of_eulerProductHelixSourceReadout χ 1 (by norm_num)
+    (eulerProductHelixSourceReadoutOfSourceReadout χ hread)
+
+/-- χ₃ form of the raw-readout endpoint-to-GRH bridge. -/
+theorem GRH_chi3_of_windingLossSpectrum_raw_w_helixUnitary
+    (χ₃ : DirichletCharacter ℂ 3)
+    (hread : ∀ z : ℂ, z ∈ WindingLossSpectrum χ₃ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ)) :
+    GRHSpectral.GRH χ₃ :=
+  GRH_of_windingLossSpectrum_raw_w_helixUnitary χ₃ hread
 
 /-- Full-loop winding-loss invariance on the captured spectrum is exactly raw
     Möbius unitarity on that same spectrum. -/
@@ -1060,6 +1175,61 @@ theorem GRH_chi3_of_no_radial_drift_chain
   GRH_chi3_of_geometric_completed_helix_operator χ₃
     (geometricCompletedHelixOperatorOnPoleSpectrumOfNoRadialDriftChain χ₃ D)
 
+/-- Pythagorean preservation by `G₁` builds the source no-drift chain used by the
+    completed pole-spectrum construction. -/
+def poleHelixNoRadialDriftChainOfG1EnergyPreserved
+    (χ : DirichletCharacter ℂ N)
+    (henergy : ∀ ρ : ℂ, CompletedLogDerivPole χ ρ → ∀ x : ℝ,
+      helixEnergy (apply_G1 (zero_embed ρ.re ρ.im x)) =
+        helixEnergy (zero_embed ρ.re ρ.im x)) :
+    PoleHelixNoRadialDriftChain χ where
+  source_no_drift := by
+    intro ρ hρ x
+    exact (G1_energy_preserved_iff_radial_zero (zero_embed ρ.re ρ.im x)).mp
+      (henergy ρ hρ x)
+
+/-- Construction-data endpoint on the captured winding-loss spectrum:
+    the raw Möbius readout is a value of the helix unitary. -/
+theorem windingLossSpectrum_raw_w_helixUnitary_of_no_radial_drift_chain
+    (χ : DirichletCharacter ℂ N)
+    (D : PoleHelixNoRadialDriftChain χ) :
+    ∀ z : ℂ, z ∈ WindingLossSpectrum χ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ) := by
+  intro z hz
+  have hpole : CompletedLogDerivPole χ z := by
+    rwa [windingLossSpectrum_eq_nontrivialZeros χ] at hz
+  exact geometric_readout_on_logderiv_poles_of_no_radial_drift_chain χ D z hpole
+
+/-- χ₃ construction-data endpoint on the captured winding-loss spectrum. -/
+theorem chi3_windingLossSpectrum_raw_w_helixUnitary_of_no_radial_drift_chain
+    (χ₃ : DirichletCharacter ℂ 3)
+    (D : PoleHelixNoRadialDriftChain χ₃) :
+    ∀ z : ℂ, z ∈ WindingLossSpectrum χ₃ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ) :=
+  windingLossSpectrum_raw_w_helixUnitary_of_no_radial_drift_chain χ₃ D
+
+/-- Pythagorean endpoint on the captured winding-loss spectrum:
+    `G₁` energy preservation gives the raw Möbius readout as a helix-unitary value. -/
+theorem windingLossSpectrum_raw_w_helixUnitary_of_G1_energy_preserved
+    (χ : DirichletCharacter ℂ N)
+    (henergy : ∀ ρ : ℂ, CompletedLogDerivPole χ ρ → ∀ x : ℝ,
+      helixEnergy (apply_G1 (zero_embed ρ.re ρ.im x)) =
+        helixEnergy (zero_embed ρ.re ρ.im x)) :
+    ∀ z : ℂ, z ∈ WindingLossSpectrum χ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ) :=
+  windingLossSpectrum_raw_w_helixUnitary_of_no_radial_drift_chain χ
+    (poleHelixNoRadialDriftChainOfG1EnergyPreserved χ henergy)
+
+/-- χ₃ Pythagorean endpoint on the captured winding-loss spectrum. -/
+theorem chi3_windingLossSpectrum_raw_w_helixUnitary_of_G1_energy_preserved
+    (χ₃ : DirichletCharacter ℂ 3)
+    (henergy : ∀ ρ : ℂ, CompletedLogDerivPole χ₃ ρ → ∀ x : ℝ,
+      helixEnergy (apply_G1 (zero_embed ρ.re ρ.im x)) =
+        helixEnergy (zero_embed ρ.re ρ.im x)) :
+    ∀ z : ℂ, z ∈ WindingLossSpectrum χ₃ →
+      ∃ t : ℝ, SpectralSide.w z = (helixUnitary t : ℂ) :=
+  windingLossSpectrum_raw_w_helixUnitary_of_G1_energy_preserved χ₃ henergy
+
 /-- The same completed-operator line works for the trivial character. -/
 theorem GRH_trivial_character_of_completed_helix_operator
     (T : CompletedHelixOperatorOnPoleSpectrum (1 : DirichletCharacter ℂ N)) :
@@ -1097,6 +1267,15 @@ end HelixReadsGRH
 #print axioms HelixReadsGRH.nontrivialZeros_eq_windingLossSpectrum
 #print axioms HelixReadsGRH.eulerProductHelixSourceReadoutOfSourceReadout
 #print axioms HelixReadsGRH.eulerProductHelixSourceReadout_w_power_norm_eq_one
+#print axioms HelixReadsGRH.sourceWindingLossReadout_helixUnitary
+#print axioms HelixReadsGRH.windingLossSpectrum_source_helixUnitary_by_construction
+#print axioms HelixReadsGRH.chi3_windingLossSpectrum_source_helixUnitary_by_construction
+#print axioms HelixReadsGRH.windingLossSpectrum_raw_w_helixUnitary_of_source_identification
+#print axioms HelixReadsGRH.chi3_windingLossSpectrum_raw_w_helixUnitary_of_source_identification
+#print axioms HelixReadsGRH.raw_w_helixUnitary_readout_iff_unitary
+#print axioms HelixReadsGRH.windingLossSpectrum_raw_w_helixUnitary_iff_unitary
+#print axioms HelixReadsGRH.chi3_windingLossSpectrum_raw_w_helixUnitary_iff_unitary
+#print axioms HelixReadsGRH.eulerProductHelixSourceReadoutOfWindingLossSpectrumUnitary
 #print axioms HelixReadsGRH.chi3PoleMode_windingLossReadout_mem_nontrivialZeros
 #print axioms HelixReadsGRH.chi3_windingLossSpectrum_eq_nontrivialZeros
 #print axioms HelixReadsGRH.chi3_nontrivialZeros_eq_windingLossSpectrum
@@ -1119,6 +1298,8 @@ end HelixReadsGRH
 #print axioms HelixReadsGRH.GRH_chi3_of_windingLossSpectrum_w_power_norm_eq_one
 #print axioms HelixReadsGRH.GRH_of_eulerProductHelixSourceReadout
 #print axioms HelixReadsGRH.GRH_chi3_of_eulerProductHelixSourceReadout
+#print axioms HelixReadsGRH.GRH_of_windingLossSpectrum_raw_w_helixUnitary
+#print axioms HelixReadsGRH.GRH_chi3_of_windingLossSpectrum_raw_w_helixUnitary
 #print axioms HelixReadsGRH.windingLossSpectrum_fullLoop_invariant_iff_unitary
 #print axioms HelixReadsGRH.windingLossSpectrum_G1_energy_preserved_iff_unitary
 #print axioms HelixReadsGRH.GRH_of_fullLoopWindingLoss_invariant
@@ -1164,5 +1345,10 @@ end HelixReadsGRH
 #print axioms HelixReadsGRH.GRH_chi3_of_geometric_completed_helix_operator
 #print axioms HelixReadsGRH.GRH_chi3_of_pole_helix_isometry
 #print axioms HelixReadsGRH.GRH_chi3_of_no_radial_drift_chain
+#print axioms HelixReadsGRH.poleHelixNoRadialDriftChainOfG1EnergyPreserved
+#print axioms HelixReadsGRH.windingLossSpectrum_raw_w_helixUnitary_of_no_radial_drift_chain
+#print axioms HelixReadsGRH.chi3_windingLossSpectrum_raw_w_helixUnitary_of_no_radial_drift_chain
+#print axioms HelixReadsGRH.windingLossSpectrum_raw_w_helixUnitary_of_G1_energy_preserved
+#print axioms HelixReadsGRH.chi3_windingLossSpectrum_raw_w_helixUnitary_of_G1_energy_preserved
 #print axioms HelixReadsGRH.GRH_trivial_character_of_completed_helix_operator
 #print axioms HelixReadsGRH.GRH_trivial_mod3_of_completed_helix_operator
