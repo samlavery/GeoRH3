@@ -1,6 +1,7 @@
 import Mathlib
 import RequestProject.SpectralSide
 import RequestProject.Chi3CompletedLogDeriv
+import RequestProject.HelixDefs
 
 /-!
 # The helix is the explicit formula — term by term, unconditional
@@ -300,10 +301,11 @@ theorem sqrt_exp_six : Real.sqrt (Real.exp 6) = Real.exp 3 := by
   have h : Real.exp 3 ^ 2 = Real.exp 6 := by rw [sq, ← Real.exp_add]; norm_num
   rw [← h]; exact Real.sqrt_sq (Real.exp_pos 3).le
 
-/-- **The zero winds radially at the geometric mean ⟺ on the line.** A zero's radial growth per
-`e⁶` loop is `e^{6σ}`; it equals `√(e⁶) = e³` (the `√x` rate, the geometric mean between the
-integers' `e⁶` and no growth) exactly when `σ = ½`. GRH = every zero winds at `e³`, whichever
-character the configurator (`π/3` for `χ₃`, `π/6` for trivial/ζ) selects. -/
+/-- **Algebraic identity (NOT the geometry).** This is the exponential per-loop framing:
+`e^{6σ} = √(e⁶) = e³ ⟺ σ = ½`. It is a pure algebraic fact about `exp`, retained for the
+files that reference it; the canonical radial law is the **linear** Archimedean spiral
+`Helix.loopRadius` (`R(k) = e^mode·k`), whose realized drift is `n^{σ−½}` (see
+`Helix.no_radial_drift_iff_half` / `linear_no_radial_drift_iff_half`). -/
 theorem radial_geometric_mean_iff_half (σ : ℝ) :
     Real.exp (6 * σ) = Real.sqrt (Real.exp 6) ↔ σ = 1 / 2 := by
   rw [sqrt_exp_six]
@@ -339,12 +341,12 @@ the no-drift condition for every channel: dial the spacing, the radial growth fo
 expands at the geometric-mean rate (no radial drift) exactly on the critical line. The four objects
 are four spacings. -/
 
-/-- **The configurator's unitary law — geometric-mean balance (no closure, no cylinder).** With
-radial growth `e^M` per loop (`M` = e-foldings = the modulus dial), a zero's per-loop radial
-expansion sits exactly at the geometric mean `e^{M/2}` — the excess factor `e^{M(σ−½)}` equals `1`,
-no radial drift — iff the winding rate is on the critical line. The helix keeps expanding and
-climbing; this fixes the expansion *rate* to the FE-balance point. ONE law; every channel is a
-value of `M`. -/
+/-- **Algebraic identity (NOT the geometry).** The exponential per-loop framing: for `M ≠ 0`,
+`e^{M(σ−½)} = 1 ⟺ σ = ½`. A pure algebraic fact about `exp`, parameterized by `M`, retained for
+the files that reference it. The canonical radial law is the **linear** Archimedean spiral
+`Helix.loopRadius` (`R(k) = e^mode·k`); its realized drift is `n^{σ−½}` with the slope `e^mode`
+absent — only the defect `σ−½` survives — so no-drift ⟺ σ=½ slope-independently
+(`Helix.no_radial_drift_iff_half` / `linear_no_radial_drift_iff_half`). -/
 theorem no_radial_drift_iff_half (M σ : ℝ) (hM : M ≠ 0) :
     Real.exp (M * (σ - 1 / 2)) = 1 ↔ σ = 1 / 2 := by
   constructor
@@ -397,6 +399,37 @@ theorem radialExp_eq_modulus :
     ∀ c ∈ towerChannels, c.radialExp = (c.modulus : ℝ) := by
   intro c hc
   fin_cases hc <;> norm_num [ch_pi6, ch_pi3, ch_pi2, ch_pi]
+
+/-! ### Reconciliation with the canonical `Helix.Channel` table
+
+A `ConfiguredChannel` carries the same geometry as the single source of truth `Helix.Channel`
+(`RequestProject.HelixDefs`): the spacing denominator is `Helix.Channel.helixUnit` (angle unit
+`π/helixUnit`) and the radial exponent is `Helix.Channel.mode` (radial slope `e^mode`). The map
+below ties the local structure to the canonical table; `*_eq_helix` lemmas show the four
+configured objects are the four canonical channels. -/
+
+/-- A `ConfiguredChannel` viewed as the canonical `Helix.Channel`: spacing → `helixUnit`,
+radial exponent → `mode`. -/
+def ConfiguredChannel.toHelix (c : ConfiguredChannel) : Helix.Channel :=
+  ⟨(c.spacingDenom : ℝ), c.radialExp⟩
+
+theorem ch_pi6_toHelix_eq : ch_pi6.toHelix = Helix.chTrivial3 := by
+  simp [ConfiguredChannel.toHelix, ch_pi6, Helix.chTrivial3]
+
+theorem ch_pi3_toHelix_eq : ch_pi3.toHelix = Helix.chChi3 := by
+  simp [ConfiguredChannel.toHelix, ch_pi3, Helix.chChi3]
+
+theorem ch_pi2_toHelix_eq : ch_pi2.toHelix = Helix.chMode8 := by
+  simp [ConfiguredChannel.toHelix, ch_pi2, Helix.chMode8]
+
+theorem ch_pi_toHelix_eq : ch_pi.toHelix = Helix.chMode12 := by
+  simp [ConfiguredChannel.toHelix, ch_pi, Helix.chMode12]
+
+/-- The four configured objects are exactly the canonical `Helix.channels`. -/
+theorem towerChannels_toHelix_eq_channels :
+    towerChannels.map ConfiguredChannel.toHelix = Helix.channels := by
+  simp [towerChannels, Helix.channels, ch_pi6_toHelix_eq, ch_pi3_toHelix_eq,
+    ch_pi2_toHelix_eq, ch_pi_toHelix_eq]
 
 /-- The configurator law specialized to a channel: every channel with nonzero radial growth
 expands at its geometric-mean rate (no radial drift, is unitary) exactly on the critical line.

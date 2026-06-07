@@ -22,8 +22,8 @@ theorem helix_surjective_onto_circle (z : ℂ) (hz : ‖z‖ = 1) :
     ∃ x : ℝ, 0 < x ∧ helix_point x = z := by
   obtain ⟨θ, hθ⟩ := (Complex.norm_eq_one_iff z).mp hz
   refine ⟨Real.exp (3 * θ / Real.pi), Real.exp_pos _, ?_⟩
-  unfold helix_point helix_angle
-  rw [Real.log_exp]
+  unfold helix_point
+  rw [helix_angle_eq, Real.log_exp]
   have hpi : Real.pi ≠ 0 := Real.pi_ne_zero
   have hθ' : (Real.pi / 3) * (3 * θ / Real.pi) = θ := by field_simp
   rw [hθ']; exact hθ

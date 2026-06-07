@@ -1,5 +1,6 @@
 import Mathlib
 import RequestProject.CoordinateInvariance
+import RequestProject.HelixDefs
 
 /-!
 # Scaling Coherence: On-Line Zeros Scale, Off-Line Zeros Diverge
@@ -130,8 +131,12 @@ def log_prime_in_unit (u : ℝ) (p : ℕ) : ℝ := u * Real.log p
 theorem log_prime_scales (p : ℕ) :
     log_prime_in_unit (Real.log 7) p = Real.log 7 * Real.log p := rfl
 
-/-- The helix angle of n in the standard system: θ(n) = (π/3) · log n. -/
-def helix_angle_std (n : ℕ) : ℝ := (Real.pi / 3) * Real.log n
+/-- The helix angle of n in the standard system: θ(n) = (π/3) · log n. Sourced from the
+    canonical χ₃ channel (`Helix.chChi3`), whose angular unit is `π/3`. -/
+def helix_angle_std (n : ℕ) : ℝ := Helix.angle Helix.chChi3 n
+
+/-- The standard χ₃ helix angle is the old hardcoded form `(π/3) · log n`. -/
+theorem helix_angle_std_eq (n : ℕ) : helix_angle_std n = (Real.pi / 3) * Real.log n := rfl
 
 /-- The helix angle in scaled coordinates: θ'(n) = u · (π/3) · log n. -/
 def helix_angle_scaled (u : ℝ) (n : ℕ) : ℝ := u * helix_angle_std n
@@ -255,8 +260,10 @@ theorem helix_prime_structure_invariant (u : ℝ) (hu : u ≠ 0) :
     (∀ m n : ℕ, helix_angle_std n ≠ 0 →
       helix_angle_scaled u m / helix_angle_scaled u n =
       helix_angle_std m / helix_angle_std n) := by
-  unfold log_prime_in_unit helix_angle_std helix_angle_scaled; norm_num [ mul_div_mul_left, hu ] ;
-  unfold helix_angle_std; intros; rw [ mul_div_mul_left _ _ ( by positivity ) ] ;
+  simp only [log_prime_in_unit, helix_angle_scaled, helix_angle_std_eq]
+  refine ⟨?_, ?_⟩
+  · intro p q _; rw [mul_div_mul_left _ _ hu]
+  · intro m n _; rw [mul_div_mul_left _ _ hu, mul_div_mul_left _ _ (by positivity)]
 
 /-- **Online zeros translate up and down the helix consistently**:
     scaling the unit translates all on-line zeros to the new midpoint u/2,

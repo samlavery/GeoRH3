@@ -1,4 +1,5 @@
 import Mathlib
+import RequestProject.HelixDefs
 
 /-!
 # The all-unit operator: the helix winding as a unitary character
@@ -12,8 +13,12 @@ group homomorphism `(ℝ,+) → S¹`, and it covers the circle. Unconditional.
 noncomputable section
 open Complex Real
 
-/-- **The all-unit operator** — the helix winding as a `Circle`-valued character. -/
-def helixUnitary : ℝ → Circle := fun t => Circle.exp ((Real.pi / 3) * t)
+/-- **The all-unit operator** — the helix winding as a `Circle`-valued character.
+    Sourced from the canonical χ₃ channel (`Helix.chChi3`); its angular unit is `π/3`. -/
+def helixUnitary : ℝ → Circle := Helix.unitary Helix.chChi3
+
+/-- The χ₃ winding value is the old hardcoded form `Circle.exp ((π/3)·t)`. -/
+theorem helixUnitary_eq (t : ℝ) : helixUnitary t = Circle.exp ((Real.pi / 3) * t) := rfl
 
 /-- Every value is a unit: it lies on the unit circle. -/
 theorem helixUnitary_norm (t : ℝ) : ‖(helixUnitary t : ℂ)‖ = 1 := by simp
@@ -22,7 +27,7 @@ theorem helixUnitary_norm (t : ℝ) : ‖(helixUnitary t : ℂ)‖ = 1 := by sim
     is angle addition on the circle. -/
 theorem helixUnitary_add (s t : ℝ) :
     helixUnitary (s + t) = helixUnitary s * helixUnitary t := by
-  simp only [helixUnitary, mul_add, Circle.exp_add]
+  simp only [helixUnitary_eq, mul_add, Circle.exp_add]
 
 /-- Every finite winding power of the source helix character is still unitary. -/
 theorem helixUnitary_pow_norm (t : ℝ) (M : ℕ) :
@@ -37,7 +42,7 @@ theorem helixUnitary_pow_normSq (t : ℝ) (M : ℕ) :
 
 /-- The unitary character is the identity at `t = 0`. -/
 theorem helixUnitary_zero : helixUnitary 0 = 1 := by
-  simp [helixUnitary]
+  simp [helixUnitary_eq]
 
 /-- **It covers the circle**: every unit point is a winding value (surjective onto `S¹`). -/
 theorem helixUnitary_surjective (z : Circle) : ∃ t : ℝ, helixUnitary t = z := by
@@ -46,7 +51,7 @@ theorem helixUnitary_surjective (z : Circle) : ∃ t : ℝ, helixUnitary t = z :
   have hpi : Real.pi ≠ 0 := Real.pi_ne_zero
   have hθ' : (Real.pi / 3) * (3 * θ / Real.pi) = θ := by field_simp
   apply Subtype.ext
-  simp only [helixUnitary, Circle.coe_exp, hθ']
+  simp only [helixUnitary_eq, Circle.coe_exp, hθ']
   exact hθ
 
 /-- **The geometric all-unit operator is unitary, unconditionally** (its values are units,

@@ -1,4 +1,5 @@
 import Mathlib
+import RequestProject.HelixDefs
 
 /-!
 # The π/3 Helix and Projection Loss → Zeta Zeros
@@ -59,42 +60,50 @@ open scoped ComplexConjugate
 
 /-! ## Part 1: The sixth root of unity -/
 
-/-- The primitive sixth root of unity: `ω = e^{iπ/3}`. -/
-def omega : ℂ := Complex.exp (↑(Real.pi / 3) * Complex.I)
+/-- The primitive sixth root of unity: `ω = e^{iπ/3}`. Sourced from the canonical χ₃
+    channel (`Helix.chChi3`), whose primitive winding value is `exp(i·π/3)`. -/
+def omega : ℂ := Helix.omega Helix.chChi3
+
+/-- The χ₃ primitive winding value is the old hardcoded form `exp(i·π/3)`. -/
+theorem omega_eq : omega = Complex.exp (↑(Real.pi / 3) * Complex.I) := rfl
 
 /-
 ω lies on the unit circle: `|ω| = 1`.
 -/
 theorem omega_norm : ‖omega‖ = 1 := by
-  unfold omega; norm_num [ Complex.norm_exp ] ;
+  rw [omega_eq]; norm_num [ Complex.norm_exp ] ;
 
 /-
 ω is a 6th root of unity: `ω^6 = 1`.
 -/
 theorem omega_pow_six : omega ^ 6 = 1 := by
-  norm_num [ omega, ← Complex.exp_nat_mul, mul_div_cancel₀ ];
+  norm_num [ omega_eq, ← Complex.exp_nat_mul, mul_div_cancel₀ ];
   exact Complex.exp_eq_one_iff.mpr ⟨ 1, by ring ⟩
 
 /-
 ω³ = −1 (half turn).
 -/
 theorem omega_pow_three : omega ^ 3 = -1 := by
-  unfold omega;
+  rw [omega_eq];
   rw [ ← Complex.exp_nat_mul, mul_comm, Complex.exp_eq_exp_re_mul_sin_add_cos ] ; norm_num
 
 /-
 ω is primitive: `ω^k = 1 ↔ 6 ∣ k` for `k > 0`.
 -/
 theorem omega_primitive (k : ℕ) (hk : 0 < k) : omega ^ k = 1 ↔ 6 ∣ k := by
-  norm_num [ omega, ← Complex.exp_nat_mul, mul_div_cancel₀ ];
+  norm_num [ omega_eq, ← Complex.exp_nat_mul, mul_div_cancel₀ ];
   rw [ Complex.exp_eq_one_iff ];
   exact ⟨ fun ⟨ n, hn ⟩ => Int.natCast_dvd_natCast.mp ⟨ n, by rw [ ← @Int.cast_inj ℂ ] ; push_cast; rw [ Complex.ext_iff ] at *; norm_num at *; nlinarith [ Real.pi_pos ] ⟩, fun h => by obtain ⟨ n, rfl ⟩ := h; exact ⟨ n, by push_cast; ring ⟩ ⟩
 
 /-! ## Part 2: The helix coordinate -/
 
 /-- The helix angle of a positive real number `x`:
-    `θ(x) = (π/3) · log x`. -/
-def helix_angle (x : ℝ) : ℝ := (Real.pi / 3) * Real.log x
+    `θ(x) = (π/3) · log x`. Sourced from the canonical χ₃ channel (`Helix.chChi3`),
+    whose angular unit is `π/3`. -/
+def helix_angle (x : ℝ) : ℝ := Helix.angle Helix.chChi3 x
+
+/-- The χ₃ helix angle is the old hardcoded form `(π/3) · log x`. -/
+theorem helix_angle_eq (x : ℝ) : helix_angle x = (Real.pi / 3) * Real.log x := rfl
 
 /-- The helix point on the unit circle: `ω^{log x} = e^{i(π/3)log x}`. -/
 def helix_point (x : ℝ) : ℂ :=
@@ -114,12 +123,12 @@ Multiplicativity: `helix_point(xy) = helix_point(x) · helix_point(y)`.
 theorem helix_point_mul (x y : ℝ) (hx : 0 < x) (hy : 0 < y) :
     helix_point (x * y) = helix_point x * helix_point y := by
   unfold helix_point;
-  rw [ ← Complex.exp_add, helix_angle, helix_angle, helix_angle, Real.log_mul hx.ne' hy.ne' ] ; push_cast ; ring
+  rw [ ← Complex.exp_add, helix_angle_eq, helix_angle_eq, helix_angle_eq, Real.log_mul hx.ne' hy.ne' ] ; push_cast ; ring
 
 /-- Multiplication adds helix angles before reducing modulo the full turn. -/
 theorem helix_angle_mul (x y : ℝ) (hx : 0 < x) (hy : 0 < y) :
     helix_angle (x * y) = helix_angle x + helix_angle y := by
-  unfold helix_angle
+  simp only [helix_angle_eq]
   rw [Real.log_mul hx.ne' hy.ne']
   ring
 
@@ -127,7 +136,7 @@ theorem helix_angle_mul (x y : ℝ) (hx : 0 < x) (hy : 0 < y) :
     within-loop angle `φ`: `log x = 6k + 3φ/π` gives angle `2πk + φ`. -/
 theorem helix_angle_of_loop_angle_reconstruction (k φ : ℝ) :
     helix_angle (Real.exp (6 * k + 3 * φ / Real.pi)) = 2 * Real.pi * k + φ := by
-  unfold helix_angle
+  simp only [helix_angle_eq]
   rw [Real.log_exp]
   field_simp [Real.pi_ne_zero]
   ring
@@ -141,7 +150,7 @@ theorem exp_loop_angle_reconstruction_log (k φ : ℝ) :
     full turn. This is native radial growth of the helix, not drift. -/
 theorem helix_angle_exp_six_mul (x : ℝ) (hx : 0 < x) :
     helix_angle (Real.exp 6 * x) = helix_angle x + 2 * Real.pi := by
-  unfold helix_angle
+  simp only [helix_angle_eq]
   rw [Real.log_mul (Real.exp_pos 6).ne' hx.ne', Real.log_exp]
   ring
 

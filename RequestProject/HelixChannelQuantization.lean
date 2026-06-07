@@ -2,6 +2,7 @@ import Mathlib
 import RequestProject.GRHSpectralCriterion
 import RequestProject.HelixReadsGRHZeros
 import RequestProject.HelixZeroMode
+import RequestProject.HelixDefs
 
 /-!
 # Channel quantization law
@@ -35,10 +36,11 @@ structure PhaseChannel where
   conductor : ℝ
   parityPhase : ℝ
 
-/-- Trivial mod-3 / zeta-type channel from the helix table. -/
+/-- Trivial mod-3 / zeta-type channel from the helix table (`Helix.chTrivial3`):
+angular unit `U = π/6`, radial slope `e³`. -/
 def trivialMod3Channel : PhaseChannel where
   m := 3
-  U := 2 * Real.pi / 3
+  U := Real.pi / 6
   radialExp := 3
   conductor := 3
   parityPhase := 0
@@ -51,17 +53,18 @@ def chi3Channel : PhaseChannel where
   conductor := 3
   parityPhase := 0
 
-/-- The mod-4 style channel from the helix table. -/
+/-- The mode-8 channel (χ₄/χ₈) from the helix table (`Helix.chMode8`):
+angular unit `U = π/2`, radial slope `e⁸`. -/
 def chi4Channel : PhaseChannel where
   m := 8
-  U := Real.pi / 4
+  U := Real.pi / 2
   radialExp := 8
   conductor := 4
   parityPhase := 0
 
 theorem trivialMod3Channel_spec :
     trivialMod3Channel.m = 3 ∧
-      trivialMod3Channel.U = 2 * Real.pi / 3 ∧
+      trivialMod3Channel.U = Real.pi / 6 ∧
       trivialMod3Channel.radialExp = 3 := by
   simp [trivialMod3Channel]
 
@@ -70,8 +73,39 @@ theorem chi3Channel_spec :
   simp [chi3Channel]
 
 theorem chi4Channel_spec :
-    chi4Channel.m = 8 ∧ chi4Channel.U = Real.pi / 4 ∧ chi4Channel.radialExp = 8 := by
+    chi4Channel.m = 8 ∧ chi4Channel.U = Real.pi / 2 ∧ chi4Channel.radialExp = 8 := by
   simp [chi4Channel]
+
+/-! ### Reconciliation with the canonical `Helix.Channel` table
+
+Each `PhaseChannel` above reads the same geometry as the single source of truth
+`Helix.Channel` (`RequestProject.HelixDefs`): its angular unit `U` is `Helix.angleUnit`
+and its `radialExp` is the channel's `Helix.Channel.mode`, for the matching canonical
+channel. These lemmas tie the local structure to the canonical table. -/
+
+/-- The trivial-mod-3 channel agrees with the canonical `Helix.chTrivial3`. -/
+theorem trivialMod3Channel_eq_helix :
+    trivialMod3Channel.U = Helix.angleUnit Helix.chTrivial3 ∧
+      trivialMod3Channel.radialExp = Helix.chTrivial3.mode := by
+  constructor
+  · simp [trivialMod3Channel, Helix.angleUnit, Helix.chTrivial3]
+  · simp [trivialMod3Channel, Helix.chTrivial3]
+
+/-- The χ₃ channel agrees with the canonical `Helix.chChi3` (`U = π/3`, mode 6). -/
+theorem chi3Channel_eq_helix :
+    chi3Channel.U = Helix.angleUnit Helix.chChi3 ∧
+      chi3Channel.radialExp = Helix.chChi3.mode := by
+  constructor
+  · simp [chi3Channel, Helix.angleUnit, Helix.chChi3]
+  · simp [chi3Channel, Helix.chChi3]
+
+/-- The mode-8 channel agrees with the canonical `Helix.chMode8` (`U = π/2`, mode 8). -/
+theorem chi4Channel_eq_helix :
+    chi4Channel.U = Helix.angleUnit Helix.chMode8 ∧
+      chi4Channel.radialExp = Helix.chMode8.mode := by
+  constructor
+  · simp [chi4Channel, Helix.angleUnit, Helix.chMode8]
+  · simp [chi4Channel, Helix.chMode8]
 
 /-- Point on the critical line at height `t`. -/
 def criticalLinePoint (t : ℝ) : ℂ :=

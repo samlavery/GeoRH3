@@ -1,5 +1,6 @@
 import Mathlib
 import RequestProject.XiPartialFraction
+import RequestProject.HelixDefs
 
 /-!
 # Von Mangoldt Explicit Formula — Standalone & Unconditional
@@ -63,10 +64,14 @@ namespace VMEFStandalone
 /-- The von Mangoldt function, as a function `ℕ → ℝ`. -/
 def Λ : ℕ → ℝ := fun n => ArithmeticFunction.vonMangoldt n
 
-/-- The helix native unit `U = π/3`. -/
-def U : ℝ := Real.pi / 3
+/-- The helix native unit `U = π/3`. Sourced from the canonical χ₃ channel
+    (`Helix.chChi3`), whose angular unit is `π/3`. -/
+def U : ℝ := Helix.angleUnit Helix.chChi3
 
-theorem U_pos : 0 < U := by unfold U; positivity
+/-- The χ₃ helix unit is the old hardcoded value `π/3`. -/
+theorem U_eq : U = Real.pi / 3 := rfl
+
+theorem U_pos : 0 < U := by rw [U_eq]; positivity
 
 theorem U_ne_zero : U ≠ 0 := U_pos.ne'
 
