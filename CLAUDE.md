@@ -192,9 +192,95 @@ Try maximally; report truthfully.
 
 ---
 
+## RULE SEVEN — use the Lean LSP tools first; they are much faster than `lake build`
+
+Build-checking is the inner loop of every proof, so make it fast. **Default to the Lean LSP
+MCP tools, not `lake build` via Bash.** A full `lake build` re-elaborates and is slow; the LSP
+is incremental and answers in seconds.
+
+**The priority workflow:**
+- **`lean_diagnostic_messages <file>`** — the primary check after every edit. Returns the
+  errors/warnings for the file directly. Use this in place of `lake build … | grep error`.
+- **`lean_goal` / `lean_term_goal`** — inspect the proof state at a position; the right way to
+  see what a tactic left, instead of guessing.
+- **`lean_hover_info`** — exact signature/type of an identifier before using it.
+- **`lean_leansearch` / `lean_loogle` / `lean_leanfinder` / `lean_state_search`** — find mathlib
+  lemmas (NL / type-pattern / semantic / goal-driven) *before* writing, to cut iteration.
+- **`lean_multi_attempt`** — test several tactics at a position without editing the file.
+
+`lake build` is still needed only to (a) refresh `.olean`s after new imports, and (b) run
+`#print axioms` for the final axiom check (the LSP confirms compilation; the kernel axiom
+footprint needs the synced `.olean`). For everything else — does it compile? what's the goal?
+which lemma? — reach for the LSP tool, not Bash. Treat fast iteration as a first-class concern.
+
+---
+
+## RULE EIGHT — the GRH win is the *on-line, earned* helix identity, not the classical Hadamard plumbing; leverage the log-free FTA/Euler helix
+
+The single most important strategic fact in this repo, and the easiest to lose under a pile of
+analysis. Keep it in front of you when choosing *what to attack*.
+
+**Classical Hadamard over the *actual* zeros does NOT supply GRH.** The factorization
+`−L'/L(s) = ∑ₙ [1/(s−Zₙ) + 1/Zₙ]` over the genuine zeros `Zₙ` (`HelixSource.HadamardData`,
+`DirichletLHadamard.HadamardPartialFraction`) is standard analytic number theory — order-1 growth →
+Jensen → Weierstrass → partial fraction. Its `Zₙ` carry their real parts and **nothing forces them
+on-line.** The repo says so itself (`HelixSource.sourceTraceIdentity_iff_hadamard` docstring):
+*"Hadamard over the actual zeros does not supply this — the actual `Zₙ` need not be source-mode
+coords."* Building it is **plumbing, not a scalp.**
+
+**The GRH content lives one identity over.** `SourceTraceIdentity` is the *same* factorization but with
+the **on-line, earned** source-mode pole-coords as the poles. Because a Hadamard factorization's poles
+are *exactly* the zeros, `SourceTraceIdentity` ⟺ "the actual zeros = the on-line source coords" = GRH.
+The step `SourceTraceIdentity → GRH` is already **kernel-proven** (`grh_of_traceIdentity_separated`).
+The entire remaining gap is the **identification / completeness** (`SourceComplete`): the earned
+on-line source modes are *exactly* the nontrivial zeros — **not another growth bound.**
+
+**Implication — leverage the helix; don't default to the Mellin flow.** The helix is *log-free* and
+*FTA/Euler-supporting* on purpose: it is meant to produce the factorization and the zero-count from
+**winding / argument-principle geometry + the Euler product**, landing on the **on-line** version via
+`source_noDrift` — *bypassing* the classical order-1-growth → Jensen → Weierstrass (Mellin/Hurwitz)
+pipeline. So before grinding traditional analytic NT, always ask: **am I building the GRH-bearing,
+on-line, earned target (the helix identity / `SourceComplete`), or classical plumbing the repo itself
+flags as non-forcing?** Prefer the helix route wherever it reaches; treat classical pieces (the
+`L`-strip bound, `HadamardData`, growth estimates) as *at-most ingredients*, never the main line.
+Drifting into Mellin/Hurwitz growth bounds when the winding/Euler structure could give the same
+factorization log-free is the specific trap to avoid.
+
+**NO `log` IN THE 3-D HELIX — forceful, non-negotiable.** The 3-D helix is the *argument* of `log`,
+never built from it. Its construction is purely arithmetic/geometric: integers placed **evenly**
+(spacing = the helix unit `U = π/helixUnit`) along the unwound line, then rewound with **linear**
+radial growth `R(k) = e^{mode}·k` (`k` = loop counter — an Archimedean spiral that *adds* `e^{mode}`
+per loop, NOT an exponential trumpet). The `√n` / area law (`n ≈ k²`) and the `σ = ½` baseline
+**emerge from the rewinding** — each loop's circumference grows, so loop `k` holds `~k` integers,
+cumulative `~k²`, hence `R ∝ √n` — they are **not** put in by placing integers at `log` positions.
+So: **never write `Real.log` / `Complex.log` inside the 3-D construction.** If you find yourself taking
+a `log` of a scale or integer in the geometry, you have left the helix and crossed the bridge to the
+analytic `L` — STOP. `log` is permitted in exactly **one** place: the *external bridge* `wind n ↔ n^{it}`
+that identifies the geometric resonances with `L`'s named zeros (the dictionary, never the forcing).
+The winding itself is the FTA-additive multiplicative character (`HelixLogFree.wind`, with
+`Θ(m·n)=Θ(m)+Θ(n)` from `Nat.factorization_mul`) — **log-free by construction**, kernel-clean. The
+`angle := U·log x` form in older files is the bridge readout, not the geometry; demote it, never build on
+it. **Log-free FTA on geometry is the Hilbert–Pólya object** — the geometric (not analytic) realization
+H–P needed; `log` lives only on the analytic side of the bridge, where the explicit-formula wall is.
+
+**Guardrail (binds to Rules Two & Five).** The helix advantage is only real if *earned*. `source_noDrift`
+is **σ-free** (on-line for a conservation/unitarity reason, *not* `radial := σ−½` by definition) — good;
+keep it that way. The danger is `SourceComplete` / the identification map **smuggling GRH** (the
+`zero_embed` costume): "the modes are all the zeros, on the line" must be *proven* from the
+geometry / Euler / winding. **The on-line forcing is REALITY, not positivity.** Hilbert–Pólya needs no
+Li/Weil `≥ 0`: it forces on-line because a real/self-adjoint spectrum is real — geometrically, the
+climbing spiral, seen down the collapse axis, **looks like a cylinder and reads as a real wave**
+(`source_noDrift`: conservation ⟹ `Re = 0`, σ-free; the `½` is `√`-of-planar-packing, not a coordinate).
+Li/Weil non-negativity is a *different, unnecessary* route — do not reach for `≥ 0` to force the line.
+Never assumed, never `rfl`-deep. Earn the identification geometrically: that is the actual research.
+
+---
+
 ## Working notes
 - Lean 4 + Mathlib. Package: `RequestProject`. Toolchain pinned in `lean-toolchain`.
-- Use the Lean LSP tools (goals, hover, `lean_verify`/`#print axioms`, leansearch/loogle)
-  to check work against the kernel rather than by eye.
+- **Build-check with the LSP (`lean_diagnostic_messages`), not `lake build`** (Rule Seven) —
+  it's incremental and much faster. Use `lean_goal`/`lean_hover_info`/leansearch/loogle for
+  state, signatures, and lemma search before/while writing.
 - A result is only "done" when it compiles with no `sorry` and no custom axioms in its
-  dependency chain. Verify with `#print axioms`. Be honest about what's still conditional.
+  dependency chain. Verify with `#print axioms` (needs a `lake build` to sync the `.olean`).
+  Be honest about what's still conditional.

@@ -469,7 +469,15 @@ theorem chi3_raw_spectral_unitary_of_source_radial_zero
   chi3_raw_spectral_unitary_of_saved_radial_loss_zero χ₃ ρ hρ x (by
     simpa [loss] using hzero)
 
-/-- χ₃ GRH from zero saved radial loss on every log-derivative pole. -/
+/-- χ₃ GRH from zero saved radial loss on every log-derivative pole.
+
+    **Costume caveat (CLAUDE.md Rule Two).** The hypothesis
+    `(loss (zero_embed ρ.re ρ.im x)).radial = 0` is `rfl`-deep in `σ − ½`: by
+    `zero_mode_dual_loss_radial` it unfolds to `ρ.re − ½ = 0`, i.e. `Re ρ = ½`. So the hypothesis
+    already *is* "ρ is on the critical line" stated per-zero — discharging it restates the
+    conclusion, it does not force it. The genuine, σ-free forcing lives in
+    `HelixSource.SourceMode.noDrift` (`HelixSource.lean`), which earns `Re (rate) = 0` from
+    loss-norm conservation, independent of σ, and feeds `HelixSource.grh_of_sourceComplete`. -/
 theorem GRH_chi3_of_saved_radial_loss_zero
     (χ₃ : DirichletCharacter ℂ 3)
     (hzero : ∀ ρ : ℂ, CompletedLogDerivPole χ₃ ρ → ∀ x : ℝ,
@@ -480,7 +488,13 @@ theorem GRH_chi3_of_saved_radial_loss_zero
   rw [zero_mode_dual_loss_radial] at hrad
   linarith
 
-/-- χ₃ GRH from zero source radial coordinate on every log-derivative pole. -/
+/-- χ₃ GRH from zero source radial coordinate on every log-derivative pole.
+
+    **Costume caveat (CLAUDE.md Rule Two).** The hypothesis `(zero_embed ρ.re ρ.im x).radial = 0`
+    is `rfl`-deep in `σ − ½`: `zero_embed` defines `radial := σ − ½` (ConcreteOperators.lean), so
+    the hypothesis unfolds to `ρ.re − ½ = 0`, i.e. `Re ρ = ½`. It is the on-line conclusion in
+    disguise, not an earned forcing. The earned, σ-free forcing is `HelixSource.SourceMode.noDrift`
+    (`Re (rate) = 0` from conservation, independent of σ). -/
 theorem GRH_chi3_of_source_radial_zero
     (χ₃ : DirichletCharacter ℂ 3)
     (hzero : ∀ ρ : ℂ, CompletedLogDerivPole χ₃ ρ → ∀ x : ℝ,
@@ -504,7 +518,13 @@ theorem chi3_saved_radial_loss_zero_of_G1_energy_preserved
       (henergy ρ hρ x)
   simpa [loss] using hrad
 
-/-- χ₃ GRH from Pythagorean energy preservation of the first projection on every pole. -/
+/-- χ₃ GRH from Pythagorean energy preservation of the first projection on every pole.
+
+    **Costume caveat (CLAUDE.md Rule Two).** The energy-preservation hypothesis is `rfl`-deep in
+    `σ − ½`: the `G₁` energy defect of a zero mode is exactly `(ρ.re − ½)²`
+    (`G1_energy_defect_zero_embed`), so "energy preserved" ⟺ `(ρ.re − ½)² = 0` ⟺ `Re ρ = ½`. The
+    hypothesis restates the on-line conclusion; it is not an earned forcing. The σ-free forcing
+    lives in `HelixSource.SourceMode.noDrift` (`Re (rate) = 0` from conservation, independent of σ). -/
 theorem GRH_chi3_of_G1_energy_preserved
     (χ₃ : DirichletCharacter ℂ 3)
     (henergy : ∀ ρ : ℂ, CompletedLogDerivPole χ₃ ρ → ∀ x : ℝ,
@@ -548,7 +568,14 @@ theorem completed_helix_operator_zero_drift
 
 /-- **GRH(χ) ⟺ the helix reads every χ-zero onto the core.** Each nontrivial zero `ρ`
     of `L(·,χ)` is read into the dual loss space with radial component `Re ρ − ½`; GRH
-    holds exactly when every such radial loss vanishes — every zero on the helix core. -/
+    holds exactly when every such radial loss vanishes — every zero on the helix core.
+
+    **Costume caveat (CLAUDE.md Rule Two).** This is an *equivalence*, and its right-hand side is
+    `rfl`-deep in `σ − ½`: by `zero_mode_dual_loss_radial` the radial loss is `ρ.re − ½`, so
+    "every radial loss = 0" unfolds to "every `Re ρ = ½`" — literally GRH restated. The bridge
+    relabels the conclusion, it does not force it. The earned, σ-free forcing of `Re = ½` is
+    `HelixSource.SourceMode.noDrift` (`HelixSource.lean`): conservation ⇒ `Re (rate) = 0`,
+    independent of σ. -/
 theorem GRH_iff_helix_reads_zeros_on_core (χ : DirichletCharacter ℂ N) :
     GRHSpectral.GRH χ ↔
       (∀ ρ ∈ GRHSpectral.NontrivialZeros χ, ∀ x : ℝ,

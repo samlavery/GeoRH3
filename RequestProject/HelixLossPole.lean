@@ -48,7 +48,15 @@ theorem modeResponse_abs (σ γ t : ℝ) :
 
 /-- **Pure harmonic ⟺ on the critical line.** The represented loss-source mode has unit
     modulus for every `t` (no radial growth or decay — a pure harmonic `e^{iγt}`) iff `σ = ½`.
-    This is "no radial warp ⇒ on the line": the equality case (`α = 0`) is exactly `Re ρ = ½`. -/
+    This is "no radial warp ⇒ on the line": the equality case (`α = 0`) is exactly `Re ρ = ½`.
+
+    **Costume caveat (CLAUDE.md Rule Two).** The radial rate `σ − ½` is built into `modeResponse`
+    by definition (`modeResponse σ γ t = exp(((σ−½)+iγ)·t)`), so `‖modeResponse‖ = exp((σ−½)·t)`
+    and "unit modulus for all `t`" unfolds to `σ − ½ = 0`, i.e. `σ = ½`. The unit-modulus
+    hypothesis is the on-line conclusion in disguise — nothing here forces `σ = ½` except naming
+    it, so this is a restatement, not an earned forcing. The genuine, σ-free forcing is
+    `HelixSource.SourceMode.noDrift` (`HelixSource.lean`), where `Re (rate) = 0` is *earned* from
+    loss-norm conservation rather than assumed of `σ`. -/
 theorem harmonic_iff_half (σ γ : ℝ) :
     (∀ t : ℝ, ‖modeResponse σ γ t‖ = 1) ↔ σ = 1 / 2 := by
   constructor

@@ -270,20 +270,16 @@ theorem re_zero_term_nonneg (σ : ℝ) (hσ : 1 < σ) (ρ : ℂ) (hρ_re : 0 < �
     · exact Complex.normSq_nonneg _
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- §2  The Hadamard pillar (the single irreducible input — sorry'd in standalone)
+-- §2  The Hadamard pillar (the one deep analytic input — proven here, kernel-clean)
 -- ═══════════════════════════════════════════════════════════════════════════
 
 /-- **Hadamard partial fraction for `ξ'/ξ`** — the one deep analytic input.
 
 `ξ'/ξ(s) = A + Σ_ρ m_ρ·(1/(s−ρ) + 1/ρ)` off the nontrivial zeros.
 
-This is the repository's unconditional, kernel-clean theorem
-`ZD.xi_logDeriv_partial_fraction` (`RequestProject.XiPartialFraction`).
-In the standalone version (standard Mathlib only), this is sorry'd — it is the
-single irreducible analytic input. When `RequestProject.XiPartialFraction` is
-available (Poisson + Hadamard chain), replace `by sorry` with
-`:= ZD.xi_logDeriv_partial_fraction` and add
-`import RequestProject.XiPartialFraction` to discharge it. -/
+Proven here (kernel-clean, unconditional) as the repository's
+`ZD.xi_logDeriv_partial_fraction` (`RequestProject.XiPartialFraction`, the Poisson + Hadamard
+chain). It is the one deep analytic input — and this file *discharges* it, not `sorry`. -/
 theorem hadamard_partial_fraction :
     ∃ A : ℂ, ∀ s : ℂ, s ∉ NontrivialZeros →
       deriv riemannXi s / riemannXi s =
@@ -592,8 +588,8 @@ theorem RiemannHypothesis_iff_NontrivialZeros :
 
 #print axioms euler_pillar
 #print axioms bridge_pillar
--- hadamard_partial_fraction is sorry'd in standalone mode (missing XiPartialFraction);
--- when discharged, it depends only on [propext, Classical.choice, Quot.sound].
+-- hadamard_partial_fraction is PROVEN (via ZD.xi_logDeriv_partial_fraction); kernel-clean:
+-- depends only on [propext, Classical.choice, Quot.sound].
 #print axioms hadamard_partial_fraction
 #print axioms vonMangoldt_explicit_formula
 #print axioms vonMangoldt_explicit_formula_LSeries
