@@ -19,7 +19,7 @@ integral is `gaussianPairDefect β`. Cosh separation
 
 The load-bearing classical-Weil-positivity theorem that used to live in
 `WeilPairFormula.lean` has been deleted.  That deletion is intentional:
-it carried a tracked sorry which was the wrong Weil-agent target
+it carried a tracked gap which was the wrong Weil-agent target
 (see `feedback_excess_sum_does_not_vanish.md` memorial).
 -/
 

@@ -320,7 +320,10 @@ structure HilbertPolyaOperator (H : Type*) [NormedAddCommGroup H]
     (li_helix_term (1 - (zeros k).1) (-(zeros k).2) n).re =
     ‖proj k (x n)‖ ^ 2
 
-/-- **The Hilbert-Pólya operator proves RH.** -/
+/-- **Hilbert–Pólya ⟹ on-line (conditional).** *Given* a `HilbertPolyaOperator`,
+    every one of its zero-modes has `Re = 1/2`. The operator's existence/completeness
+    (that the actual zeros are exactly its spectrum) is the open, GRH-equivalent
+    input — this theorem consumes it, it does not construct it. -/
 theorem hilbert_polya_implies_rh {H : Type*} [NormedAddCommGroup H]
     [InnerProductSpace ℝ H] (HP : HilbertPolyaOperator H) :
     ∀ k, (HP.zeros k).1 = 1/2 := by
@@ -428,7 +431,7 @@ theorem ef_decomposition (σ β γ : ℝ) (hσ : 1 < σ)
 
 /-- **Master summary of the spectral identification framework.**
 
-    **Unconditional results** (all sorry-free, clean axioms):
+    **Unconditional results** (all gap-free, clean kernel):
     1. On-line: paired_li = ‖1-w^n‖² (spectral_identification_on_line)
     2. Off-line γ≠0: paired_li → -∞ (paired_li_unbounded_off_line)
     3. Off-line γ=0: paired_li → -∞ (paired_li_unbounded_gamma_zero)

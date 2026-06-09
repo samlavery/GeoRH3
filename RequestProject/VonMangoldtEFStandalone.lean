@@ -8,9 +8,9 @@ import RequestProject.HelixDefs
 A **surgically isolated, fully unconditional** version of
 `RequestProject.VonMangoldtEF`. The original pulls a 51-file `RequestProject`
 import tail; this file imports only **`Mathlib` + one repository module**,
-`RequestProject.XiPartialFraction`, which supplies the single mathematically
-irreducible input (the Hadamard partial fraction). Everything else — Euler,
-Bridge, and all downstream consequences — is proved here from Mathlib alone.
+`RequestProject.XiPartialFraction`, which supplies the single deep analytic
+input (the Hadamard partial fraction) as a kernel-clean theorem. Everything else
+— Euler, Bridge, and all downstream consequences — is proved here from Mathlib alone.
 
 ## Proved from Mathlib alone
 
@@ -34,18 +34,19 @@ Bridge, and all downstream consequences — is proved here from Mathlib alone.
   via `xi_logDeriv_sub_product_const_off_zeros` (`XiHadamardFactorization`) +
   `logDeriv_xiProductMult_partial_fraction` (`XiProductMultPartialFraction`).
 
-  When built against the full repository (which includes Poisson summation and
-  Hadamard factorization), the local theorem `hadamard_partial_fraction` is
-  defined as `:= ZD.xi_logDeriv_partial_fraction`. In the standalone version
-  (standard Mathlib only), it is left as `sorry` — the single irreducible
-  analytic input that standard Mathlib does not yet provide.
+  This file imports `XiPartialFraction`, so the local `hadamard_partial_fraction`
+  is **defined** `:= ZD.xi_logDeriv_partial_fraction` — a theorem, not a gap.
+  (Were one to drop that import and rebuild against Mathlib alone, this is the one
+  step Mathlib does not yet provide, and it would become the sole hole. As
+  committed, there is no such hole.)
 
-Consequently `vonMangoldt_explicit_formula` and friends below are fully
-unconditional **modulo** the Hadamard pillar.
+Consequently `vonMangoldt_explicit_formula` and friends below are **fully
+unconditional** — no extra hypothesis, no Hadamard caveat.
 
 ## Axiom footprint
-Everything here uses only `[propext, Classical.choice, Quot.sound]`.
-Theorems downstream of `hadamard_partial_fraction` additionally have `sorryAx`.
+Everything here — including `hadamard_partial_fraction` and every theorem
+downstream of it — uses only `[propext, Classical.choice, Quot.sound]`. No gaps
+(verified via `lean_verify`/`#print axioms`).
 -/
 
 open scoped BigOperators Real
@@ -279,7 +280,7 @@ theorem re_zero_term_nonneg (σ : ℝ) (hσ : 1 < σ) (ρ : ℂ) (hρ_re : 0 < �
 
 Proven here (kernel-clean, unconditional) as the repository's
 `ZD.xi_logDeriv_partial_fraction` (`RequestProject.XiPartialFraction`, the Poisson + Hadamard
-chain). It is the one deep analytic input — and this file *discharges* it, not `sorry`. -/
+chain). It is the one deep analytic input — and this file *discharges* it, with no gap. -/
 theorem hadamard_partial_fraction :
     ∃ A : ℂ, ∀ s : ℂ, s ∉ NontrivialZeros →
       deriv riemannXi s / riemannXi s =

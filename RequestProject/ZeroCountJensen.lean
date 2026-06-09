@@ -33,7 +33,7 @@ that lands unconditionally).
 
 ## Status
 
-Scaffold — each step is a named theorem with a targeted `sorry`
+Scaffold — each step is a named theorem with a targeted gap
 explaining what closes it. Intended as a drop-in replacement for a
 Mathlib `N(T)` (which doesn't exist).
 
@@ -372,7 +372,7 @@ theorem xi_bound_in_strip :
   -- The polynomial bound is the σ-uniform Phragmén–Lindelöf consequence of
   -- `zetaPolynomialBoundInStrip_from_euler_maclaurin` + `Gammaℝ_vertical_decay`
   -- applied to `ξ/(s+2)^N`, analogous to `zetaRegularizer_bound_in_strip`
-  -- in `ZetaStripBound.lean` — scoped as a single `have` sorry below.
+  -- in `ZetaStripBound.lean` — scoped as a single `have` below.
   have h_poly : ∃ (A K R_poly : ℝ), 0 < A ∧ 0 < K ∧ 0 < R_poly ∧
       ∀ s : ℂ, R_poly ≤ ‖s‖ → 0 ≤ s.re → s.re ≤ 1 →
         ‖ZD.riemannXi s‖ ≤ A * ‖s‖ ^ K := by

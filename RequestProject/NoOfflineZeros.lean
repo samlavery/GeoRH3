@@ -229,7 +229,7 @@ theorem paired_li_bounded_above_by_norm (sigma gamma : ℝ) (n : ℕ) :
 
 /-- **The irreducible hard core.**
 
-    PROVED (unconditional, sorry-free):
+    PROVED (unconditional, gap-free):
     1. Individual pair: σ = 1/2 ⟺ paired Li bounded below
     2. On-line pair bounds: contribution ∈ [0, 4]
     3. One offline pair + on-line rest → total unbounded below

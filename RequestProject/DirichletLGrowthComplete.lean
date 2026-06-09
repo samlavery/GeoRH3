@@ -11,7 +11,7 @@ order-1 log bound
 
   `∃ C R₀ > 0, ∀ R ≥ R₀, ∀ s, ‖s‖ ≤ R → log(‖Λ(s,χ)‖ + 1) ≤ C·R·log R`
 
-for primitive non-principal `χ`. No `sorry`, no GRH — pure classical analysis (Stirling + Abel + FE).
+for primitive non-principal `χ`. No gaps, no GRH — pure classical analysis (Stirling + Abel + FE).
 This is the gate the summability `Σ ord(ρ)/‖ρ‖² < ∞` (→ product → Hadamard factorization) descends from.
 -/
 

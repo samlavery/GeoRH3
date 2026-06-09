@@ -273,15 +273,15 @@ The EF contributes:
    is needed for the Hadamard approach.
 
 What the EF does NOT prove (the irreducible core):
-- The Hadamard partial fraction (sorry'd, needs complex analysis)
 - The full Weil positivity (equivalent to RH)
 - Li-Keiper positivity (equivalent to RH)
 
-The EF narrows the gap to: "Hadamard + Weil positivity ⟹ RH"
-where both ingredients are deep analytic facts beyond Mathlib. -/
+The Hadamard partial fraction, once an open analytic input, is now a kernel-clean
+repository theorem (`ZD.xi_logDeriv_partial_fraction`). So the EF narrows the gap
+to: "Weil positivity ⟹ RH" — the one remaining deep ingredient, equivalent to RH. -/
 
-/-- Master summary: the EF proves everything EXCEPT the Hadamard
-    partial fraction (one sorry) and the Weil positivity (RH itself). -/
+/-- Master summary: the EF proves everything EXCEPT the Weil positivity (RH
+    itself). The Hadamard partial fraction is now proved, not assumed. -/
 theorem ef_gap_summary :
     -- 1. Euler pillar: proved
     (∀ s : ℂ, 1 < s.re →

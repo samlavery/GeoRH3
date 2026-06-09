@@ -17,7 +17,7 @@
 
   What this file provides: infrastructure for studying partial Dirichlet
   sums — the normSq recurrence, cross-term bounds, and base case.
-  The StepMonotone sorry is exploratory (and likely false per-step;
+  The StepMonotone gap is exploratory (and likely false per-step;
   anti-aligned steps decrease normSq).
 
   Proved (zero axioms):

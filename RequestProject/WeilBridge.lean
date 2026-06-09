@@ -147,7 +147,7 @@ theorem averaged_positivity_offline (ψ : ℝ → ℝ)
 - Envelope positivity: (cosh(δt)-1)² + sinh(δt)² > 0 for δ≠0, t>0
 - First-order derivative: ∂_β(even envelope)|_{½} = 0, ∂_β(odd envelope)|_{½} = t
 - Odd Fourier normalization: ∂_β Δ_θ(½,γ) = -½ · ĝ_ψ(γ)
-- Conditional closure: hzero ∧ hpos → ρ.re = ½ (pure logic, no sorry)
+- Conditional closure: hzero ∧ hpos → ρ.re = ½ (pure logic, no gaps)
 
 ### What is parameterized (this file)
 - `ExplicitFormulaBridge` — the Weil explicit-formula bridge

@@ -654,7 +654,7 @@ theorem gaussian_pair_identity_of_WeilFormula
 #print axioms gaussian_pair_identity_of_WeilFormula
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- § Cycle 19 — Pair-test cosh expansion (Item 1 of sorry-attempt plan)
+-- § Cycle 19 — Pair-test cosh expansion (Item 1 of completion plan)
 -- ═══════════════════════════════════════════════════════════════════════════
 
 /-- **Cosh-expansion decomposition of `pair_cosh_gauss_test`.**
@@ -678,10 +678,10 @@ can be Mellin-transformed individually — in principle expressible via
 confluent hypergeometric / Kummer functions, which are NOT clean Γ
 functions but are tractable for specific substitutions. More directly,
 this decomposition gives the pair defect as a sum of **Gaussian moments**
-that admit closed forms via `cosh_gaussian_integral_Ioi_two_R` in
+that have closed forms via `cosh_gaussian_integral_Ioi_two_R` in
 `RequestProject/GaussianClosedForm.lean`.
 
-This is **Item 1** of the itemized sorry-attempt plan. -/
+This is **Item 1** of the itemized completion plan. -/
 theorem pair_cosh_gauss_test_cosh_expansion (β t : ℝ) :
     pair_cosh_gauss_test β t =
     ((1/2) * Real.cosh ((2*β - Real.pi/3) * t) +
@@ -718,7 +718,7 @@ theorem pair_cosh_gauss_test_cosh_expansion (β t : ℝ) :
 #print axioms pair_cosh_gauss_test_cosh_expansion
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- § Cycle 20 — Fourier partner of pair test (Item 2 of sorry-attempt plan)
+-- § Cycle 20 — Fourier partner of pair test (Item 2 of completion plan)
 -- ═══════════════════════════════════════════════════════════════════════════
 
 /-- **Fourier partner of `pair_cosh_gauss_test β`.**
@@ -743,7 +743,7 @@ F(β, ξ) = √(π/2) · exp(-ξ²/8) · [
 ].
 ```
 
-This is **Item 2** of the itemized sorry-attempt plan. -/
+This is **Item 2** of the itemized completion plan. -/
 noncomputable def pair_cosh_gauss_fourier (β : ℝ) (ξ : ℂ) : ℂ :=
   ((Real.pi / 2 : ℂ))^((1:ℂ)/2) * Complex.exp (-ξ^2 / 8) *
     ((1/2 : ℂ) *

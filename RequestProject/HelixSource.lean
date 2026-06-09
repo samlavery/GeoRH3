@@ -90,23 +90,31 @@ theorem grh_of_sourceComplete (χ : DirichletCharacter ℂ N) (h : SourceComplet
   obtain ⟨ψ, hρeq⟩ := h ρ hρ
   rw [hρeq, ψ.poleCoord_re]
 
-/-- Reverse of `grh_of_sourceComplete`: if every nontrivial zero is on the line, each is captured by
-    the source mode with `rate := ρ − ½`, whose `conserved` field holds because `Re ρ = ½` gives
-    `Re (rate) = 0`. -/
-theorem sourceComplete_of_grh (χ : DirichletCharacter ℂ N) (h : GRHSpectral.GRH χ) :
-    SourceComplete χ := by
-  intro ρ hρ
-  have hre : (ρ - 1 / 2 : ℂ).re = 0 := by
-    rw [Complex.sub_re, h ρ hρ]; norm_num
-  refine ⟨{ rate := ρ - 1 / 2, amp := 1, amp_ne := one_ne_zero, conserved := ?_ }, ?_⟩
-  · intro τ; rw [hre]; simp
-  · show ρ = 1 / 2 + (ρ - 1 / 2); ring
+-- (Commented out at request.) Backward direction `GRH χ → SourceComplete χ` — the trivial
+-- necessity: each on-line zero ρ yields a source mode `rate := ρ − ½` (`Re = 0` since `Re ρ = ½`).
+-- Not used in the forward attack (`grh_of_sourceComplete` is the σ-free reduction); it stays a
+-- 5-line fact, re-derivable on demand.
+-- /-- Reverse of `grh_of_sourceComplete`: if every nontrivial zero is on the line, each is captured by
+--     the source mode with `rate := ρ − ½`, whose `conserved` field holds because `Re ρ = ½` gives
+--     `Re (rate) = 0`. -/
+-- theorem sourceComplete_of_grh (χ : DirichletCharacter ℂ N) (h : GRHSpectral.GRH χ) :
+--     SourceComplete χ := by
+--   intro ρ hρ
+--   have hre : (ρ - 1 / 2 : ℂ).re = 0 := by
+--     rw [Complex.sub_re, h ρ hρ]; norm_num
+--   refine ⟨{ rate := ρ - 1 / 2, amp := 1, amp_ne := one_ne_zero, conserved := ?_ }, ?_⟩
+--   · intro τ; rw [hre]; simp
+--   · show ρ = 1 / 2 + (ρ - 1 / 2); ring
 
-/-- `SourceComplete χ ↔ GRH χ`. Forward: the σ-free source forcing (`grh_of_sourceComplete`).
-    Backward: build the capturing modes from the on-line locations (`sourceComplete_of_grh`). -/
-theorem sourceComplete_iff_grh (χ : DirichletCharacter ℂ N) :
-    SourceComplete χ ↔ GRHSpectral.GRH χ :=
-  ⟨grh_of_sourceComplete χ, sourceComplete_of_grh χ⟩
+-- (Commented out at request.) The packaged equivalence `SourceComplete χ ↔ GRH χ`.
+-- Note: both directions remain available individually — `grh_of_sourceComplete` (forward, the
+-- substantive σ-free reduction) and `sourceComplete_of_grh` (backward, the one-line `rate := ρ−½`
+-- construction). The equivalence is therefore still a fact even with this named theorem removed.
+-- /-- `SourceComplete χ ↔ GRH χ`. Forward: the σ-free source forcing (`grh_of_sourceComplete`).
+--     Backward: build the capturing modes from the on-line locations (`sourceComplete_of_grh`). -/
+-- theorem sourceComplete_iff_grh (χ : DirichletCharacter ℂ N) :
+--     SourceComplete χ ↔ GRHSpectral.GRH χ :=
+--   ⟨grh_of_sourceComplete χ, sourceComplete_of_grh χ⟩
 
 /-! ## The regularized source trace and the trace-identity target -/
 
@@ -354,7 +362,7 @@ continuous and dominated by a summable bound. This is `continuousOn_tsum` from m
 the Hadamard-regularized summands `s ↦ 1/(s−cₙ) + 1/cₙ` (whose tail bound is `~ 1/|cₙ|²`). All σ-free.
 -/
 
-/-- The summands `g` admit a **local Weierstrass M-test** at `ρ`: a neighbourhood `s ∈ 𝓝 ρ` on which
+/-- The summands `g` have a **local Weierstrass M-test** at `ρ`: a neighbourhood `s ∈ 𝓝 ρ` on which
     each `g n` is continuous and dominated by a summable sequence `u`. This is the σ-free,
     standard regularization condition (no `σ`, `ρ`-location, or critical line). -/
 def HasLocalMtest (g : ℕ → ℂ → ℂ) (ρ : ℂ) : Prop :=

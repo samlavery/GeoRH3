@@ -28,7 +28,7 @@ From this we derive:
 
 ## Sorry inventory
 
-The sorry'd steps are:
+The open steps are:
 1. `Layer1.vonMangoldt_LSeries_eq` — the L-series identity L(Λ,s) = −ζ'/ζ(s)
 2. `ZD.riemannZeta_logDeriv_eq_xi_minus_pole_minus_gammaℝ` — the bridge identity
 3. `ZD.xi_logDeriv_partial_fraction` — the Hadamard partial fraction

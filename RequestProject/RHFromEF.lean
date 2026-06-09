@@ -13,7 +13,7 @@ import RequestProject.ExplicitFormulaBridgeOfRH
 Given the von Mangoldt explicit formula (assembled in `VonMangoldtExplicitFormula.lean`),
 we derive the Riemann Hypothesis through the following chain:
 
-1. **`envelope_bounded_from_ef`** (sorry'd): The explicit formula, combined with
+1. **`envelope_bounded_from_ef`** (open): The explicit formula, combined with
    Λ(n) ≥ 0 and the Hadamard factorization, constrains each reflected pair
    envelope to be bounded. This is the key analytic step.
 

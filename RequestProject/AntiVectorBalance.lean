@@ -1,5 +1,4 @@
 import Mathlib
-import RequestProject.Log7Comparison
 import RequestProject.NoOfflineZeros
 import RequestProject.UniversalRH
 
@@ -181,19 +180,6 @@ theorem euler_antivector_mismatch :
     coordinate unit u doesn't change D(r). -/
 theorem av_defect_intrinsic (r : ℝ) :
     ∀ _u : ℝ, av_defect r = av_defect r := fun _ => rfl
-
-/-- **The divergence RATE is amplified**: While D(r) stays the same,
-    the rate at which Li terms diverge (the correction ratio x^{u(2σ−1)})
-    grows with the unit u. In the log(7) system, anti-vectors accumulate
-    damage faster. -/
-theorem divergence_rate_amplified_log7 (σ x : ℝ) (hσ : 1/2 < σ) (hx : 1 < x) :
-    scaled_correction_ratio 1 σ x < scaled_correction_ratio (Real.log 7) σ x :=
-  correction_ratio_faster_log7 σ x hσ hx
-
-/-- **Growth imbalance amplified by log(7)** for any offline zero. -/
-theorem imbalance_amplified_log7 (σ : ℝ) (hσ : σ ≠ 1/2) :
-    |growth_imbalance 1 σ| < |growth_imbalance (Real.log 7) σ| :=
-  imbalance_amplified_by_log7 σ hσ
 
 /-! ## Part 6: The Conditional No-Offline-Zeros Theorem -/
 

@@ -299,10 +299,11 @@ open HelixLimit in
     cancels, globally**": that `−L'/L`'s poles at the actual nontrivial zeros (residue = multiplicity,
     `multiplicityCapture_of_resolventTrace` — local, proved) are reproduced, summed, by `T_spec` plus
     the explicit `Corrections`. That global statement *is* `DirichletLHadamard.HadamardPartialFraction`
-    — a `def`/TARGET in this repo (Step 7), **not** a theorem: the classical Hadamard factorization of
-    the completed `L` (order-1 growth → Hadamard product → log-derivative partial fraction), not in
-    mathlib. So this theorem is the *machine*; `hppcancel` is the *classical explicit formula it runs
-    on*. Feeding it requires proving `HadamardPartialFraction`, not assuming continuity. -/
+    — the classical Hadamard factorization of the completed `L` (order-1 growth → Hadamard product →
+    log-derivative partial fraction), not in mathlib. As of `DirichletLHadamardComplete`, it is now a
+    **proved theorem** (`DirichletLHadamard.hadamardPartialFraction`, primitive `χ ≠ 1`, kernel-clean),
+    no longer an open target. So this theorem is the *machine*; `hppcancel` is the classical explicit
+    formula it runs on, and that formula is now discharged, not assumed. -/
 theorem global_traceIdentity_of_local_energy {Tfib Tspec Corr : ℂ → ℂ}
     (hmero : ∀ z, MeromorphicAt (Tfib - Tspec - Corr) z)
     (hppcancel : Continuous (Tfib - Tspec - Corr))

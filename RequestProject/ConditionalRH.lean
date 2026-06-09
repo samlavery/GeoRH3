@@ -1,8 +1,6 @@
 import Mathlib
-import RequestProject.Log7Comparison
 import RequestProject.NoOfflineZeros
 import RequestProject.AntiVectorBalance
-import RequestProject.Log7HelixRH
 
 /-!
 # Li Positivity and Anti-Vector Scaling
@@ -87,24 +85,6 @@ def correction_at_scale (u σ x : ℝ) : ℝ := x ^ (u * (2 * σ - 1))
 def scaling_rate_diff (u₁ u₂ σ x : ℝ) : ℝ :=
   correction_at_scale u₂ σ x - correction_at_scale u₁ σ x
 
-/-- At σ > 1/2, the correction grows FASTER at larger scales. -/
-theorem rate_faster_at_log7 (σ x : ℝ) (hσ : 1/2 < σ) (hx : 1 < x) :
-    correction_at_scale 1 σ x < correction_at_scale (Real.log 7) σ x := by
-  unfold correction_at_scale
-  exact correction_ratio_faster_log7 σ x hσ hx
-
-/-- The rate difference is positive for σ > 1/2. -/
-theorem rate_diff_pos (σ x : ℝ) (hσ : 1/2 < σ) (hx : 1 < x) :
-    0 < scaling_rate_diff 1 (Real.log 7) σ x := by
-  unfold scaling_rate_diff
-  linarith [rate_faster_at_log7 σ x hσ hx]
-
-/-- For σ < 1/2, the mirror partner: ratio further from 1 at log(7). -/
-theorem rate_mirror_at_log7 (σ x : ℝ) (hσ : σ < 1/2) (hx : 1 < x) :
-    correction_at_scale (Real.log 7) σ x < correction_at_scale 1 σ x := by
-  unfold correction_at_scale
-  exact correction_ratio_smaller_log7 σ x hσ hx
-
 /-- Monotonicity in u: larger scale → larger correction ratio (for σ > 1/2). -/
 theorem rate_monotone (u₁ u₂ σ x : ℝ)
     (hu : u₁ < u₂) (hσ : 1/2 < σ) (hx : 1 < x) :
@@ -116,17 +96,6 @@ theorem rate_monotone (u₁ u₂ σ x : ℝ)
 theorem correction_online (u x : ℝ) :
     correction_at_scale u (1/2) x = 1 := by
   unfold correction_at_scale; norm_num
-
-/-- The growth imbalance ratio between log(7) and standard is log(7). -/
-theorem imbalance_ratio (σ : ℝ) (hσ : σ ≠ 1/2) :
-    growth_imbalance (Real.log 7) σ / growth_imbalance 1 σ = Real.log 7 := by
-  have h1 : growth_imbalance (Real.log 7) σ = Real.log 7 * (2 * σ - 1) := by
-    simp [growth_imbalance, growth_rate_scaled]; ring
-  have h2 : growth_imbalance 1 σ = 2 * σ - 1 := by
-    simp [growth_imbalance, growth_rate_scaled]; ring
-  rw [h1, h2, mul_div_cancel_of_imp]
-  intro h
-  exact absurd (show σ = 1/2 by linarith) hσ
 
 /-! ## Part 3: Why Li Positivity Is the Right Hypothesis -/
 
@@ -163,25 +132,6 @@ theorem hypothesis_hierarchy (S : Set (ℝ × ℝ)) (h_nt : ∀ z ∈ S, z.2 ≠
    ⟨fun h z hz => (spectral_on_circle_iff z.1 z.2 (h_nt z hz)).mp (h z hz),
     fun h z hz => (spectral_on_circle_iff z.1 z.2 (h_nt z hz)).mpr (h z hz)⟩,
    fun bad hbad hoff => universal_offline_breaks_boundedness S h_nt bad hbad hoff⟩
-
-/-! ## Part 4: Scaling Rate Summary -/
-
-/-- **Anti-vector scaling rates**: The defect is intrinsic but
-    the divergence rate is scale-dependent. -/
-theorem scaling_rate_summary (σ : ℝ) (hσ : σ ≠ 1/2) :
-    -- Imbalance amplified at log(7)
-    |growth_imbalance 1 σ| < |growth_imbalance (Real.log 7) σ| ∧
-    -- Scaling coherence characterizes online
-    ((∀ u : ℝ, u ≠ 0 → growth_imbalance u σ = 0) ↔ σ = 1/2) ∧
-    -- Log(7) alone detects offline
-    growth_imbalance (Real.log 7) σ ≠ 0 ∧
-    -- Anti-vector defect always nonpositive
-    (∀ r : ℝ, 0 < r → av_defect r ≤ 0) :=
-  ⟨imbalance_amplified_by_log7 σ hσ,
-   scaling_coherence_iff_online σ,
-   (growth_imbalance_zero_iff (Real.log 7) σ
-     (ne_of_gt (by linarith [log7_gt_one]))).not.mpr hσ,
-   av_defect_nonpos⟩
 
 /-- **The complete conditional RH package**:
 

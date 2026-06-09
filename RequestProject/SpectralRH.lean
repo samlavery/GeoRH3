@@ -44,12 +44,14 @@ the explicit formula. The geometry forces the critical line.
 4. **green_helmholtz_provides_spectral**: The Green-Helmholtz self-adjoint
    projection provides the SpectralRealization structure.
 
-## The Gap That VMG-EF Closes
+## What is plumbing vs. what is the gap
 
-The only sorry in the chain is `hadamard_partial_fraction` in
-VonMangoldtEFStandalone.lean. When the Hadamard factorization module
-is dropped in, this sorry disappears, making the entire chain
-unconditional.
+The Hadamard partial fraction is **proved**, kernel-clean
+(`ZD.xi_logDeriv_partial_fraction`); this chain contains **no gaps**. The
+remaining input is the `SpectralRealization` hypothesis itself — the per-zero
+non-negativity / identification of the actual zeros with the self-adjoint
+spectrum. That hypothesis is GRH-equivalent: it is the genuine open obligation,
+not the (now-discharged) Hadamard plumbing.
 -/
 
 open scoped BigOperators Real

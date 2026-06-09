@@ -1,5 +1,4 @@
 import Mathlib
-import RequestProject.Log7Comparison
 import RequestProject.NoOfflineZeros
 import RequestProject.AntiVectorBalance
 

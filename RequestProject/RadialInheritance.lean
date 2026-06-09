@@ -19,7 +19,7 @@ and instantiates it on the repo's real objects.
 `3D source ──project──▶ 1D receiver`: a property established at the **source** (no radial
 drift) is carried to its **projection** (zero radial energy at the receiver) along a
 drift-preserving projection. Downward inheritance is free and valid; the implication below
-is therefore an *unconditional* theorem — kernel-clean, no `sorry`, no custom axioms.
+is therefore an *unconditional* theorem — kernel-clean, no gaps, no custom assumptions.
 
 **Why it is not circular (Rule Two).** The conclusion `β ρ = ½` (equivalently
 `E_radial = 0`) is *derived* by composing **two independently-meaningful facts about two

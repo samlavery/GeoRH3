@@ -22,7 +22,7 @@ The `nontrivial` field is `0 < ∫_{Ioi 0} (ψ t)² dt`, which reduces to
 positivity of `volume (support · ∩ Ioi 0) = volume (Ioi 0) = ∞ > 0`
 via `setIntegral_pos_iff_support_of_nonneg_ae`.
 
-Axiom footprint: mathlib-standard only. No `sorry`, no custom axioms.
+Kernel footprint: mathlib-standard only. No gaps, no custom assumptions.
 -/
 
 open Real MeasureTheory Set

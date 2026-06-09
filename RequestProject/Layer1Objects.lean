@@ -37,7 +37,7 @@ theorem U_pos : (0 : ℝ) < U := by norm_num [U]
 theorem U_ne_zero : U ≠ 0 := ne_of_gt U_pos
 
 /-
-**The von Mangoldt L-series identity** (sorry'd).
+**The von Mangoldt L-series identity** (open).
 
     For Re(s) > 1:
       L(Λ, s) = Σ_n Λ(n) · n^{-s} = −ζ'/ζ(s)

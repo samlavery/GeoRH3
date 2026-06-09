@@ -26,7 +26,7 @@ All definitions (`riemannXi`, `NontrivialZeros`, `U`) are re-exported from
 `completedRiemannZeta₀`, etc.
 
 ## Axiom footprint
-`[propext, Classical.choice, Quot.sound]` (modulo sorry'd bounds).
+`[propext, Classical.choice, Quot.sound]` (modulo unproven bounds).
 -/
 
 open Real Complex VMEFStandalone

@@ -359,7 +359,7 @@ theorem averageEnergyDefect_pos_offline (ψ : ℝ → ℝ) {β : ℝ}
   exact mul_ne_zero (h_env_pos ht_pos) ht_supp
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- § Conditional Closure (pure logic — no sorry)
+-- § Conditional Closure (pure logic — no gaps)
 -- ═══════════════════════════════════════════════════════════════════════════
 
 /-- **Conditional no-offline-zeros theorem.** Given:

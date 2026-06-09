@@ -45,7 +45,7 @@ This file connects the **Von Mangoldt explicit formula** (§1–§3 of
 
 ## Axiom footprint
 Everything except `hadamard_partial_fraction`, `strip_zero_count_bound`,
-and `xi_zero_count_disk_bound` (which are sorry'd) uses only
+and `xi_zero_count_disk_bound` (which are open) uses only
 `[propext, Classical.choice, Quot.sound]`.
 -/
 

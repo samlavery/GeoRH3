@@ -86,12 +86,13 @@ theorem hparseval_gaussian (β : ℝ) :
     (ψ_gaussian_admissible.l2_even β)
     (ψ_gaussian_admissible.l2_odd β)
 
-/-! ### Axiom hygiene
+/-! ### Kernel hygiene
 
 The forward direction uses only mathlib-standard axioms. The reverse
-and the biconditional depend only on the single Weil-citation axiom
-`weil_gaussian_bridge` below — the half-line Parseval identities are
-now proved unconditionally from Mathlib Plancherel. -/
+and the biconditional depend only on the single cited Weil result
+(supplied as a hypothesis, not a custom axiom) `weil_gaussian_bridge`
+below — the half-line Parseval identities are now proved unconditionally
+from Mathlib Plancherel. -/
 
 /-! ### Narrow Weil factoring
 

@@ -1,10 +1,11 @@
 import Mathlib
 
 /-!
-# Half-Line Parseval — discharging the project axioms from Mathlib Plancherel
+# Half-Line Parseval — discharging the project assumptions from Mathlib Plancherel
 
 Goal: prove the half-line cosine and sine Parseval identities as
-theorems (currently axioms in `EnergyDefect.lean`).
+theorems (formerly assumed in `EnergyDefect.lean`, discharged here from
+Mathlib Plancherel).
 
 Strategy: derive from Mathlib's `MeasureTheory.Lp.norm_fourier_eq`
 (L² Plancherel for complex-valued functions on ℝ) via even (resp.
@@ -507,7 +508,7 @@ for the even extension `evenExtC f`. The L¹ piece guarantees that
 function; the L² piece gives access to Plancherel via `Lp.norm_fourier_eq`.
 
 Under the hypothesis `f ∈ L¹` (alongside `f² ∈ L¹`), this theorem could be
-used to discharge the axiom `ZD.halfLine_cosine_parseval` **at the call
+used to discharge the assumption `ZD.halfLine_cosine_parseval` **at the call
 site by providing the extra L¹ witness**. The downstream test function `ψ`
 is expected to decay super-exponentially, hence L¹ is automatic. -/
 theorem halfLine_cosine_parseval_strong {f : ℝ → ℝ} (hf_meas : Measurable f)
