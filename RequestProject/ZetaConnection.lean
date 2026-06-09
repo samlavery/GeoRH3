@@ -144,7 +144,7 @@ theorem mertens_feeds_zero_free :
     - Self-adjoint projections have spectrum ⊂ {0,1} (this project)
     - Functional equation ξ(1-s) = ξ(s) (Mathlib)
 
-    ❌ REMAINING (equivalent to RH):
+    ❌ REMAINING:
     - The global Li criterion: Σ_ρ Re[1-(1-1/ρ)^n] ≥ 0 for all n
     - Constructing a Hilbert-Pólya operator for ζ
     - Full Weil positivity for all test functions

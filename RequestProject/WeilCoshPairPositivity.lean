@@ -22,9 +22,7 @@ This file owns two things and ONLY two things:
 2. **`WeilVanishesOnZeros` Prop — propositionally equivalent to RH.**
    `∀ ρ ∈ NontrivialZeros, gaussianPairDefect ρ.re = 0`. Combined with
    the proved cosh-side biconditional in `GaussianDetectorPair.lean`,
-   this is just RH spelled differently. The bridge
-   `RiemannHypothesis_of_WeilVanishesOnZeros` is a propositional
-   unfolding, NOT a substantive analytic step. The substantive content
+   this is just RH spelled differently. The substantive content
    that would close `WeilVanishesOnZeros` is the Weil positivity
    criterion at our test (cf. `WeilUnconditionalRHEndpoint.lean`,
    `PerZeroForcing_target`).
@@ -33,8 +31,7 @@ The legacy name `pair_defect_vanishes_at_zeros` is preserved as a thin
 alias for backward compatibility with downstream files that still
 reference it.
 
-This file does NOT close RH. It documents the propositional shape of
-the cosh-side endpoint and exposes the unfolding bridge.
+It documents the propositional shape of the cosh-side endpoint.
 -/
 
 open Real Complex
@@ -78,28 +75,8 @@ def WeilVanishesOnZeros : Prop :=
 code should use `WeilVanishesOnZeros`. -/
 def pair_defect_vanishes_at_zeros : Prop := WeilVanishesOnZeros
 
-/-- **Propositional unfolding: `WeilVanishesOnZeros ⟹ RH`.**
-
-NOT a substantive analytic step. The hypothesis is biconditionally RH
-via the proved `re_half_of_gaussianPairDefect_zero`; this theorem is a
-trivial unfolding. The substance lives in the cosh-side proof of that
-biconditional (`GaussianDetectorPair.lean:374`) — not here. -/
-theorem RiemannHypothesis_of_WeilVanishesOnZeros
-    (h : WeilVanishesOnZeros) : RiemannHypothesis := by
-  apply RHBridge.no_offline_zeros_implies_rh
-  intro ρ hρ
-  exact re_half_of_gaussianPairDefect_zero ρ.re (h ρ hρ)
-
-/-- **Backward-compatibility wrapper.** Same content as
-`RiemannHypothesis_of_WeilVanishesOnZeros`; preserved under the
-legacy name for downstream callers. -/
-theorem RiemannHypothesis_of_pair_defect_positivity
-    (h : pair_defect_vanishes_at_zeros) : RiemannHypothesis :=
-  RiemannHypothesis_of_WeilVanishesOnZeros h
-
 #print axioms gaussianPairDefect_nonzero_of_ne_half
 #print axioms gaussianPairDefect_pos_of_ne_half
-#print axioms RiemannHypothesis_of_WeilVanishesOnZeros
 
 end WeilPositivity
 

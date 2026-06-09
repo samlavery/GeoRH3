@@ -36,8 +36,6 @@ to the Li evaluation (n-th coefficient). The extension requires:
 either (a) constructing a self-adjoint operator (Hilbert-Pólya), or
 (b) proving the Weil positivity criterion.
 
-Both (a) and (b) are equivalent to RH.
-
 ## Architecture
 
 ```

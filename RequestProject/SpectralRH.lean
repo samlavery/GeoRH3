@@ -38,8 +38,8 @@ the explicit formula. The geometry forces the critical line.
 2. **spectral_forces_on_line**: SpectralRealization → each zero on the
    critical line (Re(ρ) = 1/2).
 
-3. **spectral_rh**: SpectralRealization → RH (all nontrivial zeros on
-   the critical line).
+3. **spectral_rh**: given a SpectralRealization, each of its zeros has
+   Re = 1/2.
 
 4. **green_helmholtz_provides_spectral**: The Green-Helmholtz self-adjoint
    projection provides the SpectralRealization structure.
@@ -112,12 +112,9 @@ theorem spectral_forces_on_line (SR : SpectralRealization) (k : ℕ) :
 -- §3  Spectral Realization → RH
 -- ═══════════════════════════════════════════════════════════════════════════
 
-/-- **The Spectral RH Theorem**: If the Hilbert–Pólya spectral realization
-    holds (each zero's paired Li contribution is a norm-squared), then
-    every nontrivial zero has Re(ρ) = 1/2.
-
-    This is the Riemann Hypothesis, derived from the self-adjoint
-    projection structure of the Green-Helmholtz operator on the helix. -/
+/-- Given a SpectralRealization (its `paired_nonneg` field: each zero's paired
+    Li contribution is a norm-squared), every zero of that structure has
+    Re = 1/2. -/
 theorem spectral_rh (SR : SpectralRealization) :
     ∀ k : ℕ, (SR.zeros k).1 = 1/2 :=
   fun k => spectral_forces_on_line SR k
@@ -175,23 +172,13 @@ theorem per_eigenspace_nonneg (v : ℝ) (hv : ∃ u : ℝ, v = u ^ 2) :
 -- §5  The Complete Proof Chain
 -- ═══════════════════════════════════════════════════════════════════════════
 
-/-- **The complete chain from self-adjoint projection to RH.**
+/-- For any SpectralRealization, every one of its zeros has Re = 1/2.
 
     1. Green-Helmholtz provides self-adjoint projections (proved)
     2. Self-adjoint → Pythagorean decomposition (proved)
     3. Spectral theorem → per-eigenspace nonnegativity (proved)
-    4. Identification with Li coefficients (from VMG-EF)
-    5. Per-zero nonnegativity → Re(ρ) = 1/2 (proved)
-
-    The only assumption is the SpectralRealization — that the
-    identification (step 4) holds. This is what the VMG-EF provides
-    when the Hadamard factorization is available.
-
-    When Hadamard is dropped in:
-    - The EF gives the per-zero decomposition
-    - The Green-Helmholtz self-adjointness gives nonnegativity
-    - The per-zero dichotomy gives Re(ρ) = 1/2
-    - QED: all nontrivial zeros on the critical line -/
+    4. Identification with Li coefficients — the SpectralRealization structure
+    5. Per-zero nonnegativity → Re = 1/2 (proved) -/
 theorem complete_proof_chain :
     -- Given any SpectralRealization (which the helix provides),
     ∀ SR : SpectralRealization,
@@ -214,34 +201,6 @@ def onLineSpectralRealization (gammas : ℕ → ℝ) (hg : ∀ k, gammas k ≠ 0
   paired_nonneg := fun k n => by
     simp only
     exact on_line_pair_nonneg (gammas k) n
-
--- ═══════════════════════════════════════════════════════════════════════════
--- §7  Connection to VMEFStandalone's NontrivialZeros
--- ═══════════════════════════════════════════════════════════════════════════
-
-/-- **RH in VMEFStandalone's formulation**: if every nontrivial zero of ζ
-    is realized by a SpectralRealization, then all nontrivial zeros have
-    Re(ρ) = 1/2. -/
-theorem spectral_implies_vmef_rh
-    (h_spectral : ∃ SR : SpectralRealization,
-      ∀ ρ : ℂ, ρ ∈ VMEFStandalone.NontrivialZeros →
-        ∃ k, (SR.zeros k).1 = ρ.re ∧ (SR.zeros k).2 = ρ.im) :
-    ∀ ρ : ℂ, ρ ∈ VMEFStandalone.NontrivialZeros → ρ.re = 1/2 := by
-  obtain ⟨SR, hSR⟩ := h_spectral
-  intro ρ hρ
-  obtain ⟨k, hk_re, _⟩ := hSR ρ hρ
-  rw [← hk_re]
-  exact spectral_forces_on_line SR k
-
-/-- **Spectral RH → Mathlib's `RiemannHypothesis`**: the spectral
-    realization implies the standard Mathlib formulation of RH. -/
-theorem spectral_implies_RiemannHypothesis
-    (h_spectral : ∃ SR : SpectralRealization,
-      ∀ ρ : ℂ, ρ ∈ VMEFStandalone.NontrivialZeros →
-        ∃ k, (SR.zeros k).1 = ρ.re ∧ (SR.zeros k).2 = ρ.im) :
-    RiemannHypothesis :=
-  VMEFStandalone.NontrivialZeros_implies_RiemannHypothesis
-    (spectral_implies_vmef_rh h_spectral)
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- §8  The EF Provides the Spectral Identification
@@ -311,7 +270,6 @@ theorem sigma_gt_one_nonneg (σ : ℝ) (hσ : 1 < σ) (ρ : ℂ)
 #print axioms spectral_rh
 #print axioms complete_proof_chain
 #print axioms onLineSpectralRealization
-#print axioms spectral_implies_vmef_rh
 #print axioms green_helmholtz_loss_nonneg
 #print axioms green_helmholtz_pythagorean_exact
 #print axioms sigma_gt_one_nonneg

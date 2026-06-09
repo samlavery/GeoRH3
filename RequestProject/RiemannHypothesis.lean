@@ -52,15 +52,9 @@ If paired_term(ρ, n) ≥ 0 for all n, then ‖w(ρ)‖ = 1 (Möbius unit),
 hence Re(ρ) = 1/2 (critical_line_iff_bounded_li, per_zero_dichotomy).
 
 ### Status
-All four steps are proved sorry-free with clean axioms
-`[propext, Classical.choice, Quot.sound]`. The only remaining
-assumption is the SpectralRealization — that the EF decomposition
-matches the self-adjoint projection's spectral decomposition. This
-identification is provided by the Von Mangoldt explicit formula when
-the Hadamard factorization is available.
-
-When the Hadamard factorization module is dropped into the workspace,
-the entire chain becomes unconditional.
+The equivalent characterizations of RH (`rh_iff_bounded_envelopes`,
+`rh_iff_stationary_envelopes`), the per-zero dichotomy, and the per-zero
+nonnegativity at σ > 1 are proved unconditionally.
 -/
 
 open scoped BigOperators Real
@@ -79,24 +73,7 @@ noncomputable section
 #check VMEFStandalone.RiemannHypothesis_iff_NontrivialZeros
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- §2  The Spectral RH Theorem (stated with Mathlib's RiemannHypothesis)
--- ═══════════════════════════════════════════════════════════════════════════
-
-/-- **The Spectral RH Theorem**: If the Green-Helmholtz spectral realization
-    holds for ζ's nontrivial zeros, then Mathlib's `RiemannHypothesis` holds.
-
-    The spectral realization says: each zero's paired Li contribution is
-    a norm-squared (from the self-adjoint projection's spectral decomposition).
-    This forces each zero onto the critical line via the per-zero dichotomy. -/
-theorem spectral_RH
-    (h_spectral : ∃ SR : SpectralRealization,
-      ∀ ρ : ℂ, ρ ∈ NontrivialZeros →
-        ∃ k, (SR.zeros k).1 = ρ.re ∧ (SR.zeros k).2 = ρ.im) :
-    RiemannHypothesis :=
-  NontrivialZeros_implies_RiemannHypothesis (spectral_implies_vmef_rh h_spectral)
-
--- ═══════════════════════════════════════════════════════════════════════════
--- §3  Equivalent Characterizations (all unconditional)
+-- §2  Equivalent Characterizations (all unconditional)
 -- ═══════════════════════════════════════════════════════════════════════════
 
 /-- **RH ↔ bounded envelopes** (stated with Mathlib's `RiemannHypothesis`). -/
@@ -241,7 +218,6 @@ theorem master_summary :
 -- §9  Axiom Audit
 -- ═══════════════════════════════════════════════════════════════════════════
 
-#print axioms spectral_RH
 #print axioms per_zero_dichotomy
 #print axioms positivity_chain
 #print axioms master_summary

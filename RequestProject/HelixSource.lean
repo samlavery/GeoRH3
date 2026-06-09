@@ -55,9 +55,28 @@ theorem SourceMode.poleCoord_re (ψ : SourceMode) : ψ.poleCoord.re = 1 / 2 := b
   rw [SourceMode.poleCoord, Complex.add_re, ψ.noDrift]
   norm_num
 
+/-- **Earned mode from a real spectral value.** Any real `μ` yields a source mode with `rate := i·μ`;
+    its `conserved` field holds because `Re (i·μ) = 0`, with **no** input about zeros, `ρ`, or `σ`.
+    This is the non-circular direction: a real eigenvalue (e.g. of the self-adjoint `A_N`) produces an
+    on-line mode, with pole-coordinate `½ + i·μ`. -/
+noncomputable def SourceMode.ofReal (μ : ℝ) : SourceMode where
+  rate := Complex.I * μ
+  amp := 1
+  amp_ne := one_ne_zero
+  conserved := by
+    intro τ
+    have hre : (Complex.I * (μ : ℂ)).re = 0 := by simp
+    rw [hre]; simp
+
+@[simp] theorem SourceMode.ofReal_rate (μ : ℝ) :
+    (SourceMode.ofReal μ).rate = Complex.I * μ := rfl
+
+theorem SourceMode.ofReal_poleCoord (μ : ℝ) :
+    (SourceMode.ofReal μ).poleCoord = 1 / 2 + Complex.I * μ := rfl
+
 /-- **The identification / completeness obligation** (the open analytic content): every nontrivial
     zero of `L` is the pole-coordinate of some source mode. Bundles `sourceTrace_identity`
-    (`T_F = −Λ_F'/Λ_F(½+iz)`) and `pole_to_sourceMode`. NOT circular: it asserts that `ρ` is
+    (`T_F = Λ_F'/Λ_F(½+iz)`) and `pole_to_sourceMode`. NOT circular: it asserts that `ρ` is
     *captured by a source mode*, whose `Re (rate) = 0` is established independently by `noDrift`. -/
 def SourceComplete (χ : DirichletCharacter ℂ N) : Prop :=
   ∀ ρ ∈ GRHSpectral.NontrivialZeros χ, ∃ ψ : SourceMode, ρ = ψ.poleCoord
@@ -71,25 +90,47 @@ theorem grh_of_sourceComplete (χ : DirichletCharacter ℂ N) (h : SourceComplet
   obtain ⟨ψ, hρeq⟩ := h ρ hρ
   rw [hρeq, ψ.poleCoord_re]
 
+/-- Reverse of `grh_of_sourceComplete`: if every nontrivial zero is on the line, each is captured by
+    the source mode with `rate := ρ − ½`, whose `conserved` field holds because `Re ρ = ½` gives
+    `Re (rate) = 0`. -/
+theorem sourceComplete_of_grh (χ : DirichletCharacter ℂ N) (h : GRHSpectral.GRH χ) :
+    SourceComplete χ := by
+  intro ρ hρ
+  have hre : (ρ - 1 / 2 : ℂ).re = 0 := by
+    rw [Complex.sub_re, h ρ hρ]; norm_num
+  refine ⟨{ rate := ρ - 1 / 2, amp := 1, amp_ne := one_ne_zero, conserved := ?_ }, ?_⟩
+  · intro τ; rw [hre]; simp
+  · show ρ = 1 / 2 + (ρ - 1 / 2); ring
+
+/-- `SourceComplete χ ↔ GRH χ`. Forward: the σ-free source forcing (`grh_of_sourceComplete`).
+    Backward: build the capturing modes from the on-line locations (`sourceComplete_of_grh`). -/
+theorem sourceComplete_iff_grh (χ : DirichletCharacter ℂ N) :
+    SourceComplete χ ↔ GRHSpectral.GRH χ :=
+  ⟨grh_of_sourceComplete χ, sourceComplete_of_grh χ⟩
+
 /-! ## The regularized source trace and the trace-identity target -/
 
 /-- **The regularized source trace** of a source-mode family — the Hadamard-regularized resolvent
     sum `T_F(s) = ∑ₙ [1/(s − poleCoordₙ) + 1/poleCoordₙ]`. The counterterms `1/poleCoordₙ` make the
     series converge (each term `~ 1/|poleCoordₙ|²`), matching the convergent partial-fraction form
-    of `−L'/L`; the poles are still exactly the (on-line) source-mode pole-coords. -/
+    of `L'/L`; the poles are still exactly the (on-line) source-mode pole-coords. -/
 noncomputable def sourceTrace (modes : ℕ → SourceMode) (s : ℂ) : ℂ :=
   ∑' n, ((s - (modes n).poleCoord)⁻¹ + (modes n).poleCoord⁻¹)
 
 /-- **The trace-identity target** (the open analytic content, σ-free): the source trace equals the
-    completed log-derivative `−L'/L` of the channel `χ`. Proving this — the construction faithfully
-    reproducing `−Λ_F'/Λ_F` — is your `sourceTrace_identity`. With the pole-matching it yields the
-    capture below, hence `SourceComplete`, hence GRH. It mentions no `σ`, `ρ`, or critical line. -/
+    log-derivative `L'/L` of the channel `χ` (so `−sourceTrace` is the von Mangoldt prime field
+    `−L'/L`). Proving this — the construction faithfully reproducing `Λ_F'/Λ_F` — is your
+    `sourceTrace_identity`. With the pole-matching it yields the capture below, hence `SourceComplete`,
+    hence GRH. It mentions no `σ`, `ρ`, or critical line.
+
+    Sign: each pole-coord `cₙ` gives `sourceTrace` residue `+1`, matching the residue `+n` of `L'/L`
+    at a zero of multiplicity `n` (`LFunction_logDeriv_residue_eq_order`). -/
 def SourceTraceIdentity (modes : ℕ → SourceMode) (χ : DirichletCharacter ℂ N) : Prop :=
-  ∀ s : ℂ, sourceTrace modes s = -logDeriv (DirichletCharacter.LFunction χ) s
+  ∀ s : ℂ, sourceTrace modes s = logDeriv (DirichletCharacter.LFunction χ) s
 
 /-- **Capture ⟹ completeness.** If every nontrivial zero equals some source-mode pole-coord, then
     `SourceComplete` holds. The capture (`pole_to_sourceMode`) is what the trace identity plus
-    pole-matching of `T_F = −L'/L` supplies — both poles must coincide, and the source poles are
+    pole-matching of `T_F = L'/L` supplies — both poles must coincide, and the source poles are
     on the line. -/
 theorem sourceComplete_of_poleCapture (modes : ℕ → SourceMode) (χ : DirichletCharacter ℂ N)
     (hcap : ∀ ρ ∈ GRHSpectral.NontrivialZeros χ, ∃ n, ρ = (modes n).poleCoord) :
@@ -104,7 +145,7 @@ theorem grh_of_poleCapture (modes : ℕ → SourceMode) (χ : DirichletCharacter
   grh_of_sourceComplete χ (sourceComplete_of_poleCapture modes χ hcap)
 
 open Filter Topology in
-/-- **Pole-matching ⟹ capture.** Given the trace identity `T_F = −L'/L`, plus the two analytic
+/-- **Pole-matching ⟹ capture.** Given the trace identity `T_F = L'/L`, plus the two analytic
     facts — `−L'/L` is **singular** at every nontrivial zero (`hLsing`) and `T_F` is **regular**
     off its pole-coords (`hTreg`) — every zero must coincide with a source-mode pole-coord. These
     two facts are the meromorphic content of `pole_to_sourceMode`; isolating them verifies the
@@ -114,19 +155,19 @@ theorem poleCapture_of_traceIdentity (modes : ℕ → SourceMode) (χ : Dirichle
     (hTreg : ∀ ρ ∈ GRHSpectral.NontrivialZeros χ, (∀ n, ρ ≠ (modes n).poleCoord) →
         ∃ L, Tendsto (sourceTrace modes) (𝓝[≠] ρ) (𝓝 L))
     (hLsing : ∀ ρ ∈ GRHSpectral.NontrivialZeros χ,
-        ¬ ∃ L, Tendsto (fun s => -logDeriv (DirichletCharacter.LFunction χ) s) (𝓝[≠] ρ) (𝓝 L)) :
+        ¬ ∃ L, Tendsto (fun s => logDeriv (DirichletCharacter.LFunction χ) s) (𝓝[≠] ρ) (𝓝 L)) :
     ∀ ρ ∈ GRHSpectral.NontrivialZeros χ, ∃ n, ρ = (modes n).poleCoord := by
   intro ρ hρ
   by_contra h
   push_neg at h
   obtain ⟨L, hL⟩ := hTreg ρ hρ h
   refine hLsing ρ hρ ⟨L, ?_⟩
-  have heq : (fun s => -logDeriv (DirichletCharacter.LFunction χ) s) = sourceTrace modes := by
+  have heq : (fun s => logDeriv (DirichletCharacter.LFunction χ) s) = sourceTrace modes := by
     funext s; exact (hid s).symm
   rw [heq]; exact hL
 
 open Filter Topology in
-/-- **GRH from the trace identity**, fully assembled: the identity `T_F = −L'/L`, the singularity of
+/-- **GRH from the trace identity**, fully assembled: the identity `T_F = L'/L`, the singularity of
     `−L'/L` at the zeros, and the regularity of `T_F` off its (on-line) pole-coords ⟹ GRH. The
     on-line forcing is `SourceMode.noDrift` (σ-free); the three hypotheses are the analytic content
     (`sourceTrace_identity` + the pole structure). -/
@@ -135,7 +176,7 @@ theorem grh_of_traceIdentity (modes : ℕ → SourceMode) (χ : DirichletCharact
     (hTreg : ∀ ρ ∈ GRHSpectral.NontrivialZeros χ, (∀ n, ρ ≠ (modes n).poleCoord) →
         ∃ L, Tendsto (sourceTrace modes) (𝓝[≠] ρ) (𝓝 L))
     (hLsing : ∀ ρ ∈ GRHSpectral.NontrivialZeros χ,
-        ¬ ∃ L, Tendsto (fun s => -logDeriv (DirichletCharacter.LFunction χ) s) (𝓝[≠] ρ) (𝓝 L)) :
+        ¬ ∃ L, Tendsto (fun s => logDeriv (DirichletCharacter.LFunction χ) s) (𝓝[≠] ρ) (𝓝 L)) :
     GRHSpectral.GRH χ :=
   grh_of_poleCapture modes χ (poleCapture_of_traceIdentity modes χ hid hTreg hLsing)
 
@@ -147,8 +188,41 @@ this discharges `hLsing` for every nontrivial zero. All of this is σ-free. -/
 
 open Filter Topology
 
+/-- **`logDeriv f` has a *simple* pole at an isolated zero — exact order `−1`.** If `f` is analytic
+    at `ρ`, vanishes there, and is not locally zero, then `meromorphicOrderAt (logDeriv f) ρ = −1`,
+    *regardless* of the zero's multiplicity `m`: `logDeriv f = f'/f` and `f ~ c(z−ρ)^m` give
+    `f'/f ~ m/(z−ρ)`, a simple pole. The multiplicity `m` is the *residue* (`logDeriv_pole_of_order`),
+    not the pole order. So the counting function `−L'/L` charges each zero **location** once (order 1)
+    and carries its multiplicity in the residue. -/
+theorem meromorphicOrderAt_logDeriv_eq_neg_one {f : ℂ → ℂ} {ρ : ℂ}
+    (hf : AnalyticAt ℂ f ρ) (hfρ : f ρ = 0) (hne : ¬ f =ᶠ[𝓝 ρ] 0) :
+    meromorphicOrderAt (logDeriv f) ρ = -1 := by
+  have hdf : AnalyticAt ℂ (deriv f) ρ := hf.deriv
+  have htop : analyticOrderAt f ρ ≠ ⊤ := fun h => hne (analyticOrderAt_eq_top.mp h)
+  obtain ⟨m, hm⟩ := ENat.ne_top_iff_exists.mp htop
+  have hderiv : analyticOrderAt (deriv f) ρ + 1 = analyticOrderAt f ρ := by
+    have h := hf.analyticOrderAt_deriv_add_one
+    rwa [show (fun x => f x - f ρ) = f by funext x; rw [hfρ, sub_zero]] at h
+  obtain ⟨k, hk⟩ : ∃ k : ℕ, analyticOrderAt (deriv f) ρ = (k : ℕ∞) := by
+    rcases eq_or_ne (analyticOrderAt (deriv f) ρ) ⊤ with h | h
+    · rw [h, top_add] at hderiv; exact absurd hderiv.symm htop
+    · obtain ⟨k, hk⟩ := ENat.ne_top_iff_exists.mp h
+      exact ⟨k, hk.symm⟩
+  have hkm : k + 1 = m := by
+    have hc : (k : ℕ∞) + 1 = (m : ℕ∞) := by rw [← hk, hderiv, ← hm]
+    exact_mod_cast hc
+  have e1 : meromorphicOrderAt f ρ = (m : ℤ) := by
+    rw [hf.meromorphicOrderAt_eq, ← hm]; simp
+  have e2 : meromorphicOrderAt (deriv f) ρ = (k : ℤ) := by
+    rw [hdf.meromorphicOrderAt_eq, hk]; simp
+  have hlog : logDeriv f = (deriv f) / f := by funext x; exact logDeriv_apply f x
+  rw [hlog, meromorphicOrderAt_div hdf.meromorphicAt hf.meromorphicAt, e1, e2]
+  have heq : (k : ℤ) - (m : ℤ) = -1 := by omega
+  rw [show (-1 : WithTop ℤ) = ((-1 : ℤ) : WithTop ℤ) from by norm_cast]
+  exact_mod_cast heq
+
 /-- **`logDeriv f` has a simple pole at an isolated zero**: if `f` is analytic at `ρ`, vanishes
-    there, and is not locally zero, then `meromorphicOrderAt (logDeriv f) ρ = -1 < 0`. -/
+    there, and is not locally zero, then `meromorphicOrderAt (logDeriv f) ρ < 0`. -/
 theorem meromorphicOrderAt_logDeriv_neg {f : ℂ → ℂ} {ρ : ℂ}
     (hf : AnalyticAt ℂ f ρ) (hfρ : f ρ = 0) (hne : ¬ f =ᶠ[𝓝 ρ] 0) :
     meromorphicOrderAt (logDeriv f) ρ < 0 := by
@@ -220,7 +294,26 @@ theorem LFunction_logDeriv_not_tendsto (χ : DirichletCharacter ℂ N) {ρ : ℂ
     (LFunction_analyticOnNhd χ ρ (Set.mem_compl_singleton_iff.mpr hρ1)) hzero
     (LFunction_not_eventuallyEq_zero χ hρ1)
 
-/-- **GRH from the trace identity, with `hLsing` discharged.** Only the identity `T_F = −L'/L` and
+/-- **A nontrivial `L(·,χ)` zero has positive natural multiplicity.** Its `analyticOrderAt` is a
+    finite (not locally zero) nonzero (it *is* a zero) natural number `n ≥ 1`. This is the order
+    `n` that `logDeriv_pole_of_order` reads off as the **residue** of `L'/L` at `ρ` — the weight the
+    counting function assigns to the zero. σ-free: no mention of `Re ρ`. -/
+theorem analyticOrderAt_LFunction_eq_pos_nat (χ : DirichletCharacter ℂ N) {ρ : ℂ}
+    (hρ : ρ ∈ GRHSpectral.NontrivialZeros χ) :
+    ∃ n : ℕ, 1 ≤ n ∧ analyticOrderAt (DirichletCharacter.LFunction χ) ρ = (n : ℕ∞) := by
+  obtain ⟨_, hre1, hzero⟩ := hρ
+  have hρ1 : ρ ≠ 1 := by intro h; rw [h] at hre1; simp at hre1
+  have hf : AnalyticAt ℂ (DirichletCharacter.LFunction χ) ρ :=
+    LFunction_analyticOnNhd χ ρ (Set.mem_compl_singleton_iff.mpr hρ1)
+  have htop : analyticOrderAt (DirichletCharacter.LFunction χ) ρ ≠ ⊤ :=
+    fun h => LFunction_not_eventuallyEq_zero χ hρ1 (analyticOrderAt_eq_top.mp h)
+  obtain ⟨n, hn⟩ := ENat.ne_top_iff_exists.mp htop
+  refine ⟨n, ?_, hn.symm⟩
+  rcases Nat.eq_zero_or_pos n with h0 | hpos
+  · exact absurd hzero (hf.analyticOrderAt_eq_zero.mp (by rw [← hn, h0]; rfl))
+  · exact hpos
+
+/-- **GRH from the trace identity, with `hLsing` discharged.** Only the identity `T_F = L'/L` and
     the regularity of `T_F` off its (on-line) pole-coords remain as hypotheses — the singularity of
     `−L'/L` at the zeros is now a theorem. -/
 theorem grh_of_traceIdentity' (modes : ℕ → SourceMode) (χ : DirichletCharacter ℂ N)
@@ -228,7 +321,8 @@ theorem grh_of_traceIdentity' (modes : ℕ → SourceMode) (χ : DirichletCharac
     (hTreg : ∀ ρ ∈ GRHSpectral.NontrivialZeros χ, (∀ n, ρ ≠ (modes n).poleCoord) →
         ∃ L, Tendsto (sourceTrace modes) (𝓝[≠] ρ) (𝓝 L)) :
     GRHSpectral.GRH χ :=
-  grh_of_traceIdentity modes χ hid hTreg (fun _ hρ => LFunction_logDeriv_not_tendsto χ hρ)
+  grh_of_traceIdentity modes χ hid hTreg
+    (fun _ hρ => by rintro ⟨M, hM⟩; exact LFunction_logDeriv_not_tendsto χ hρ ⟨-M, hM.neg⟩)
 
 /-- **`hTreg` reduces to continuity of the regularized trace.** If `T_F` is continuous at each zero
     off its pole-coords, the punctured limit exists. This is *not* GRH-hard: it is the regularity of
@@ -242,7 +336,7 @@ theorem hTreg_of_continuousAt (modes : ℕ → SourceMode) (χ : DirichletCharac
   ⟨sourceTrace modes ρ, (hcont ρ hρ hne).tendsto.mono_left nhdsWithin_le_nhds⟩
 
 /-- **GRH from the trace identity — both glue lemmas discharged.** The only remaining inputs are the
-    frontier identity `T_F = −L'/L` (`SourceTraceIdentity`) and continuity of the regularized trace
+    frontier identity `T_F = L'/L` (`SourceTraceIdentity`) and continuity of the regularized trace
     off its (on-line) pole-coords. The singularity of `−L'/L` at the zeros (`hLsing`) is now a
     theorem; the on-line forcing is `SourceMode.noDrift` (σ-free). -/
 theorem grh_of_traceIdentity'' (modes : ℕ → SourceMode) (χ : DirichletCharacter ℂ N)
@@ -283,7 +377,7 @@ theorem continuousAt_sourceTrace_of_localMtest (modes : ℕ → SourceMode) {ρ 
 
 /-- **GRH from the trace identity + the regularization M-test.** The regularization obligation is now
     fully concrete and standard: at each nontrivial zero off the source poles, the Hadamard-regularized
-    resolvent series satisfies a Weierstrass M-test. Combined with the frontier identity `T_F = −L'/L`
+    resolvent series satisfies a Weierstrass M-test. Combined with the frontier identity `T_F = L'/L`
     this gives GRH. (`hLsing` is a theorem; the on-line forcing is `SourceMode.noDrift`, σ-free.) -/
 theorem grh_of_traceIdentity_mtest (modes : ℕ → SourceMode) (χ : DirichletCharacter ℂ N)
     (hid : SourceTraceIdentity modes χ)
@@ -392,7 +486,7 @@ theorem hasLocalMtest_resolvent (modes : ℕ → SourceMode) {ρ : ℂ} {δ : �
 
 /-- **GRH from the trace identity + standard regularization inputs.** Fully grounds the
     regularization in pole-separation, escape-to-infinity, and trace-class summability — all σ-free
-    — leaving only the frontier identity `T_F = −L'/L`. -/
+    — leaving only the frontier identity `T_F = L'/L`. -/
 theorem grh_of_traceIdentity_separated (modes : ℕ → SourceMode) (χ : DirichletCharacter ℂ N)
     (hid : SourceTraceIdentity modes χ)
     (hreg : ∀ ρ ∈ GRHSpectral.NontrivialZeros χ, (∀ n, ρ ≠ (modes n).poleCoord) →
@@ -406,7 +500,7 @@ theorem grh_of_traceIdentity_separated (modes : ℕ → SourceMode) (χ : Dirich
 
 /-! ## The Euler-product (prime-side) ingredient — and the honest wall
 
-`SourceTraceIdentity` asserts the **zero-side** (Hadamard) expansion `∑ₙ[1/(s−cₙ)+1/cₙ] = −L'/L`,
+`SourceTraceIdentity` asserts the **zero-side** (Hadamard) expansion `∑ₙ[1/(s−cₙ)+1/cₙ] = L'/L`,
 where the `cₙ` are the source-mode pole-coords (all on the line by `SourceMode.noDrift`). By
 `grh_of_traceIdentity_separated`, that identity *implies GRH* — so it cannot be proven without proving
 GRH. What Euler product + completion genuinely give is the **prime-side** identity below: `−L'/L`
@@ -428,19 +522,20 @@ theorem neg_logDeriv_LFunction_eq_vonMangoldt (χ : DirichletCharacter ℂ N) {s
   ring
 
 /-- **A Hadamard factorization datum**: an enumeration `Z` of the **actual** nontrivial zeros with
-    the zero-side identity `−L'/L(s) = ∑ₙ [1/(s−Zₙ) + 1/Zₙ]`. The `Zₙ` carry their genuine real
-    parts — **nothing forces them on-line.** (Classical; not in mathlib for Dirichlet `L`.) -/
+    the zero-side identity `L'/L(s) = ∑ₙ [1/(s−Zₙ) + 1/Zₙ]` (residue `+1` per `Zₙ`, matching `L'/L`).
+    The `Zₙ` carry their genuine real parts — **nothing forces them on-line.** (Classical; not in
+    mathlib for Dirichlet `L`.) -/
 def HadamardData (χ : DirichletCharacter ℂ N) (Z : ℕ → ℂ) : Prop :=
-  ∀ s, -logDeriv (DirichletCharacter.LFunction χ) s = ∑' n, ((s - Z n)⁻¹ + (Z n)⁻¹)
+  ∀ s, logDeriv (DirichletCharacter.LFunction χ) s = ∑' n, ((s - Z n)⁻¹ + (Z n)⁻¹)
 
 open ArithmeticFunction in
 /-- **The explicit formula** (prime side = zero side), σ-free, from Euler product + Hadamard: for
-    `Re s > 1` the von Mangoldt prime series equals the Hadamard sum over the **actual** zeros. This
-    is the genuine, GRH-free content Hadamard buys. -/
+    `Re s > 1` the von Mangoldt prime series `−L'/L` equals minus the Hadamard sum over the **actual**
+    zeros. This is the genuine, GRH-free content Hadamard buys. -/
 theorem explicitFormula (χ : DirichletCharacter ℂ N) (Z : ℕ → ℂ) (h : HadamardData χ Z)
     {s : ℂ} (hs : 1 < s.re) :
     LSeries ((fun n : ℕ => χ ↑n) * fun n => (vonMangoldt n : ℂ)) s
-      = ∑' n, ((s - Z n)⁻¹ + (Z n)⁻¹) := by
+      = -∑' n, ((s - Z n)⁻¹ + (Z n)⁻¹) := by
   rw [← neg_logDeriv_LFunction_eq_vonMangoldt χ hs, h s]
 
 /-- **The whole gap, exactly.** `SourceTraceIdentity` is *precisely* a Hadamard factorization over the

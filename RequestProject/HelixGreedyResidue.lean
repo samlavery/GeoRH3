@@ -54,8 +54,7 @@ for any self-adjoint projection) instantiates to the concrete EF
 at the boundary s = 1.
 
 This instantiation requires constructing the specific Hilbert space
-and projection operator for ζ's zeros — which is equivalent to RH
-(the Weil positivity criterion).
+and projection operator for ζ's zeros.
 -/
 
 open scoped BigOperators Real

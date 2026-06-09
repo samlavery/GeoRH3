@@ -240,30 +240,6 @@ theorem ef_per_zero_nonneg_summary :
     0 ≤ (zeroTerm (σ : ℂ) ρ).re :=
   fun σ hσ ρ hρ => re_zeroTerm_nonneg σ hσ ρ hρ.1 hρ.2.1
 
-/-! ### Connection 6: Conditional RH from EF
-
-The EF gives two conditional RH results:
-1. Bounded envelopes ⟹ RH (via `conditionalRH_from_bounded_envelopes`)
-2. Stationary envelopes ⟹ RH (via `conditionalRH_from_stationary_envelopes`)
-
-The gap audit identifies the obstacle: proving that the actual ζ zeros
-have bounded/stationary envelopes. This is equivalent to RH itself. -/
-
-/-- Conditional RH: if all reflected-pair envelopes are bounded, then RH
-    (in both the `NontrivialZeros` formulation and Mathlib's `RiemannHypothesis`). -/
-theorem ef_conditional_rh :
-    (∀ ρ : ℂ, ρ ∈ NontrivialZeros →
-      ∃ M : ℝ, ∀ θ : ℝ, reflectedPairEnvelope ρ.re θ ≤ M) →
-    (∀ ρ : ℂ, ρ ∈ NontrivialZeros → ρ.re = 1/2) :=
-  conditionalRH_from_bounded_envelopes
-
-/-- Conditional RH stated using Mathlib's `RiemannHypothesis`. -/
-theorem ef_conditional_rh_mathlib :
-    (∀ ρ : ℂ, ρ ∈ NontrivialZeros →
-      ∃ M : ℝ, ∀ θ : ℝ, reflectedPairEnvelope ρ.re θ ≤ M) →
-    RiemannHypothesis :=
-  fun h => NontrivialZeros_implies_RiemannHypothesis (conditionalRH_from_bounded_envelopes h)
-
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Part III: What the EF Proves Toward the Gap
 -- ═══════════════════════════════════════════════════════════════════════════

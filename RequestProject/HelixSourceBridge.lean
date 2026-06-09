@@ -267,38 +267,6 @@ theorem weilGaussianBridge_of_radial_drift_impossible
   ZD.weilGaussianBridge_of_nontrivialZeros_on_line
     (nontrivialZeros_on_line_of_radial_drift_impossible hdrift)
 
-/-- Radial drift impossibility proves Mathlib's `RiemannHypothesis`. -/
-theorem riemannHypothesis_of_radial_drift_impossible
-    (hdrift : RadialDriftImpossibleOnZeros) :
-    RiemannHypothesis :=
-  RHBridge.no_offline_zeros_implies_rh
-    (nontrivialZeros_on_line_of_radial_drift_impossible hdrift)
-
-/-- The audited no-drift branch closes the chain to Mathlib's
-    `RiemannHypothesis`. -/
-theorem helix_audit_no_radial_drift_implies_riemannHypothesis
-    (hdrift : RadialDriftImpossibleOnZeros) :
-    RiemannHypothesis :=
-  riemannHypothesis_of_radial_drift_impossible hdrift
-
-/-- The yes/no source radial-drift audit. -/
-theorem radial_drift_audit_consequence :
-    (RadialDriftImpossibleOnZeros → RiemannHypothesis) ∧
-    (RadialDriftCreatedOnZero → ¬ RiemannHypothesis) :=
-  ⟨helix_audit_no_radial_drift_implies_riemannHypothesis,
-   not_riemannHypothesis_of_radial_drift_created⟩
-
-/-- The full concrete helix audit closes the same yes/no branch:
-    no source/saved radial drift gives Mathlib's `RiemannHypothesis`; any
-    source/saved radial drift witness gives its negation. -/
-theorem helix_construction_radial_drift_audit_consequence :
-    (HelixConstructionNoRadialDriftOnZeros → RiemannHypothesis) ∧
-    (HelixConstructionRadialDriftCreatedOnZero → ¬ RiemannHypothesis) :=
-  ⟨fun h => helix_audit_no_radial_drift_implies_riemannHypothesis
-      (helix_construction_no_radial_drift_iff.mp h),
-   fun h => not_riemannHypothesis_of_radial_drift_created
-      (radial_drift_created_of_helix_construction_radial_drift h)⟩
-
 /-- Universal helix spectral identification on the zero set places every
     nontrivial zero at the unit midpoint. -/
 theorem nontrivialZeros_on_line_of_helix_spectral_identification

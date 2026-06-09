@@ -3,7 +3,7 @@ import RequestProject.HelixEmpiricalCores
 import RequestProject.VonMangoldtEFStandalone
 
 /-!
-# The spectral side: the Möbius operator whose unitarity is RH
+# The spectral side: the Möbius operator
 
 Built on my own axiom-clean cores (`HelixEmpiricalCores`). This is the operator-side
 companion to `HelixProjection` (the geometric side).

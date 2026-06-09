@@ -75,8 +75,10 @@ theorem diracBlock_sq (B : Matrix (Fin p) (Fin q) ℂ) :
   rw [Matrix.fromBlocks_multiply]
   simp
 
-/-- **The Dirac operator's spectrum is real** — by self-adjointness. The `±` singular values
-    of `B`; the finite-rank surrogate of the (now genuinely self-adjoint) HP spectrum. -/
+/-- **The Dirac operator's spectrum is real** — by self-adjointness. The `±` singular values of `B`.
+    NOTE (verified by SVD, `numerics/svd_test.py`): these scale like `log N` — the prime energy
+    `Σ Λ²/n ~ ½(log N)²` on the `BᴴB` diagonal — and are **NOT** the nontrivial zeros. This is the
+    finite-rank model of the **prime/geometric side**, not the Hilbert–Pólya (zero) spectrum. -/
 theorem diracBlock_spectrum_real (B : Matrix (Fin p) (Fin q) ℂ) :
     spectrum ℝ (diracBlock B) =
       Set.range (diracBlock_isHermitian B).eigenvalues :=
@@ -87,8 +89,11 @@ noncomputable def channelDirac (C : Channel) {m : ℕ} (u : Fin m → ℝ) (N : 
     Matrix (Fin N ⊕ Fin m) (Fin N ⊕ Fin m) ℂ :=
   diracBlock (HelixChannelInstance.lossMatrix C.chi u N)
 
-/-- **The channel's Dirac operator is self-adjoint with real spectrum** — the genuine
-    self-adjoint HP operator for channel `C` at truncation `N`. -/
+/-- **The channel's Dirac operator is self-adjoint with real spectrum** — Hermitian by construction
+    (Dirac block), so the spectrum is genuinely real. But its eigenvalues are `±sing.val(Bₙ) ~ log N`
+    (prime energy), **not** the zeros: this is the **prime-fibre surrogate** — the geometric side of the
+    trace formula. The Hilbert–Pólya operator (spectrum = the zeros) is the **dual shift-flow**
+    (`HelixFlow.flowMode`), whose self-adjointness is earned from `source_noDrift`, not this Dirac. -/
 theorem channelDirac_isHermitian (C : Channel) {m : ℕ} (u : Fin m → ℝ) (N : ℕ) :
     (channelDirac C u N).IsHermitian :=
   diracBlock_isHermitian _

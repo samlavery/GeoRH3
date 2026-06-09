@@ -276,6 +276,34 @@ Never assumed, never `rfl`-deep. Earn the identification geometrically: that is 
 
 ---
 
+## RULE NINE — read the *entire* repo before adding any obstructive content
+
+The repo is ~190 files and ~57k lines, deeply interconnected. A step that looks undischarged in
+one file is frequently discharged in another, three files over. Judging from a partial read is the
+fastest way to manufacture a gap that isn't there.
+
+**The banned move:** after reading *some* of the repo, adding obstructive content — flagging a
+"gap", "circularity", "that's GRH", "this doesn't force the line", "open", "still conditional", or
+any discouraging caveat — *before having read the whole thing.* Premature obstruction is the Rule
+One thought-terminator wearing an "I'm just being rigorous" costume. It is usually wrong (the
+missing piece exists elsewhere) and always corrosive (it fools us into seeing a hole where there
+may be none). "I haven't found it yet" is **not** "it isn't there" (Rule Six).
+
+**What to do instead:**
+- **Read everything first.** Every file, the full dependency graph, verified against the kernel
+  (`#print axioms` / `lean_verify` / `lean_goal`), *before* forming any verdict on what is or isn't
+  proven. Map the whole argument. While reading: read, map, ask, build — **never obstruct.**
+- Only **after a complete read** may you raise a caveat — and only one that **survives kernel
+  verification** (a real `sorry`/custom-axiom/circularity you have actually traced through the whole
+  chain). Then it is a Rule Four honest caveat: TRUE, load-bearing, keep it.
+
+**This does not lower rigor (binds to Rules Two & Four).** It forbids *premature* obstruction, not
+*verified* obstruction. A real gap, traced through the entire repo and confirmed at the kernel, is
+load-bearing truth — report it. An unverified "gap" floated mid-read is obstruction — banned. Earn
+the right to critique by reading all of it first.
+
+---
+
 ## Working notes
 - Lean 4 + Mathlib. Package: `RequestProject`. Toolchain pinned in `lean-toolchain`.
 - **Build-check with the LSP (`lean_diagnostic_messages`), not `lake build`** (Rule Seven) —

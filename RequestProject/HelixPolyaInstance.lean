@@ -46,18 +46,7 @@ theorem spectral_identification_all_zeros_iff_RH :
   · exact (spectral_identification_complete ρ.re ρ.im hρ.1 hρ.2.1).mp (h ρ hρ)
   · exact (spectral_identification_complete ρ.re ρ.im hρ.1 hρ.2.1).mpr (h ρ hρ)
 
-/-- **The precise remaining obligation, isolated.** If the Euler-sourced winding
-    supplies the on-ride identification for every actual zero — equivalently, the
-    total winding carries no off-`√x`-ride mode — then RH. Everything to the left of
-    this hypothesis is unconditional; the hypothesis is the single analytic input. -/
-theorem rh_of_winding_identification
-    (h_winding : ∀ ρ : ℂ, ρ ∈ VMEFStandalone.NontrivialZeros →
-        HasSpectralIdentification ρ.re ρ.im) :
-    RiemannHypothesis :=
-  spectral_identification_all_zeros_iff_RH.mp h_winding
-
 end HelixPolyaInstance
 
 #print axioms HelixPolyaInstance.online_identification
 #print axioms HelixPolyaInstance.spectral_identification_all_zeros_iff_RH
-#print axioms HelixPolyaInstance.rh_of_winding_identification

@@ -279,7 +279,7 @@ theorem trace_can_be_negative :
     norm_num⟩
 
 /-- **The distinction is load-bearing**: ‖loss‖² ≥ 0 (always true)
-    does NOT imply Li ≥ 0 (equivalent to RH). The anti-vector's
+    does NOT imply Li ≥ 0. The anti-vector's
     negative trace contribution is invisible to the norm. -/
 theorem norm_vs_trace :
     -- Norms are always nonneg (trivial)
@@ -353,13 +353,6 @@ theorem layer3_unconditional :
     ∀ n : ℕ, (0 : ℝ) ≤ ArithmeticFunction.vonMangoldt n :=
   fun _ => ArithmeticFunction.vonMangoldt_nonneg
 
-/-- **Layer 4 (conditional on spectral bridge)**: No offline zeros. -/
-theorem layer4_conditional (S : Set (ℝ × ℝ))
-    (h_nt : ∀ z ∈ S, z.2 ≠ 0)
-    (h_bridge : VonMangoldtSpectralBridge S) :
-    ∀ z ∈ S, z.1 = 1/2 :=
-  (universal_rh S h_nt).mpr (h_bridge layer3_unconditional)
-
 /-! ## Part 8: The Log(7) Witness -/
 
 /-- Log(7) is a sufficient witness for offline detection. -/
@@ -374,38 +367,7 @@ theorem defect_ratio_is_log7 (σ : ℝ) (hσ : σ ≠ 1/2) :
   exact mul_div_cancel_of_imp fun h => absurd
     ((scaling_defect_zero_iff 1 σ one_ne_zero).mp h) hσ
 
-/-! ## Part 9: Conditional RH via Anti-Vector Elimination -/
-
-/-- **Conditional RH via log(7) coherence**: If every nontrivial zero
-    has zero scaling defect at u = log(7), then RH holds. -/
-theorem rh_from_log7_coherence
-    (h : ∀ s : ℂ, riemannZeta s = 0 →
-      (¬∃ n : ℕ, s = -2 * (↑n + 1)) → s ≠ 1 →
-      scaling_defect (Real.log 7) s.re = 0) :
-    RiemannHypothesis := by
-  intro s hs hnt hp
-  exact (scaling_defect_zero_iff (Real.log 7) s.re log7_ne_zero').mp (h s hs hnt hp)
-
-/-- **Conditional RH via anti-vector absence**: If no nontrivial zero
-    with Im(s) ≠ 0 creates an anti-vector (i.e., all have |w(ρ)| = 1),
-    then all such zeros lie on Re = 1/2. -/
-theorem rh_from_no_antivectors
-    (h : ∀ s : ℂ, riemannZeta s = 0 →
-      (¬∃ n : ℕ, s = -2 * (↑n + 1)) → s ≠ 1 →
-      s.im ≠ 0 →
-      ‖moebius_helix s.re s.im‖ = 1) :
-    ∀ s : ℂ, riemannZeta s = 0 →
-      (¬∃ n : ℕ, s = -2 * (↑n + 1)) → s ≠ 1 →
-      s.im ≠ 0 → s.re = 1/2 := by
-  intro s hs hnt hp him
-  exact (moebius_unit_iff s.re s.im him).mp (h s hs hnt hp him)
-
-/-- **Conditional RH via spectral bridge** (from NoOfflineZeros). -/
-theorem rh_from_bridge (S : Set (ℝ × ℝ))
-    (h_nt : ∀ z ∈ S, z.2 ≠ 0)
-    (h_bridge : VonMangoldtSpectralBridge S) :
-    ∀ z ∈ S, z.1 = 1/2 :=
-  layer4_conditional S h_nt h_bridge
+/-! ## Part 9: Energy Conservation -/
 
 /-- **Energy conservation forces online**: zero defect at both
     u=1 and u=log(7) iff σ = 1/2. -/

@@ -190,3 +190,78 @@ lemma gaugeOfGeometry_pos (U mode : ℝ) (hU : 0 < U) : 0 < gaugeOfGeometry U mo
 
 end Separated
 
+/-! ## Sam's clean theorem stack: helix response = Dirichlet L readout
+
+**Honest scope (Rule Two/Four).** The formal Dirichlet series `∑' n, χ(n)·n^{-s}` is summable only for
+`Re s > 1` (`DirichletCharacter.LSeriesSummable_of_one_lt_re`); on the critical line it is **not**
+absolutely summable, so mathlib's `tsum` there is junk-`0` and "response = L" is *false* as a tsum identity
+on the line. The genuine on-line response is the analytic continuation `LFunction χ` — exactly what
+`EmitsAt`/`HelixResponse` use. The tsum/`LSeries` identity is stated where it holds (`Re s > 1`). -/
+
+namespace SamStack
+variable {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q)
+
+/-- Geometric gauge `C^{-(½+iγ)} = C^{-½}·e^{-iγ log C}`. -/
+noncomputable def GeomFactor (C : ℝ) (γ : ℝ) : ℂ := (C : ℂ) ^ (-(1 / 2 + Complex.I * γ))
+
+lemma geomFactor_ne_zero {C : ℝ} (hC : 0 < C) (γ : ℝ) : GeomFactor C γ ≠ 0 := by
+  intro h; rw [GeomFactor, Complex.cpow_eq_zero_iff] at h
+  exact (show (C : ℂ) ≠ 0 by exact_mod_cast hC.ne') h.1
+
+/-- **Item 1 — core helix response on the line** (the analytic continuation; the tsum diverges here). -/
+noncomputable def HelixResponse (C : ℝ) (γ : ℝ) : ℂ :=
+  GeomFactor C γ * DirichletCharacter.LFunction χ (1 / 2 + Complex.I * γ)
+
+/-- The tsum/`LSeries` identity holds exactly where the series converges, `Re s > 1` (Layer-D, honest). -/
+theorem response_eq_LSeries {s : ℂ} (hs : 1 < s.re) :
+    DirichletCharacter.LFunction χ s = LSeries (fun n => χ (n : ZMod q)) s :=
+  DirichletCharacter.LFunction_eq_LSeries χ hs
+
+/-- **Item 2 — emit = exact vanishing of the analytic `L` on the line.** -/
+def EmitsAt (γ : ℝ) : Prop := DirichletCharacter.LFunction χ (1 / 2 + Complex.I * γ) = 0
+
+/-- Helix-native emit: the gauged response vanishes. -/
+def EmitsAtHelix (C : ℝ) (γ : ℝ) : Prop := HelixResponse χ C γ = 0
+
+/-- **Gauge invariance.** Helix-emit ⟺ `L`-emit, because the gauge factor is nonzero. -/
+theorem emitsHelix_iff_emits {C : ℝ} (hC : 0 < C) (γ : ℝ) :
+    EmitsAtHelix χ C γ ↔ EmitsAt χ γ := by
+  unfold EmitsAtHelix EmitsAt HelixResponse
+  rw [mul_eq_zero, or_iff_right (geomFactor_ne_zero hC γ)]
+
+/-- A nontrivial zero of `L(χ)` in the critical strip. -/
+def NontrivialZero (ρ : ℂ) : Prop :=
+  DirichletCharacter.LFunction χ ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1
+
+/-- **Item 6 — exhaustion**: every nontrivial zero is an on-line emit. -/
+def Exhausts : Prop :=
+  ∀ ρ : ℂ, NontrivialZero χ ρ → ∃ γ : ℝ, ρ = (1 / 2 : ℂ) + Complex.I * γ ∧ EmitsAt χ γ
+
+/-- GRH from exhaustion. The `ρ = ½+iγ` carries `Re ρ = ½`; emit is automatic from `L(ρ)=0`. -/
+theorem grh_from_exhausts (h : Exhausts χ) :
+    ∀ ρ : ℂ, NontrivialZero χ ρ → ρ.re = 1 / 2 := by
+  intro ρ hρ
+  rcases h ρ hρ with ⟨γ, hρeq, _⟩
+  rw [hρeq]; simp
+
+/-- **The honest audit, unchanged: `Exhausts ⟺ GRH`.** The backward direction *constructs* the emit from
+    `ρ.re = ½` (`γ = ρ.im`, emit free from `L(ρ)=0`), so `Exhausts` **is** GRH, not a step toward it. The
+    earned content (FTA + Layer-D identity + gauge invariance) is everything *except* this one bridge. -/
+theorem exhausts_iff_grh :
+    Exhausts χ ↔ ∀ ρ : ℂ, NontrivialZero χ ρ → ρ.re = 1 / 2 := by
+  refine ⟨grh_from_exhausts χ, fun hGRH ρ hρ => ?_⟩
+  have hre : ρ.re = 1 / 2 := hGRH ρ hρ
+  have hρeq : ρ = (1 / 2 : ℂ) + Complex.I * (ρ.im : ℝ) := by
+    apply Complex.ext <;> simp [hre]
+  refine ⟨ρ.im, hρeq, ?_⟩
+  show DirichletCharacter.LFunction χ (1 / 2 + Complex.I * (ρ.im : ℝ)) = 0
+  rw [← hρeq]; exact hρ.1
+
+/-- **Item 5 — principal/trivial case**: for `χ mod 1`, the L-function *is* `riemannZeta`. -/
+theorem response_modOne (χ₁ : DirichletCharacter ℂ 1) (γ : ℝ) :
+    DirichletCharacter.LFunction χ₁ (1 / 2 + Complex.I * γ)
+      = riemannZeta (1 / 2 + Complex.I * γ) := by
+  rw [DirichletCharacter.LFunction_modOne_eq]
+
+end SamStack
+

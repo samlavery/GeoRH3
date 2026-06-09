@@ -6,8 +6,8 @@ import RequestProject.KeiperLiNonempty
 # Keiper–Li coefficient λ₁: unconditional positivity from the strip
 
 The Keiper–Li coefficients are `λ_n = Σ_ρ [1 − (1 − 1/ρ)ⁿ]`, summed over the
-nontrivial zeros `ρ`. Li's theorem says `λ_n ≥ 0 for all n ⟺ RH`. The
-**`∀ n`** statement is RH; the **individual low coefficients are unconditional**.
+nontrivial zeros `ρ`. Li's theorem says `λ_n ≥ 0 for all n ⟺ RH`; the
+**individual low coefficients are unconditional**.
 
 This file proves the `n = 1` case completely and unconditionally:
 

@@ -469,7 +469,7 @@ end ForcedMidpoint
     projection onto ζ zeros. This requires showing that the zero subspace
     is R-invariant (zeros come in pairs ρ, 1-ρ AND each pair contributes
     positively). The pairing is the functional equation (free). The
-    positivity of each pair's contribution is RH.
+    open step is the positivity of each pair's contribution.
 
     Equivalently: we need Λ ≥ 0 to force the round-trip to be trivial.
     The Mertens trick (3+4cosθ+cos2θ ≥ 0) gives a partial result

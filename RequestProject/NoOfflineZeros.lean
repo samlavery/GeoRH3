@@ -34,10 +34,10 @@ The sum converges for each n (known fact), but formalizing this requires
 analytic number theory infrastructure not in Mathlib.
 
 ### Obstacle 3: Proving λ_n ≥ 0 from the Number Theory Side
-**Status: THIS IS RH ITSELF.**
+**Status: OPEN.**
 
-The Li-Keiper criterion says λ_n ≥ 0 ⟺ RH. Proving it requires
-the Weil explicit formula + positivity of the full quadratic form.
+Proving λ_n ≥ 0 requires the Weil explicit formula + positivity of
+the full quadratic form.
 
 ## What This File Proves
 
