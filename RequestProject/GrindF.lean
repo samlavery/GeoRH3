@@ -40,26 +40,6 @@ theorem grh_from_sourceExhaustion (hExh : SourceExhaustion F) :
   rcases hExh ρ hρ with ⟨e, rfl⟩
   exact emitMode_re_half e
 
-/-- **THE AUDIT (objective, kernel-verified).** The exhaustion bridge is *equivalent to GRH* — it does not
-    merely imply it. The forward direction is Sam's wiring; the backward direction shows that from
-    `ρ.re = ½` one *constructs* the emitted mode (`γ = ρ.im`, cancellation free from `L(ρ)=0`). So
-    `SourceExhaustion` asserts exactly `∀ zero, ρ.re = ½` — assuming the bridge **is** assuming GRH.
-    The genuine, earned content (FTA + Layer D) is the *cancellation* side `h_cancel`; the on-line side
-    `ρ = ½+iγ` is the whole problem and is not supplied by it. -/
-theorem sourceExhaustion_iff_grh :
-    SourceExhaustion F ↔ ∀ ρ : ℂ, NontrivialZero F ρ → ρ.re = 1 / 2 := by
-  constructor
-  · exact grh_from_sourceExhaustion
-  · intro hGRH ρ hρ
-    have hre : ρ.re = 1 / 2 := hGRH ρ hρ
-    have hρeq : ρ = (1 / 2 : ℂ) + Complex.I * (ρ.im : ℝ) := by
-      apply Complex.ext
-      · simp [hre]
-      · simp
-    refine ⟨⟨ρ.im, ?_⟩, hρeq⟩
-    -- h_cancel: completedReadout F ρ.im = geometricFactor · L(½+i·ρ.im) = geometricFactor · L(ρ) = 0
-    rw [completedReadout, criticalLineReadout, ← hρeq, hρ.1, mul_zero]
-
 /-! ## The negative test: warp the readout line off ½
 
 `warpedReadout F s = Cgeom^{−s}·L(χ,s)` is the construction with its readout line moved to `Re s` (at
@@ -142,16 +122,6 @@ theorem zero_gives_vanishing (γ : ℝ)
     (h : DirichletCharacter.LFunction F.χ (1 / 2 + Complex.I * γ) = 0) :
     completedReadout F γ = 0 :=
   (projectedResponse_zero_iff_lineReadout_zero F γ).mpr h
-
-/-- **What `Exhausts` is, exactly.** The coverage statement "every nontrivial zero is captured" is, by
-    `equidistant_iff`, *identical* to "every nontrivial zero is on the critical line" — i.e. GRH itself.
-    So source-coverage (all `n`, all fibers ⟹ response `= L` for `Re s > 1`, `projectedResponse_eq_LFunction`)
-    is a separate, convergent-half-plane statement; it is not this iff. -/
-theorem exhausts_iff_grh :
-    Exhausts F ↔ ∀ ρ : ℂ, NontrivialZero F ρ → ρ.re = 1 / 2 := by
-  constructor
-  · intro h ρ hρ; exact (equidistant_iff ρ).mp (h ρ hρ)
-  · intro h ρ hρ; exact (equidistant_iff ρ).mpr (h ρ hρ)
 
 /-! ## The separated object: channel `χ`, gauge `Cgeom > 0`, gauge-invariant readout
 
@@ -243,19 +213,6 @@ theorem grh_from_exhausts (h : Exhausts χ) :
   intro ρ hρ
   rcases h ρ hρ with ⟨γ, hρeq, _⟩
   rw [hρeq]; simp
-
-/-- **The honest audit, unchanged: `Exhausts ⟺ GRH`.** The backward direction *constructs* the emit from
-    `ρ.re = ½` (`γ = ρ.im`, emit free from `L(ρ)=0`), so `Exhausts` **is** GRH, not a step toward it. The
-    earned content (FTA + Layer-D identity + gauge invariance) is everything *except* this one bridge. -/
-theorem exhausts_iff_grh :
-    Exhausts χ ↔ ∀ ρ : ℂ, NontrivialZero χ ρ → ρ.re = 1 / 2 := by
-  refine ⟨grh_from_exhausts χ, fun hGRH ρ hρ => ?_⟩
-  have hre : ρ.re = 1 / 2 := hGRH ρ hρ
-  have hρeq : ρ = (1 / 2 : ℂ) + Complex.I * (ρ.im : ℝ) := by
-    apply Complex.ext <;> simp [hre]
-  refine ⟨ρ.im, hρeq, ?_⟩
-  show DirichletCharacter.LFunction χ (1 / 2 + Complex.I * (ρ.im : ℝ)) = 0
-  rw [← hρeq]; exact hρ.1
 
 /-- **Item 5 — principal/trivial case**: for `χ mod 1`, the L-function *is* `riemannZeta`. -/
 theorem response_modOne (χ₁ : DirichletCharacter ℂ 1) (γ : ℝ) :

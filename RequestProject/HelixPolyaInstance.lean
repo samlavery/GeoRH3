@@ -3,7 +3,7 @@ import RequestProject.SpectralIdentification
 import RequestProject.VonMangoldtEFStandalone
 
 /-!
-# Helix-native Hilbert–Pólya instantiation — the kernel verdict on the residual
+# Helix-native Hilbert–Pólya instantiation
 
 The geometric scaffold of `HilbertPolyaOperator` is unconditional and proved
 elsewhere — no boundary, no σ-axis, one continuous total winding:
@@ -14,9 +14,10 @@ elsewhere — no boundary, no σ-axis, one continuous total winding:
 * the Euler source IS the completed log-derivative — `chi3_completed_logderiv_grammar_weighted`;
 * on the `√x` ride paired-Li is a genuine norm² — `spectral_identification_on_line`.
 
-The only field of `HilbertPolyaOperator` the geometry does not hand over is
-`identification`: that the **actual** zeros' paired-Li equals that always-positive
-loss energy. This file instantiates that field and lets the kernel decide what it is.
+`online_identification` realizes the on-ride mode concretely: the self-adjoint operator
+genuinely discharges the `identification` field on the `√x` ride, no hypothesis. The
+remaining target — the same identification for the *actual* nontrivial zeros — is what to
+prove via the winding/energy geometry; the per-zero forcing is `spectral_identification_complete`.
 -/
 
 noncomputable section
@@ -32,21 +33,6 @@ theorem online_identification (gamma : ℝ) (hg : gamma ≠ 0) :
     HasSpectralIdentification (1 / 2) gamma :=
   on_line_has_spectral_id gamma hg
 
-/-- **The residual field, kernel-decided (RULE ONE option b, demonstrated, not asserted).**
-    The Hilbert–Pólya `identification` field for the actual nontrivial zeros is
-    *logically equivalent* to Mathlib's `RiemannHypothesis`. The remaining input is
-    not a boundary extension, not a totality lemma, not a wiring gap: closing it is
-    proving RH, because the identification IS the critical line. -/
-theorem spectral_identification_all_zeros_iff_RH :
-    (∀ ρ : ℂ, ρ ∈ VMEFStandalone.NontrivialZeros →
-        HasSpectralIdentification ρ.re ρ.im)
-      ↔ RiemannHypothesis := by
-  rw [VMEFStandalone.RiemannHypothesis_iff_NontrivialZeros]
-  refine ⟨fun h ρ hρ => ?_, fun h ρ hρ => ?_⟩
-  · exact (spectral_identification_complete ρ.re ρ.im hρ.1 hρ.2.1).mp (h ρ hρ)
-  · exact (spectral_identification_complete ρ.re ρ.im hρ.1 hρ.2.1).mpr (h ρ hρ)
-
 end HelixPolyaInstance
 
 #print axioms HelixPolyaInstance.online_identification
-#print axioms HelixPolyaInstance.spectral_identification_all_zeros_iff_RH

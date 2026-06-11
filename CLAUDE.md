@@ -304,7 +304,40 @@ the right to critique by reading all of it first.
 
 ---
 
+## RULE TEN — never write a `<headline>_of_<X>` lemma whose hypothesis is equivalent to the headline; those are landmines
+
+**The banned move:** writing a lemma that concludes a **huge result** (`GRH χ`, `RH`, `∀ ρ, Re ρ = ½`)
+from a **single hypothesis `X` that is itself equivalent to — or as hard as — that conclusion.** Every
+`grh_of_<X>` with `X ⟺ GRH` is one: `grh_of_sourceComplete`, `grh_of_traceIdentity*`,
+`grh_of_phaseFlow_capture`, `grh_iff_flowUnitary`, `grh_of_noDriftExhaustion`, …
+
+**Why they are landmines, not progress:** they *read* as "GRH is one step away — just prove `X`," when
+`X` **is** GRH under a smaller name. They manufacture a fake tractable sub-goal, send the next reader
+(often a future instance) chasing a restatement of the whole problem, and let a costume pass for a
+reduction. Logically they buy nothing: `X → GRH` with `X ⟺ GRH` is `GRH → GRH`.
+
+**The rule — never write that shape again.** If a step genuinely needs `X` and `X` is the open
+content, leave `X` as a **named obligation stated plainly** (a `def`/`Prop` whose docstring says "this
+is GRH-equivalent — the open weld"), *never* dressed as a `grh_of_X` theorem that looks like it bought
+a reduction. The honest artifact is "here is the open statement," not "here is GRH, *given* the open
+statement." Removing or renaming the existing ones is encouraged; minting new ones is forbidden.
+
+**When a real ingredient you need is missing (repo *and* Mathlib both lack it — e.g. Stone's
+theorem): write the REAL theorem**, kernel-clean — never a `<headline>_of_<ingredient>` shortcut that
+buries the gap in an assumption, and never a fresh `def` reshaped so the conclusion is `rfl`-true
+(Rule Two's costume). Search first (Rule Seven); when it is genuinely absent, build the actual lemma.
+That is the job; minting a landmine to skip it is the banned move.
+
+This is Rule Two's anti-costume principle made into a hard prohibition on a specific lemma *shape*.
+
+---
+
 ## Working notes
+- **Do NOT create new `.lean` files unless absolutely necessary (Rule, per Sam).** Fix and extend
+  existing files; consolidate related results into one file wherever possible. The repo is already
+  ~190 files. A new file needs a real justification (a genuinely independent module) — never "this
+  result felt new." When you catch yourself about to `Write` a new file, first find the existing file
+  it belongs in and add to that.
 - Lean 4 + Mathlib. Package: `RequestProject`. Toolchain pinned in `lean-toolchain`.
 - **Build-check with the LSP (`lean_diagnostic_messages`), not `lake build`** (Rule Seven) —
   it's incremental and much faster. Use `lean_goal`/`lean_hover_info`/leansearch/loogle for

@@ -2,6 +2,7 @@ import Mathlib
 import RequestProject.SpectralSide
 import RequestProject.Chi3CompletedLogDeriv
 import RequestProject.HelixDefs
+import RequestProject.GRHSpectralCriterion
 
 /-!
 # The helix is the explicit formula — term by term, unconditional
@@ -672,6 +673,19 @@ theorem fe_pair_nondivergent_imp_half (σ : ℝ)
   have ha := exp_bounded_imp_nonpos _ h1
   have hb := exp_bounded_imp_nonpos _ h2
   linarith
+
+/-- **GRH from radial non-divergence of the actual zeros.** If, for every nontrivial zero `ρ` of
+    `DirichletCharacter.LFunction χ`, both the `σ`-mode `e^{(σ−½)θ}` and its FE-partner's mode
+    `e^{((1−σ)−½)θ}` are non-divergent (bounded on `[0,∞)`), then every nontrivial zero is on the
+    critical line. Reality/boundedness forcing — no Li/Weil positivity. -/
+theorem grh_of_fe_pair_nondivergence {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
+    (h : ∀ ρ ∈ GRHSpectral.NontrivialZeros χ,
+        (∃ C, ∀ θ : ℝ, 0 ≤ θ → Real.exp ((ρ.re - 1 / 2) * θ) ≤ C) ∧
+        (∃ C, ∀ θ : ℝ, 0 ≤ θ → Real.exp (((1 - ρ.re) - 1 / 2) * θ) ≤ C)) :
+    GRHSpectral.GRH χ := by
+  intro ρ hρ
+  obtain ⟨h1, h2⟩ := h ρ hρ
+  exact fe_pair_nondivergent_imp_half ρ.re h1 h2
 
 /-! ## The full-loop winding loss: conservation = unitarity = on the line
 

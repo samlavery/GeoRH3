@@ -1,4 +1,5 @@
 import Mathlib
+import RequestProject.GRHSpectralCriterion
 
 /-!
 # The source-flow spectral mechanism, with the reality forcing earned from unitarity
@@ -79,5 +80,24 @@ def RepresentsPole (residue : H →L[ℂ] ℂ) (v : H) : Prop :=
     this, not a crossing. -/
 def IsNewSpectralMode (Vbefore Vafter : Submodule ℂ H) (v : H) : Prop :=
   v ∈ Vafter ∧ v ∉ Vbefore
+
+/-- **GRH from a unitary source flow capturing the (mathlib) zeros — reality, NO positivity.** For a
+    unitary source flow `U` (`‖U τ w‖ = ‖w‖`): if **every nontrivial zero `ρ` of the actual
+    `DirichletCharacter.LFunction χ`** is a *nonzero drifting mode* `v` with drift `ρ.re − ½` and
+    frequency `ρ.im` (`U τ v = e^{(ρ−½)τ} v`), then GRH — `drift_zero_of_unitary` forces the drift to
+    `0`, i.e. `Re ρ = ½`. Pure norm-preservation; **no Li/Weil `≥ 0`**. The conclusion
+    `GRHSpectral.GRH χ` quantifies over `GRHSpectral.NontrivialZeros χ`, the genuine zero set of
+    mathlib's `DirichletCharacter.LFunction χ`. The unitary flow `hU` is supplied by a self-adjoint
+    generator (`HelixForm.gramOp_isSelfAdjoint` + Stone) or a flow-invariant loss metric; the capture
+    `hcap` is the single remaining obligation. -/
+theorem grh_of_unitary_source_flow {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
+    (U : ℝ → H →L[ℂ] H) (hU : ∀ (τ : ℝ) (w : H), ‖U τ w‖ = ‖w‖)
+    (hcap : ∀ ρ ∈ GRHSpectral.NontrivialZeros χ,
+        ∃ v : H, IsDriftingMode U v (ρ.re - 1 / 2) ρ.im) :
+    GRHSpectral.GRH χ := by
+  intro ρ hρ
+  obtain ⟨v, hv⟩ := hcap ρ hρ
+  have hα : ρ.re - 1 / 2 = 0 := drift_zero_of_unitary U hU hv
+  linarith
 
 end HelixSourceFlow

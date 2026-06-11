@@ -247,4 +247,83 @@ theorem grh_from_exhaustion (U : ℝ → H →L[ℂ] H) (hU : ∀ (τ : ℝ) (w 
 
 end Capture
 
+/-! ## Layer C, full: the loss-space phase flow — the `lp` direct-sum of `modeFlow`, unconditional `hU`
+
+Option 3 (flow-invariant loss metric): exhibit the unitary flow directly as the diagonal phase action
+on the loss modes, `U(τ) : (wₙ) ↦ (e^{−iτ·scale(n)} wₙ)`, and prove `‖U τ w‖ = ‖w‖` by `lp`-norm
+invariance under coordinatewise unit phases (Parseval) — per-mode unit modulus, norm preserved
+blockwise. The frequencies `scale(n)` may run to `∞`; **no generator is formed, no Stone invoked.**
+This is the genuine `hU`, the direct-sum of `modeFlow_norm`. -/
+
+open scoped ENNReal BigOperators
+
+/-- The loss space `ℓ²(ℕ)` carrying the source modes. -/
+abbrev LossSpace : Type := lp (fun _ : ℕ => ℂ) 2
+
+/-- The per-mode flow phase `exp(−iτ·scale(n))` as a coordinate (the `modeFlow` factor). -/
+noncomputable def lossPhase (F : HelixChannel) (τ : ℝ) (n : ℕ) : ℂ :=
+  Complex.exp (-Complex.I * (τ : ℂ) * (projectedScale F n : ℂ))
+
+theorem lossPhase_norm (F : HelixChannel) (τ : ℝ) (n : ℕ) : ‖lossPhase F τ n‖ = 1 :=
+  flowPhase_norm_one F τ n
+
+/-- Coordinatewise unit phases preserve `ℓ²`-membership. -/
+theorem memℓp_lossFlow (F : HelixChannel) (τ : ℝ) (w : LossSpace) :
+    Memℓp (fun n => lossPhase F τ n * (w : ℕ → ℂ) n) 2 := by
+  apply memℓp_gen
+  have h := lp.memℓp w
+  rw [memℓp_gen_iff (show (0:ℝ) < (2 : ℝ≥0∞).toReal by norm_num)] at h
+  refine h.congr (fun n => ?_)
+  rw [norm_mul, lossPhase_norm, one_mul]
+
+/-- **The loss-space phase flow as a linear isometry** — the `lp` direct-sum of `modeFlow`. -/
+noncomputable def lossFlowIso (F : HelixChannel) (τ : ℝ) : LossSpace →ₗᵢ[ℂ] LossSpace where
+  toFun w := ⟨fun n => lossPhase F τ n * (w : ℕ → ℂ) n, memℓp_lossFlow F τ w⟩
+  map_add' w w' := by
+    ext n; simp only [lp.coeFn_add, Pi.add_apply]; ring
+  map_smul' c w := by
+    ext n; simp only [lp.coeFn_smul, Pi.smul_apply, smul_eq_mul, RingHom.id_apply]; ring
+  norm_map' w := by
+    rw [lp.norm_eq_tsum_rpow (show (0:ℝ) < (2 : ℝ≥0∞).toReal by norm_num),
+        lp.norm_eq_tsum_rpow (show (0:ℝ) < (2 : ℝ≥0∞).toReal by norm_num)]
+    congr 1
+    refine tsum_congr (fun n => ?_)
+    congr 1
+    show ‖lossPhase F τ n * (w : ℕ → ℂ) n‖ = ‖(w : ℕ → ℂ) n‖
+    rw [norm_mul, lossPhase_norm, one_mul]
+
+/-- The loss-space flow as a continuous linear map. -/
+noncomputable def lossFlow (F : HelixChannel) (τ : ℝ) : LossSpace →L[ℂ] LossSpace :=
+  (lossFlowIso F τ).toContinuousLinearMap
+
+/-- **`hU`, unconditional, on the full loss space** — the genuine reality, no Stone, no generator.
+    `‖U τ w‖² = Σₙ |e^{−iτ·scale(n)} wₙ|² = Σₙ |wₙ|² = ‖w‖²`, by `lp`-norm invariance under
+    coordinatewise unit phases. The `lp` direct-sum of `modeFlow_norm`; the concrete `hU` feeding
+    `HelixSourceFlow.drift_zero_of_unitary`.
+
+    **Honest scope (do not cross this line).** This is the *easy* half. Because `U` is unitary **by
+    construction**, it can host only `α = 0` modes — so the capture (that an actual zero *is* a mode of
+    `U`) is a **separate, GRH-strength** obligation and must **not** be discharged by capturing into
+    this by-construction-unitary flow (that is the circularity). `hU` lives here; the capture stays its
+    own atom. -/
+theorem lossFlow_norm (F : HelixChannel) (τ : ℝ) (w : LossSpace) : ‖lossFlow F τ w‖ = ‖w‖ :=
+  (lossFlowIso F τ).norm_map w
+
+/-- **Reality on the full loss space — `hU` discharged by the unconditional `lossFlow_norm`.** Any
+    drifting eigenmode of the loss-space phase flow has zero drift `α = 0` (real frequency): the
+    abstract forcing `HelixSourceFlow.drift_zero_of_unitary` instantiated at `lossFlow`, with the
+    unitarity hypothesis supplied by `lossFlow_norm` (unconditional, no Stone, no generator). The `lp`
+    direct-sum of `modeFlow_drift_zero`. Not a capture: the drifting-mode hypothesis is about a
+    *specific* `v`, never the zeros — the on-line property earned from unitarity alone. -/
+theorem lossFlow_drift_zero (F : HelixChannel) {v : LossSpace} {α β : ℝ}
+    (h : HelixSourceFlow.IsDriftingMode (lossFlow F) v α β) : α = 0 :=
+  HelixSourceFlow.drift_zero_of_unitary (lossFlow F) (fun τ w => lossFlow_norm F τ w) h
+
+/-- **A drifting eigenmode of the loss-space flow is genuinely a harmonic** (real frequency `β`), with
+    `hU` discharged by `lossFlow_norm`. The `lp` direct-sum of `modeFlow_isHarmonic`. -/
+theorem lossFlow_isHarmonic (F : HelixChannel) {v : LossSpace} {α β : ℝ}
+    (h : HelixSourceFlow.IsDriftingMode (lossFlow F) v α β) :
+    HelixSourceFlow.IsHarmonic (lossFlow F) v β :=
+  HelixSourceFlow.isHarmonic_of_unitary_drifting (lossFlow F) (fun τ w => lossFlow_norm F τ w) h
+
 end HelixProjected

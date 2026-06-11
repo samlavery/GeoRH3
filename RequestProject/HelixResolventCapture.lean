@@ -188,6 +188,71 @@ theorem real_absorption_of_selfAdjoint {T : ℂ → ℂ} (hsa : IsSelfAdjointRec
   by_contra him
   exact hz (hsa z him)
 
+/-- **(2a) — self-adjointness turns "regular off the spectrum" into a self-adjoint receiver.** A
+    bounded self-adjoint `a` has real spectrum (`IsSelfAdjoint.im_eq_zero_of_mem_spectrum`), so any
+    boundary trace `T` regular at every point **off the spectrum** is automatically regular off `ℝ` —
+    an `IsSelfAdjointReceiver`. This is the earned reality `hsa` the harmonic capstone consumes:
+    supplied by the operator's self-adjointness, with **no input about the zeros**. (`hReg` — regular
+    off the spectrum — is the resolvent trace's own regularity; for the unbounded `gramOp` this lemma
+    applies after passing to its bounded resolvent `(gramOp + 1)⁻¹`.) -/
+theorem isSelfAdjointReceiver_of_regular_off_spectrum {A : Type*} [CStarAlgebra A] [StarModule ℂ A]
+    {a : A} (ha : IsSelfAdjoint a) {T : ℂ → ℂ}
+    (hReg : ∀ z, z ∉ spectrum ℂ a → ∃ L, Tendsto T (𝓝[≠] z) (𝓝 L)) :
+    IsSelfAdjointReceiver T :=
+  fun z hz => hReg z fun hmem => hz (ha.im_eq_zero_of_mem_spectrum hmem)
+
+/-- **Unitary receiver — the bounded 2D / Möbius-circle coordinate.** `T` has a finite limit at every
+    `z` **off the unit circle** (`‖z‖ ≠ 1`). The bounded-operator analog of `IsSelfAdjointReceiver`,
+    with the real axis replaced by the unit circle (the Cayley/Möbius image of `ℝ`, where `‖w‖ = 1 ⟺`
+    on-line). This is the natural reality of the **bounded** loss-projection operator: no unbounded
+    resolvent — the 2D shadow is compact. -/
+def IsUnitaryReceiver (T : ℂ → ℂ) : Prop :=
+  ∀ z, ‖z‖ ≠ 1 → ∃ L, Tendsto T (𝓝[≠] z) (𝓝 L)
+
+/-- **(2a), unitary form — unitarity turns "regular off the spectrum" into a unitary receiver.** A
+    unitary `u` has spectrum on the unit circle (`spectrum.norm_eq_one_of_unitary`), so any trace `T`
+    regular off the spectrum is regular off the circle. The earned reality of the **bounded** 2D
+    loss-projection operator (its values are the Möbius circle), supplied by unitarity with **no input
+    about the zeros** — the exact dual of `isSelfAdjointReceiver_of_regular_off_spectrum`. -/
+theorem isUnitaryReceiver_of_regular_off_spectrum {A : Type*} [CStarAlgebra A]
+    {u : A} (hu : u ∈ unitary A) {T : ℂ → ℂ}
+    (hReg : ∀ z, z ∉ spectrum ℂ u → ∃ L, Tendsto T (𝓝[≠] z) (𝓝 L)) :
+    IsUnitaryReceiver T :=
+  fun z hz => hReg z fun hmem => hz (spectrum.norm_eq_one_of_unitary hu hmem)
+
+/-- **`hReg` is a theorem, not a hypothesis, for a bounded operator.** The resolvent
+    `w ↦ resolvent a w` is differentiable — hence continuous — at every point of the resolvent set
+    (`spectrum.hasDerivAt_resolvent`), i.e. **off the spectrum**. So any continuous scalar readout `φ`
+    of it is regular off the spectrum, with the limit equal to the value. No hypotheses. -/
+theorem regular_off_spectrum_of_resolvent {A : Type*} [NormedRing A] [NormedAlgebra ℂ A]
+    [CompleteSpace A] (a : A) {φ : A → ℂ} (hφ : Continuous φ) :
+    ∀ z, z ∉ spectrum ℂ a → ∃ L, Tendsto (fun w => φ (resolvent a w)) (𝓝[≠] z) (𝓝 L) := by
+  intro z hz
+  have hk : z ∈ resolventSet ℂ a := by by_contra h; exact hz h
+  have hcont : ContinuousAt (fun w => φ (resolvent a w)) z :=
+    hφ.continuousAt.comp (spectrum.hasDerivAt_resolvent_const_left hk).continuousAt
+  exact ⟨_, hcont.tendsto.mono_left nhdsWithin_le_nhds⟩
+
+/-- **Unconditional self-adjoint receiver — `hReg` discharged.** For a **bounded** self-adjoint `a`
+    and any continuous readout `φ`, the resolvent trace `z ↦ φ(resolvent a z)` is an
+    `IsSelfAdjointReceiver` — **no hypotheses beyond self-adjointness of the (bounded) operator.** The
+    reality side is fully earned: self-adjoint spectrum (off ℝ) + resolvent continuity (off spectrum).
+    The only remaining conditional input on the GRH path is the *identification* of this readout with
+    `−L'/L` (the trace formula), which is the genuinely GRH-strength step. -/
+theorem isSelfAdjointReceiver_resolventReadout {A : Type*} [CStarAlgebra A] [StarModule ℂ A]
+    {a : A} (ha : IsSelfAdjoint a) {φ : A → ℂ} (hφ : Continuous φ) :
+    IsSelfAdjointReceiver (fun z => φ (resolvent a z)) :=
+  isSelfAdjointReceiver_of_regular_off_spectrum ha (regular_off_spectrum_of_resolvent a hφ)
+
+/-- **Unconditional unitary receiver — `hReg` discharged (the bounded 2D form).** For a unitary `u`
+    (the bounded loss-projection operator's natural form) and any continuous readout `φ`, the resolvent
+    trace `z ↦ φ(resolvent u z)` is an `IsUnitaryReceiver` — no hypotheses beyond unitarity. Earned
+    reality on the compact circle; only the `−L'/L` identification remains. -/
+theorem isUnitaryReceiver_resolventReadout {A : Type*} [CStarAlgebra A]
+    {u : A} (hu : u ∈ unitary A) {φ : A → ℂ} (hφ : Continuous φ) :
+    IsUnitaryReceiver (fun z => φ (resolvent u z)) :=
+  isUnitaryReceiver_of_regular_off_spectrum hu (regular_off_spectrum_of_resolvent u hφ)
+
 /-- **GRH from a self-adjoint harmonic receiver — the Connes/absorption capstone.** A self-adjoint
     receiver (regular off `ℝ`) whose singular support contains every zero parameter forces GRH:
     real absorption (earned) + resonance at the zeros ⟹ `poleParam ρ` real ⟹ `σ = ½`. No discrete
@@ -207,6 +272,20 @@ theorem grh_of_harmonicTraceReceiver_traceIdentity {χ : DirichletCharacter ℂ 
     (hid : ∀ z, T z = -logDeriv (DirichletCharacter.LFunction χ) (1 / 2 + Complex.I * z)) :
     GRHSpectral.GRH χ :=
   grh_of_harmonicTraceReceiver hsa (zeros_subset_singularSupport_of_traceIdentity hid)
+
+/-- **GRH from a self-adjoint operator whose resolvent readout is `−L'/L`.** The on-line forcing is
+    entirely **self-adjointness**: `isSelfAdjointReceiver_resolventReadout` is unconditional — a
+    self-adjoint spectrum is real, so the resolvent is regular off `ℝ`. The *only* input is the trace
+    identity `hid` (the operator's resolvent readout equals `−L'/L(½+i·)`), which is the **energy
+    cancellation** (`EnergyBalance.geometric_eq_spectral` local / `HelixExhaustion.globalTraceBalance`
+    global) read in operator form. Self-adjointness ⟹ on-line; energy cancellation ⟹ `hid`. -/
+theorem grh_of_selfAdjoint_resolventReadout {A : Type*} [CStarAlgebra A] [StarModule ℂ A]
+    {a : A} (ha : IsSelfAdjoint a) {φ : A → ℂ} (hφ : Continuous φ)
+    {χ : DirichletCharacter ℂ N}
+    (hid : ∀ z, φ (resolvent a z)
+        = -logDeriv (DirichletCharacter.LFunction χ) (1 / 2 + Complex.I * z)) :
+    GRHSpectral.GRH χ :=
+  grh_of_harmonicTraceReceiver_traceIdentity (isSelfAdjointReceiver_resolventReadout ha hφ) hid
 
 /-- **Multiplicity layer — the resolvent trace's residue at `poleParam ρ` is the zero multiplicity.**
     From the meromorphic identity `T = −L'/L(½+i·)`, the principal part of `T` at `z = poleParam ρ` is
@@ -318,4 +397,10 @@ end HelixLimit
 #print axioms HelixLimit.global_traceIdentity_of_local
 #print axioms HelixLimit.grh_of_realSingularSupport
 #print axioms HelixLimit.real_absorption_of_selfAdjoint
+#print axioms HelixLimit.isSelfAdjointReceiver_of_regular_off_spectrum
+#print axioms HelixLimit.isUnitaryReceiver_of_regular_off_spectrum
+#print axioms HelixLimit.regular_off_spectrum_of_resolvent
+#print axioms HelixLimit.isSelfAdjointReceiver_resolventReadout
+#print axioms HelixLimit.isUnitaryReceiver_resolventReadout
 #print axioms HelixLimit.grh_of_harmonicTraceReceiver_traceIdentity
+#print axioms HelixLimit.grh_of_selfAdjoint_resolventReadout

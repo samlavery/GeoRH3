@@ -137,9 +137,10 @@ theorem E_radial_zero_of_sourceComplete (χ : DirichletCharacter ℂ N) (h : Sou
     (fun ψ : SourceMode => ψ.rate.re) SourceMode.noDrift (sourceProjection χ h hs)
 
 /-- **Per-zero set form.** The radial term `m ρ · w ρ · (Re ρ − ½)²` vanishes at every
-    nontrivial zero, from `SourceComplete` + source no-drift. This is the exact `hRad` input of
-    `RadialEnergyGRH.grh_of_radial_zero`, making the radial route to GRH and the source route
-    (`grh_of_sourceComplete`) one and the same — both gated only on `SourceComplete`. -/
+    nontrivial zero, from `SourceComplete` + source no-drift. This is the radial *shadow* of the
+    source route `grh_of_sourceComplete` — gated only on `SourceComplete`. (Note: the radial
+    term vanishing is `Re ρ = ½` true-by-construction of `(Re ρ − ½)²`; it carries no forcing of
+    its own — the earned content is upstream in `SourceMode.noDrift`.) -/
 theorem radialTerm_zero_of_sourceComplete (χ : DirichletCharacter ℂ N) (h : SourceComplete χ)
     (m w : ℂ → ℝ) :
     ∀ ρ ∈ GRHSpectral.NontrivialZeros χ, m ρ * w ρ * (ρ.re - 1 / 2) ^ 2 = 0 := by

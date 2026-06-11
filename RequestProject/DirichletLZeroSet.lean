@@ -77,4 +77,39 @@ theorem completedLFunction_zero_mem_NontrivialZeros {χ : DirichletCharacter ℂ
     exact hrel
   exact ⟨hgt0, hlt1, hLzero⟩
 
+/-- **Character-agnostic FE zero-pairing.** For primitive `χ ≠ 1`, the functional equation
+    `Λ_χ(1−s) = N^{s−½}·rootNumber(χ)·Λ_{χ⁻¹}(s)` reflects each nontrivial zero `ρ` of `L(·,χ)` onto a
+    nontrivial zero `1−ρ` of `L(·,χ⁻¹)`. (Put `s = 1−ρ`: the left side is `Λ_χ(ρ) = 0`, the prefactor
+    `N^{(1−ρ)−½}·rootNumber(χ)` is nonzero, so `Λ_{χ⁻¹}(1−ρ) = 0`; the reverse inclusion for the
+    primitive `χ⁻¹ ≠ 1` then places `1−ρ` in its strip.) For **self-dual** `χ` (`χ⁻¹ = χ`, e.g. the
+    real character χ₃) this is the same-character symmetry `ρ ↦ 1−ρ` — the general form of
+    `chi3_completedLogDerivPole_one_sub`. Pure analytic input from Mathlib's FE; no GRH-strength. -/
+theorem one_sub_mem_NontrivialZeros_inv {χ : DirichletCharacter ℂ N} (hχ : χ ≠ 1)
+    (hχp : χ.IsPrimitive) {ρ : ℂ} (hρ : ρ ∈ GRHSpectral.NontrivialZeros χ) :
+    (1 - ρ) ∈ GRHSpectral.NontrivialZeros χ⁻¹ := by
+  have hz : DirichletCharacter.completedLFunction χ ρ = 0 := completedLFunction_eq_zero_of_mem hρ
+  have hFE := hχp.completedLFunction_one_sub (1 - ρ)
+  rw [show (1 - (1 - ρ)) = ρ from by ring, hz] at hFE
+  have hN_ne : ((N : ℂ)) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne N)
+  have hpow_ne : (N : ℂ) ^ ((1 - ρ) - 1 / 2) ≠ 0 := by
+    rw [Complex.cpow_def_of_ne_zero hN_ne]; exact Complex.exp_ne_zero _
+  have hrn_ne : χ.rootNumber ≠ 0 := rootNumber_ne_zero hχ hχp
+  have hLinv0 : DirichletCharacter.completedLFunction χ⁻¹ (1 - ρ) = 0 := by
+    rcases mul_eq_zero.mp hFE.symm with h | h
+    · exact absurd h (mul_ne_zero hpow_ne hrn_ne)
+    · exact h
+  exact completedLFunction_zero_mem_NontrivialZeros (inv_ne_one_of_ne_one hχ)
+    (isPrimitive_inv hχp) hLinv0
+
+/-- **Same-character FE pairing for self-dual `χ`.** When `χ⁻¹ = χ` (the real/quadratic characters),
+    the agnostic pairing `one_sub_mem_NontrivialZeros_inv` collapses to `ρ ↦ 1−ρ` within `χ` itself —
+    exactly the hypothesis `fe_tends_towards_closure`/`fe_nonexpansion_closure` consume, now available
+    for every self-dual primitive `χ ≠ 1`, not just χ₃. -/
+theorem one_sub_mem_NontrivialZeros_of_selfDual {χ : DirichletCharacter ℂ N} (hχ : χ ≠ 1)
+    (hχp : χ.IsPrimitive) (hsd : χ⁻¹ = χ) {ρ : ℂ}
+    (hρ : ρ ∈ GRHSpectral.NontrivialZeros χ) :
+    (1 - ρ) ∈ GRHSpectral.NontrivialZeros χ := by
+  have h := one_sub_mem_NontrivialZeros_inv hχ hχp hρ
+  rwa [hsd] at h
+
 end DirichletLHadamard
