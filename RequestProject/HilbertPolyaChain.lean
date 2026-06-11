@@ -1,6 +1,7 @@
 import RequestProject.HelixDualOperator
 import RequestProject.HelixFlowGenerator
 import RequestProject.HelixFlowResolvent
+import RequestProject.HelixStandingWave
 
 /-!
 # The Hilbert–Pólya chain — six steps, one bundle, all proven
@@ -22,6 +23,25 @@ the zeros are *the same* set, read as that function's singularities / the dual o
 ```
 
 `hilbertPolyaChain` bundles all six, **unconditionally** (primitive non-principal `χ`), kernel-clean.
+
+## The census — where the finish lives (state of the squeeze)
+
+GRH per window = two counters agree. Both halves exist, in different files, awaiting marriage:
+
+* **UPPER (χ-general, `DirichletLZeroCount`/`DirichletLZeroSet`, kernel-done):** Jensen for `Λχ`
+  (`completedL_jensen_at_zero`), the weighted disk zero-count bound
+  (`completedL_weighted_zero_count_disk_bound`), strip containment
+  (`completedLFunction_zero_mem_NontrivialZeros`), finiteness in every ball
+  (`NontrivialZeros_inter_closedBall_finite`), `rootNumber_ne_zero` (the Möbius crack),
+  `Σ 1/|ρ|²` summability.
+* **LOWER (ζ-instantiated, `HelixStandingWave`, kernel-done):** the standing wave, nodes isolated &
+  finite, `nodeCount`/`boxCount`, the alternation engine (`k` flips ⟹ `k` ordered on-line zeros),
+  per-window RH from counter agreement (`rh_in_window_of_counters_agree`), global packaging
+  (`rh_of_window_certificates`).
+* **THE MARRIAGE (next):** the character wave `Z_χ = (ε^{-1/2}·Λχ(½+it)).re` with root-number
+  reality; counters conductor-parametrized; `boxCount` pinned by the repo's Jensen bound,
+  `nodeCount` driven by the wave's π-per-zero production. The weld, in operator language: the
+  unitary flow's spectral admissions are all real.
 
 **Honest endpoint (the chain ENDS at 6).** Step 6 is the *principle* — a self-adjoint spectrum is real.
 Steps 4–5 put the zeros into the dual operator as its spectrum. The chain does **not** assert that
@@ -62,4 +82,33 @@ theorem hilbertPolyaChain {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
    fun _ hρ => EnergyBalance.resonates_at_zeros χ hρ,
    fun _ ha _ hz => ha.im_eq_zero_of_mem_spectrum hz⟩
 
+/-- **The weld arcs (the finish campaign), bundled — all UNCONDITIONAL.** The three-way weld
+    (flip ⟺ octave ⟺ rendezvous) as landed so far, every hypothesis situational:
+    1. a sign flip of the standing wave yields an on-line `ζ`-zero strictly between (classical hook);
+    2. at ANY vanishing — location-free, no line — the two fibres MEET (admission = rendezvous);
+    3. a transversal node is a sign flip in every window (node = flip);
+    4. the wave's real derivative is the holomorphic derivative on the line (the ℂ→ℝ bridge).
+    **Still open, honestly (the remaining arcs):** rendezvous = node at the fold (wave reality at the
+    meeting point); the census `N(T)` welding flip-count to admission-count (multiplicity-safe — no
+    simplicity assumed); the χ₃-instance wiring; final conductor-parametrized packaging. -/
+theorem weldArcs :
+    -- 1. classical hook: flip ⟹ counted on-line zero
+    (∀ a b : ℝ, a < b → HelixStandingWave.standingWave a * HelixStandingWave.standingWave b < 0 →
+      ∃ t ∈ Set.Ioo a b, riemannZeta (1 / 2 + (t : ℂ) * I) = 0) ∧
+    -- 2. admission = rendezvous, location-free: at ANY vanishing the fibres meet
+    (∀ Φ : ZMod 3 → ℂ, Function.Odd Φ → Φ 1 ≠ 0 → ∀ s : ℂ, ZMod.LFunction Φ s = 0 →
+      HurwitzZeta.hurwitzZetaOdd (ZMod.toAddCircle (1 : ZMod 3)) s
+        = HurwitzZeta.hurwitzZetaOdd (ZMod.toAddCircle (2 : ZMod 3)) s) ∧
+    -- 3. node = flip: a transversal node flips sign in every window
+    (∀ (f : ℝ → ℝ) (t₀ d : ℝ), f t₀ = 0 → HasDerivAt f d t₀ → d ≠ 0 → ∀ ε : ℝ, 0 < ε →
+      ∃ a ∈ Set.Ioo (t₀ - ε) t₀, ∃ b ∈ Set.Ioo t₀ (t₀ + ε), f a * f b < 0) ∧
+    -- 4. the ℂ→ℝ bridge: the wave's derivative is the holomorphic derivative on the line
+    (∀ t : ℝ, HasDerivAt HelixStandingWave.standingWave
+      ((deriv HelixStandingWave.waveC (t : ℂ)).re) t) :=
+  ⟨fun _ _ hab h => HelixStandingWave.online_zero_of_signFlip hab h,
+   fun Φ hΦ h1 s hz => HelixStandingWave.fibres_meet_at_any_vanishing Φ hΦ h1 s hz,
+   fun _ _ _ h0 hd hne _ hε => HelixStandingWave.signFlip_of_simple_node h0 hd hne hε,
+   HelixStandingWave.standingWave_hasDerivAt⟩
+
 #print axioms hilbertPolyaChain
+#print axioms weldArcs
