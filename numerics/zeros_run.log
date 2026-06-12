@@ -1,0 +1,82 @@
+=== L1_zeta_q1 (Riemann zeta, q = 1) ===
+L1_zeta_q1: 25 zeros, t ~ 88.80911121
+L1_zeta_q1: 50 zeros, t ~ 143.1118458
+L1_zeta_q1: 75 zeros, t ~ 192.0266564
+L1_zeta_q1: 100 zeros, t ~ 236.5242297
+L1_zeta_q1: done in 4.6s -> /Users/samuellavery/proof/three/numerics/zeros/L1_zeta_q1.txt
+=== L2_chi3_q3 (Dirichlet L of chi_3, the unique primitive character mod 3 (odd quadratic)) ===
+L2_chi3_q3: branch +1, reality residual 2.21e-30
+L2_chi3_q3: 25 zeros, t ~ 63.17699277
+L2_chi3_q3: 50 zeros, t ~ 106.2460618
+L2_chi3_q3: 75 zeros, t ~ 144.251664
+L2_chi3_q3: 100 zeros, t ~ 180.4313868
+L2_chi3_q3: done in 25.2s -> /Users/samuellavery/proof/three/numerics/zeros/L2_chi3_q3.txt
+=== L3_chi4_q4 (Dirichlet L of chi_4, the unique primitive character mod 4 (odd quadratic)) ===
+L3_chi4_q4: branch +1, reality residual 2.36e-30
+L3_chi4_q4: 25 zeros, t ~ 58.11670711
+L3_chi4_q4: 50 zeros, t ~ 98.75530042
+L3_chi4_q4: 75 zeros, t ~ 135.4908373
+L3_chi4_q4: 100 zeros, t ~ 170.0511312
+L3_chi4_q4: done in 22.4s -> /Users/samuellavery/proof/three/numerics/zeros/L3_chi4_q4.txt
+=== L4_chi5quad_q5 (Dirichlet L of the even quadratic character mod 5 (Legendre symbol mod 5)) ===
+L4_chi5quad_q5: branch +1, reality residual 4.74e-30
+L4_chi5quad_q5: 25 zeros, t ~ 55.58928034
+L4_chi5quad_q5: 50 zeros, t ~ 93.39442394
+L4_chi5quad_q5: 75 zeros, t ~ 129.0483001
+L4_chi5quad_q5: 100 zeros, t ~ 161.7676626
+L4_chi5quad_q5: done in 42.9s -> /Users/samuellavery/proof/three/numerics/zeros/L4_chi5quad_q5.txt
+=== L5_chi5c4_q5 (Dirichlet L of the order-4 character mod 5 with chi(2) = i (odd, complex)) ===
+L5_chi5c4_q5: branch +1, reality residual 6.76e-30
+L5_chi5c4_q5: 25 zeros, t ~ 54.48544239
+L5_chi5c4_q5: 50 zeros, t ~ 93.81857517
+L5_chi5c4_q5: 75 zeros, t ~ 128.3585784
+L5_chi5c4_q5: 100 zeros, t ~ 161.6911699
+L5_chi5c4_q5: done in 42.7s -> /Users/samuellavery/proof/three/numerics/zeros/L5_chi5c4_q5.txt
+=== L6_chi7quad_q7 (Dirichlet L of the odd quadratic character mod 7 (Legendre symbol mod 7)) ===
+L6_chi7quad_q7: branch +1, reality residual 3.84e-30
+L6_chi7quad_q7: 25 zeros, t ~ 50.98309943
+L6_chi7quad_q7: 50 zeros, t ~ 86.47845308
+L6_chi7quad_q7: 75 zeros, t ~ 120.2000354
+L6_chi7quad_q7: 100 zeros, t ~ 151.1210205
+L6_chi7quad_q7: done in 57.4s -> /Users/samuellavery/proof/three/numerics/zeros/L6_chi7quad_q7.txt
+
+==================== SUMMARY ====================
+L1_zeta_q1:
+  first three ordinates: 14.134725141735, 21.022039638772, 25.010857580146
+  reality residual: n/a
+  rescans: none (zetazero used directly)
+  flags: none
+  elapsed: 4.6s
+L2_chi3_q3:
+  first three ordinates: 8.039737155681, 11.249206207773, 15.704619176722
+  reality residual: 2.21e-30
+  rescans: bottom [0.1, 8.03973715568] @ 0.01: 0 new
+  flags: none
+  elapsed: 25.2s
+L3_chi4_q4:
+  first three ordinates: 6.020948904698, 10.243770304167, 12.988098012312
+  reality residual: 2.36e-30
+  rescans: bottom [0.1, 6.0209489047] @ 0.01: 0 new
+  flags: none
+  elapsed: 22.4s
+L4_chi5quad_q5:
+  first three ordinates: 6.648453344728, 9.831444432887, 11.958845626084
+  reality residual: 4.74e-30
+  rescans: bottom [0.1, 6.64845334473] @ 0.01: 0 new
+  flags: none
+  elapsed: 42.9s
+L5_chi5c4_q5:
+  first three ordinates: 6.183578195451, 8.457229174423, 12.674946417011
+  reality residual: 6.76e-30
+  rescans: bottom [0.1, 6.18357819545] @ 0.01: 0 new
+  flags: none
+  elapsed: 42.7s
+L6_chi7quad_q7:
+  first three ordinates: 4.475738283729, 6.845491712491, 11.160184543120
+  reality residual: 3.84e-30
+  rescans: bottom [0.1, 4.47573828373] @ 0.01: 0 new
+  flags: none
+  elapsed: 57.4s
+total runtime: 195.1s
+All checks passed.
+EXIT CODE: 0

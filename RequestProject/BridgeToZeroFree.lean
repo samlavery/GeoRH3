@@ -39,12 +39,21 @@ positivity of Λ genuinely constrains the zeros.
 4. The unconditional positivity of the Mertens-type sum
 5. The precise statement of what remains to close the gap
 
-## Honest status
+## Honest status (updated)
 
 The trigonometric trick gives Re(s) > 1 - c/log|t| (proved in ANT textbooks).
 RH needs Re(s) ≥ 1/2. The improvement from 1-c/log|t| to 1/2 is the open core.
 No amount of abstract projection theory closes it — you need a quantitative
 bound on the Weil form, not just its sign.
+
+NOTE (state of the art in Mathlib + this repo): the ANALYTIC 3-4-1 weld is DONE in Mathlib —
+`DirichletCharacter.norm_LFunction_product_ge_one` (the dlVP product `‖L(χ⁰)³L(χ)⁴L(χ²)‖ ≥ 1`),
+the pole bound `LFunctionTrivChar_isBigO_near_one_horizontal`, and the edge consequence
+`LFunction_ne_zero_of_one_le_re` (no zeros on Re = 1). This file's Parts 1–3 are the elementary
+real-variable shadow of those. The repo's quantitative composite lives in
+`HelixZeroFreeStep.zero_repulsion_near_one`; the interior REGION (1 − β ≥ c/log) is still not
+formalized anywhere — its missing ingredients are the edge growth bound and the mean-value step
+(see `HelixZeroFreeStep`).
 -/
 
 noncomputable section
@@ -196,8 +205,10 @@ theorem zero_free_from_mertens :
     -- Combined with Λ ≥ 0:
     (∀ n : ℕ, (0 : ℝ) ≤ ArithmeticFunction.vonMangoldt n) ∧
     -- Together these are the inputs to the classical zero-free region proof.
-    -- The zero-free region itself (Re(s) > 1 - c/log|t|) requires the
-    -- analytic continuation of ζ, which Mathlib doesn't have.
+    -- The analytic weld of these inputs IS in Mathlib now
+    -- (`DirichletCharacter.norm_LFunction_product_ge_one`, `LFunction_ne_zero_of_one_le_re`);
+    -- the interior region (Re(s) > 1 - c/log|t|) remains unformalized — see
+    -- `HelixZeroFreeStep.zero_repulsion_near_one` for the quantitative composite.
     True := by
   exact ⟨mertens_nonneg, fun n => ArithmeticFunction.vonMangoldt_nonneg, trivial⟩
 

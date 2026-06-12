@@ -75,6 +75,42 @@ theorem completedL_jensen_at_zero {χ : DirichletCharacter ℂ N} (hχ : χ ≠ 
   simp only [zero_sub, norm_neg]
   ring_nf
 
+/-- **Jensen at any non-vanishing center for `Λ_χ`** — the general-center payment identity: the
+    boundary circle-average of `log ‖Λ_χ‖` equals the sum of the modes inside, each priced
+    `ord · log (R/dist)`, plus the ground value `log ‖Λ_χ(c)‖`. -/
+theorem completedL_jensen_at_center {χ : DirichletCharacter ℂ N} (hχ : χ ≠ 1)
+    {c : ℂ} (hc : DirichletCharacter.completedLFunction χ c ≠ 0)
+    (R : ℝ) (hR : 0 < R) :
+    Real.circleAverage (fun s => Real.log ‖DirichletCharacter.completedLFunction χ s‖) c R
+      = ∑ᶠ u, (MeromorphicOn.divisor (DirichletCharacter.completedLFunction χ)
+                (Metric.closedBall c |R|)) u * Real.log (R * ‖c - u‖⁻¹)
+        + Real.log ‖DirichletCharacter.completedLFunction χ c‖ := by
+  have hR' : R ≠ 0 := hR.ne'
+  have hAnal : AnalyticOnNhd ℂ (DirichletCharacter.completedLFunction χ)
+      (Metric.closedBall c |R|) := fun z _ => completedLFunction_analyticAt hχ z
+  have hMero : MeromorphicOn (DirichletCharacter.completedLFunction χ)
+      (Metric.closedBall c |R|) := hAnal.meromorphicOn
+  have hJensen := MeromorphicOn.circleAverage_log_norm hR' hMero
+  have hc_mem : c ∈ Metric.closedBall c |R| := by
+    simp [Metric.mem_closedBall]
+  have hΛc_analytic : AnalyticAt ℂ (DirichletCharacter.completedLFunction χ) c :=
+    completedLFunction_analyticAt hχ c
+  have hDiv0 : (MeromorphicOn.divisor (DirichletCharacter.completedLFunction χ)
+      (Metric.closedBall c |R|)) c = 0 := by
+    rw [MeromorphicOn.divisor_apply hMero hc_mem]
+    have hAnalOrd : analyticOrderAt (DirichletCharacter.completedLFunction χ) c = 0 := by
+      rw [analyticOrderAt_eq_zero]
+      right
+      exact hc
+    rw [hΛc_analytic.meromorphicOrderAt_eq, hAnalOrd]
+    rfl
+  have hTrail : meromorphicTrailingCoeffAt (DirichletCharacter.completedLFunction χ) c
+      = DirichletCharacter.completedLFunction χ c :=
+    hΛc_analytic.meromorphicTrailingCoeffAt_of_ne_zero hc
+  rw [hJensen, hDiv0, hTrail]
+  push_cast
+  ring_nf
+
 /-- **divisor ≥ 1 at a `Λ_χ`-zero.** -/
 theorem completedL_divisor_ge_one_of_zero {χ : DirichletCharacter ℂ N} (hχ : χ ≠ 1)
     {CB : Set ℂ} (hMero : MeromorphicOn (DirichletCharacter.completedLFunction χ) CB)

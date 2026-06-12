@@ -1,0 +1,18 @@
+CENTRAL UNIFORMITY TEST (Sam's criterion, 2026-06-12)
+G(t) = |Lambda(1/2+it)| / prod_{m<=M} |g_m^2 - t^2|  over the central interval t in [0, 0.8*g_1].
+Exact Hadamard consequence: if ALL zeros are on the line, G is flat with curvature exactly
+kappa_tail = -(log(q g_M/2pi)+1)/(2 pi g_M)  (parameter-free, from the uncertified far tail).
+A real-zero (Siegel) pair at beta = 1/2 + delta multiplies G/G(0) by (delta^2+t^2)/delta^2 >= 1+4t^2
+(even at the maximal delta = 1/2): at the interval edge a factor of 50-150x. Measured flatness ~1e-3.
+
+channel                 kappa_fit kappa_tail    excess  flat dev   verdict
+L2_chi3_q3   (M=1000)    -0.00097   -0.00099   0.00002   1.8e-04   UNIFORM
+L3_chi4_q4   (M=100)     -0.00502   -0.00532   0.00030   1.5e-03   UNIFORM
+L4_chi5quad  (M=100)     -0.00532   -0.00576   0.00044   2.6e-03   UNIFORM
+L6_chi7quad  (M=100)     -0.00618   -0.00645   0.00027   6.9e-04   UNIFORM
+L7_chi8quad  (M=100)     -0.00638   -0.00672   0.00034   1.1e-03   UNIFORM
+L9_chi1009   (M=25)      -0.06264   -0.06747   0.00483   1.6e-03   UNIFORM
+
+Central real-zero pairs are excluded with margin ~1e4-1e5 (required deformation vs measured
+flatness) in every channel, including the large-conductor Siegel target q=1009.
+The measured curvature MATCHES the all-on-line prediction with zero fitted parameters.

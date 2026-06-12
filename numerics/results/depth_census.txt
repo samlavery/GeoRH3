@@ -1,0 +1,108 @@
+================================================================================================
+TASK A: 100-ZERO CENSUS, STANDING-WAVE RECIPE, 5 NON-PRINCIPAL CHANNELS
+================================================================================================
+
+Recipe: F(t) = sum_{n=1}^{M} chi(n) n^{-1/2} e^{-i t log n},  M = 4,000,000;
+        theta(t) = Im loggamma((1/2 + a + i t)/2) + (t/2) log(q/pi)  (mpmath, dps 20);
+        u = e^{i theta} F;  gauge alpha = -arg(sum u^2)/2 over the coarse grid
+        (vs alpha + pi/2, keeping the minimizer of sum Im(e^{i alpha} u)^2);
+        V = Re(e^{i alpha} u).  Zeros = sign changes of V.
+Scan:   t in [2 pi/q + 0.05, gamma_100 + 0.5], coarse step 0.02; each crossing
+        refined on a 15-point local grid at step 0.002 + linear interpolation.
+Census: 1-1 nearest matching to the 100 certified zeros (zeros/<label>.txt),
+        tolerance 0.2; unmatched crossings within 0.2 of the window top or above
+        gamma_100 + 0.2 are classified 'edge' (zeros beyond index 100), the rest
+        'spurious'.  Every crossing re-verified with M doubled (8,000,000).
+Engine: active modes only (chi(n) != 0); phase recurrence w <- w*r on the regular
+        t-grid, exact re-anchor every 256 steps; trig in float64, storage complex64,
+        sums accumulated in complex128.  Validated per channel against (a) direct
+        complex128 summation and (b) mpmath L(1/2+it, chi) at 8 sample points.
+R metric: R = sqrt( sum Im(e^{i alpha} u)^2 / sum |u|^2 ) over the coarse grid.
+
+channel           q  a crossings  matched spurious  edge  missed     max|d|    mean|d|          R
+-------------------------------------------------------------------------------------------------
+L2_chi3_q3        3  1       100      100        0     0       0   1.95e-04   7.71e-05  1.197e-04
+L3_chi4_q4        4  1       100      100        0     0       0   1.59e-04   4.87e-05  9.947e-05
+L4_chi5quad_q5    5  0       100      100        0     0       0   2.56e-06   3.71e-07  3.001e-06
+L5_chi5c4_q5      5  1       100      100        0     0       0   2.14e-04   6.46e-05  1.045e-04
+L6_chi7quad_q7    7  1       100      100        0     0       0   5.77e-04   1.05e-04  1.573e-04
+
+MAJOR FINDINGS: none.  Every certified zero is matched by exactly one V
+crossing and every off-edge crossing matches a certified zero, all 5 channels.
+
+------------------------------------------------------------------------------------------------
+L2_chi3_q3  (q=3, parity a=1)
+  window [2.1444, 180.9444], 8941 coarse pts, active modes (4M cutoff): 2666667
+  min certified gap: 0.6132  (coarse step 0.02)
+  gauge: alpha = -0.000000 (candidate 0); -arg(eps)/2 = -0.000000  (agreement mod pi/2 expected)
+  standing metric R = 1.1974e-04
+  census (M=4M):  crossings 100, matched 100, spurious 0, edge 0, missed 0
+  displacement (M=4M): max |d| = 1.949e-04, mean |d| = 7.710e-05, signed mean = +1.628e-05
+  verification (M=8M): crossings 100, matched 100, spurious 0, edge 0, missed 0; max |d| = 9.517e-05, mean |d| = 2.697e-05; max |t(8M)-t(4M)| = 2.531e-04
+  numeric validation: max|recurrence - direct c128| = 9.99e-06; max|F(4M) - L| = 3.33e-04 vs q/sqrt(M) = 1.50e-03; max|F(8M) - L| = 1.18e-04; mean ratio e(4M)/e(8M) = 2.83 (sqrt(2) = 1.41 expected)
+  truncation convergence at sample zeros (signed crossing - certified):
+    zero #  1 gamma=8.039737: M=1M -4.47e-04, 4M +1.40e-04, 8M -9.52e-05
+    zero # 50 gamma=106.246062: M=1M -6.00e-05, 4M +4.58e-07, 8M +2.89e-05
+    zero #100 gamma=180.431387: M=1M -2.24e-04, 4M -7.37e-05, 8M +2.50e-06
+
+------------------------------------------------------------------------------------------------
+L3_chi4_q4  (q=4, parity a=1)
+  window [1.6208, 170.5608], 8448 coarse pts, active modes (4M cutoff): 2000000
+  min certified gap: 0.2929  (coarse step 0.02)
+  gauge: alpha = +0.000000 (candidate 0); -arg(eps)/2 = -0.000000  (agreement mod pi/2 expected)
+  standing metric R = 9.9466e-05
+  census (M=4M):  crossings 100, matched 100, spurious 0, edge 0, missed 0
+  displacement (M=4M): max |d| = 1.593e-04, mean |d| = 4.866e-05, signed mean = +7.933e-06
+  verification (M=8M): crossings 100, matched 100, spurious 0, edge 0, missed 0; max |d| = 1.352e-04, mean |d| = 3.613e-05; max |t(8M)-t(4M)| = 2.490e-04
+  numeric validation: max|recurrence - direct c128| = 1.47e-05; max|F(4M) - L| = 2.50e-04 vs q/sqrt(M) = 2.00e-03; max|F(8M) - L| = 1.77e-04; mean ratio e(4M)/e(8M) = 1.41 (sqrt(2) = 1.41 expected)
+  truncation convergence at sample zeros (signed crossing - certified):
+    zero #  1 gamma=6.020949: M=1M -3.81e-04, 4M +1.02e-04, 8M -1.35e-04
+    zero # 50 gamma=98.755300: M=1M -9.39e-05, 4M +2.34e-05, 8M +3.67e-05
+    zero #100 gamma=170.051131: M=1M +1.52e-04, 4M -7.50e-05, 8M -4.77e-06
+
+------------------------------------------------------------------------------------------------
+L4_chi5quad_q5  (q=5, parity a=0)
+  window [1.3066, 162.2866], 8050 coarse pts, active modes (4M cutoff): 3200000
+  min certified gap: 0.3390  (coarse step 0.02)
+  gauge: alpha = -0.000000 (candidate 0); -arg(eps)/2 = +0.000000  (agreement mod pi/2 expected)
+  standing metric R = 3.0005e-06
+  census (M=4M):  crossings 100, matched 100, spurious 0, edge 0, missed 0
+  displacement (M=4M): max |d| = 2.559e-06, mean |d| = 3.710e-07, signed mean = -3.066e-08
+  verification (M=8M): crossings 100, matched 100, spurious 0, edge 0, missed 0; max |d| = 2.593e-06, mean |d| = 3.719e-07; max |t(8M)-t(4M)| = 4.923e-08
+  numeric validation: max|recurrence - direct c128| = 1.57e-05; max|F(4M) - L| = 7.71e-09 vs q/sqrt(M) = 2.50e-03; max|F(8M) - L| = 2.73e-09; mean ratio e(4M)/e(8M) = 2.83 (sqrt(2) = 1.41 expected)
+  truncation convergence at sample zeros (signed crossing - certified):
+    zero #  1 gamma=6.648453: M=1M +1.84e-07, 4M +1.76e-07, 8M +1.56e-07
+    zero # 50 gamma=93.394424: M=1M -5.30e-07, 4M -5.20e-07, 8M -5.20e-07
+    zero #100 gamma=161.767663: M=1M -1.68e-06, 4M -1.70e-06, 8M -1.70e-06
+
+------------------------------------------------------------------------------------------------
+L5_chi5c4_q5  (q=5, parity a=1)
+  window [1.3066, 162.2066], 8046 coarse pts, active modes (4M cutoff): 3200000
+  min certified gap: 0.5793  (coarse step 0.02)
+  gauge: alpha = -0.276787 (candidate 0); -arg(eps)/2 = -0.276787  (agreement mod pi/2 expected)
+  standing metric R = 1.0446e-04
+  census (M=4M):  crossings 100, matched 100, spurious 0, edge 0, missed 0
+  displacement (M=4M): max |d| = 2.145e-04, mean |d| = 6.458e-05, signed mean = -1.098e-06
+  verification (M=8M): crossings 100, matched 100, spurious 0, edge 0, missed 0; max |d| = 1.199e-04, mean |d| = 4.570e-05; max |t(8M)-t(4M)| = 2.585e-04
+  numeric validation: max|recurrence - direct c128| = 2.39e-05; max|F(4M) - L| = 3.16e-04 vs q/sqrt(M) = 2.50e-03; max|F(8M) - L| = 2.24e-04; mean ratio e(4M)/e(8M) = 1.41 (sqrt(2) = 1.41 expected)
+  truncation convergence at sample zeros (signed crossing - certified):
+    zero #  1 gamma=6.183578: M=1M -5.20e-05, 4M +2.14e-04, 8M +3.63e-05
+    zero # 50 gamma=93.818575: M=1M -1.13e-04, 4M +2.25e-05, 8M -3.92e-05
+    zero #100 gamma=161.691170: M=1M +1.20e-04, 4M -1.30e-04, 8M -4.90e-05
+
+------------------------------------------------------------------------------------------------
+L6_chi7quad_q7  (q=7, parity a=1)
+  window [0.9476, 151.6276], 7535 coarse pts, active modes (4M cutoff): 3428572
+  min certified gap: 0.3135  (coarse step 0.02)
+  gauge: alpha = -0.000000 (candidate 0); -arg(eps)/2 = +0.000000  (agreement mod pi/2 expected)
+  standing metric R = 1.5725e-04
+  census (M=4M):  crossings 100, matched 100, spurious 0, edge 0, missed 0
+  displacement (M=4M): max |d| = 5.765e-04, mean |d| = 1.051e-04, signed mean = +1.150e-05
+  verification (M=8M): crossings 100, matched 100, spurious 0, edge 0, missed 0; max |d| = 3.162e-06, mean |d| = 4.446e-07; max |t(8M)-t(4M)| = 5.742e-04
+  numeric validation: max|recurrence - direct c128| = 1.65e-05; max|F(4M) - L| = 5.00e-04 vs q/sqrt(M) = 3.50e-03; max|F(8M) - L| = 6.37e-09; mean ratio e(4M)/e(8M) = 319692.74 (sqrt(2) = 1.41 expected)
+  truncation convergence at sample zeros (signed crossing - certified):
+    zero #  1 gamma=4.475738: M=1M -2.25e-07, 4M -3.94e-04, 8M -2.82e-07
+    zero # 50 gamma=86.478453: M=1M -8.02e-07, 4M +1.70e-04, 8M -7.52e-07
+    zero #100 gamma=151.121020: M=1M -3.96e-08, 4M -8.84e-05, 8M -1.34e-08
+
+total runtime: 243.1 s

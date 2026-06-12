@@ -1,0 +1,274 @@
+====================================================================================================
+CONSTANTS HUNT — jackknife error bars on the helix gauge U_f, and exact-constant matching
+generated 2026-06-11 by /tmp/constants_hunt.py ; inputs: numerics/zeros/L*_*.txt (first 100 certified zeros each)
+====================================================================================================
+
+MODEL
+  cost_m = gamma_m^2 - gamma_{m-1}^2 ; OLS fit cost = alpha + beta*m over m = 2..100 (99 points).
+  Anchor (chi_3 kernel row): C_3 = e^6*pi/(pi/3)^3 = 1103.648838  (chi_3 exact by construction: U = pi/3).
+  Estimator A (universal linear cost):  C_f = C_3 * beta_3/beta_f.
+  Estimator B (log-corrected density):  z_m = cost_m*log(q*gamma_m/(2pi))/(4*pi*gamma_m) ~ const ;
+                                        C_f = C_3 * zbar_3/zbar_f.
+  mode = q*(1+a) ;  U_f = (e^mode*pi/C_f)^(1/3) ;  P_f = sqrt(pi/C_f).
+
+ERRORS
+  Delete-one-block jackknife: 10 blocks of 10 consecutive zeros; every cost_m touching a deleted
+  gamma is dropped; refit on surviving points (original m indices). SE = sqrt(9/10*sum(th_i-thbar)^2).
+  All ratios to the anchor are formed PER REPLICATE (same block index deleted in chi_3 and in the
+  target channel), so the anchor's own jackknife spread propagates with its correlation structure.
+  chi8quad (L7) is a BONUS row found in zeros/ (q=8, a=0 from its file header); not in the task's six.
+
+SECTIONS
+  1  estimator A table          2  estimator B table + A/B agreement   2b smooth-density counterfactual
+  2c window-stability halves    3  U candidate hunt                    4  chi4 focus
+  5  pitch P table + candidates    GLOBAL VERDICT at end.
+
+----------------------------------------------------------------------------------------------------
+SECTION 1 — ESTIMATOR A (linear-cost fit), jackknife errors
+----------------------------------------------------------------------------------------------------
+channel     q  a mode       gamma range      alpha             beta +- SE              C_A +- SE              U_A +- SE              P_A +- SE
+zeta        1  0    1 [ 14.135, 236.524]    258.004      5.98169 +- 0.42132      743.186 +- 21.094      0.225657 +- 0.002134   0.0650169 +- 0.0009222
+chi3        3  1    6 [  8.040, 180.431]    122.762      4.02801 +- 0.27828     1103.649 +- 0.000       1.047198 +- 0.000000   0.0533531 +- 0.0000000
+chi4        4  1    8 [  6.021, 170.051]     97.448      3.80942 +- 0.18134     1166.977 +- 63.202      2.002079 +- 0.035738   0.0518852 +- 0.0013874
+chi5quad    5  0    5 [  6.648, 161.768]     91.419      3.38168 +- 0.25458     1314.587 +- 40.692      0.707855 +- 0.007221   0.0488855 +- 0.0007470
+chi5c4      5  1   10 [  6.184, 161.691]     89.537      3.41486 +- 0.33617     1301.812 +- 99.344      3.759950 +- 0.094742   0.0491248 +- 0.0018549
+chi7quad    7  1   14 [  4.476, 151.121]     72.269      3.10219 +- 0.22829     1433.024 +- 66.593     13.814644 +- 0.212163   0.0468218 +- 0.0010775
+chi8quad    8  0    8 [  4.900, 147.611]     67.934      2.97870 +- 0.27524     1492.432 +- 78.629      1.844465 +- 0.032969   0.0458805 +- 0.0012329
+
+cross-check vs previous point estimates of U:
+  zeta       previous   0.225660   recomputed   0.225657   delta = -0.000003
+  chi3       previous   1.047198   recomputed   1.047198   delta = +0.000000
+  chi4       previous   2.002100   recomputed   2.002079   delta = -0.000021
+  chi5quad   previous   0.707860   recomputed   0.707855   delta = -0.000005
+  chi5c4     previous   3.759950   recomputed   3.759950   delta = +0.000000
+  chi7quad   previous  13.814640   recomputed  13.814644   delta = +0.000004
+  chi8quad   previous: (none — bonus channel)   recomputed U_A = 1.844465
+
+----------------------------------------------------------------------------------------------------
+SECTION 2 — ESTIMATOR B (log-corrected law), jackknife errors, and A/B agreement
+----------------------------------------------------------------------------------------------------
+channel                  zbar +- SE   rms(z_m)              C_B +- SE              U_B +- SE              P_B +- SE
+zeta           0.996188 +- 0.009939    0.3514     1094.527 +- 9.626       0.198338 +- 0.000581   0.0535749 +- 0.0002355
+chi3           0.987955 +- 0.008557    0.3035     1103.649 +- 0.000       1.047198 +- 0.000000   0.0533531 +- 0.0000000
+chi4           0.992946 +- 0.010644    0.3097     1098.101 +- 14.903      2.043092 +- 0.009236   0.0534877 +- 0.0003626
+chi5quad       0.984858 +- 0.011192    0.3284     1107.119 +- 9.256       0.749565 +- 0.002090   0.0532694 +- 0.0002228
+chi5c4         0.985346 +- 0.010991    0.3257     1106.570 +- 17.128      3.969221 +- 0.020424   0.0532826 +- 0.0004111
+chi7quad       0.985448 +- 0.013000    0.3419     1106.456 +- 18.046     15.058421 +- 0.081982   0.0532853 +- 0.0004352
+chi8quad       0.986419 +- 0.012720    0.3210     1105.367 +- 18.940      2.038605 +- 0.011669   0.0533116 +- 0.0004578
+
+C_B vs the anchor constant C_3 (is there ANY channel structure left after the log correction?):
+  zeta       C_B - C_3 =    -9.122 +-   9.626   z =  -0.95
+  chi4       C_B - C_3 =    -5.548 +-  14.903   z =  -0.37
+  chi5quad   C_B - C_3 =    +3.471 +-   9.256   z =  +0.37
+  chi5c4     C_B - C_3 =    +2.921 +-  17.128   z =  +0.17
+  chi7quad   C_B - C_3 =    +2.808 +-  18.046   z =  +0.16
+  chi8quad   C_B - C_3 =    +1.718 +-  18.940   z =  +0.09
+  => every channel's C_B is consistent with C_3 (all |z| < 2): under the log-corrected law the
+     channels share ONE constant; estimator B sees NO residual channel structure. The channel
+     structure in estimator A (C_A ranges 743 to 1492, far outside its errors)
+     therefore lives in exactly the log-density window factor that B divides out.
+
+A/B agreement (per-replicate difference U_A - U_B, correlated jackknife):
+  zeta       U_A - U_B = +0.027319 +- 0.002202   z =   +12.40   DISAGREE
+  chi3       anchor — both estimators pinned to U = pi/3 exactly; trivial agreement
+  chi4       U_A - U_B = -0.041013 +- 0.036194   z =    -1.13   AGREE (<2 sigma)
+  chi5quad   U_A - U_B = -0.041710 +- 0.007155   z =    -5.83   DISAGREE
+  chi5c4     U_A - U_B = -0.209270 +- 0.080616   z =    -2.60   DISAGREE
+  chi7quad   U_A - U_B = -1.243777 +- 0.202256   z =    -6.15   DISAGREE
+  chi8quad   U_A - U_B = -0.194140 +- 0.029888   z =    -6.50   DISAGREE
+
+SECTION 2b — smooth-density counterfactual: what would estimator A return if the zero spacings
+exactly followed the universal density at the observed heights?  cost_smooth_m =
+4*pi*gamma_m / log(q*gamma_m/(2pi)) (observed gamma_m, fluctuation in the spacing removed),
+same OLS fit and anchoring. This asks whether A's channel structure needs any per-channel input
+beyond q and the first-100-zeros window.
+channel     beta_smooth     U_smooth    U_A(data)  (data-smooth)  in sigma_A
+zeta            5.80444     0.223109     0.225657      +0.002548      +1.19s
+chi3            4.04408     1.047198     1.047198       (anchor)
+chi4            3.69447     1.979107     2.002079      +0.022972      +0.64s
+chi5quad        3.43946     0.710920     0.707855      -0.003065      -0.42s
+chi5c4          3.44612     3.766388     3.759950      -0.006438      -0.07s
+chi7quad        3.11504    13.815352    13.814644      -0.000708      -0.00s
+chi8quad        2.98595     1.843512     1.844465      +0.000953      +0.03s
+
+SECTION 2c — window-stability test: estimator A refit on m = 2..51 and m = 51..100 separately
+(jackknife: 5 disjoint 10-zero blocks per half; one boundary cost point per half is never
+deleted — immaterial). A TRUE channel constant stays put across windows; a density-window
+artifact drifts along with the smooth-law prediction U_smooth computed on the same half.
+channel          U(m=2..51) +- SE     U(m=51..100) +- SE  drift z   Usm(h1)   Usm(h2)  data-sm(h1)  data-sm(h2)
+zeta             0.22388 +- 0.00332       0.22911 +- 0.00877    +0.56   0.22337   0.22239      +0.15s      +0.77s
+chi3           (anchor: pi/3 in every window by construction)
+chi4             1.94579 +- 0.05466       2.07330 +- 0.10953    +1.04   1.97657   1.98156      -0.56s      +0.84s
+chi5quad         0.71393 +- 0.01404       0.66387 +- 0.02015    -2.04   0.70892   0.71257      +0.36s      -2.42s
+chi5c4           3.75972 +- 0.04371       3.70816 +- 0.49833    -0.10   3.75826   3.77475      +0.03s      -0.13s
+chi7quad        13.42985 +- 0.67822      13.48049 +- 0.92864    +0.04  13.76568  13.86747      -0.50s      -0.42s
+chi8quad         1.79259 +- 0.03925       1.90259 +- 0.26553    +0.41   1.83432   1.85327      -1.06s      +0.19s
+
+----------------------------------------------------------------------------------------------------
+SECTION 3 — CANDIDATE MATCHING for U_f (estimator A; B shown as corroboration)
+candidates: named list + (p/r)*pi (p,r<=12) + rationals p/r (p,r<=16), deduped by value.
+reported: every candidate within 2 sigma, sorted by |z|; near-misses 2<|z|<=3 listed for context.
+----------------------------------------------------------------------------------------------------
+
+zeta (q=1, a=0, mode=1):  U_A = 0.225657 +- 0.002134   [U_B = 0.198338 +- 0.000581]
+    [NAMED] 7/31           = 0.22580645    z_A =   -0.07   (z_B =    -47.26)
+    [NAMED] e/12           = 0.22652349    z_A =   -0.41   (z_B =    -48.50)
+    [NAMED] 2/9            = 0.22222222    z_A =   +1.61   (z_B =    -41.10)
+  near misses (2 < |z| <= 3):
+    [grid ] 3/13           = 0.23076923    z_A =   -2.40
+  >>> MULTIPLE named matches within 2 sigma: 7/31 (z=-0.07), e/12 (z=-0.41), 2/9 (z=+1.61) — degenerate at this precision
+
+chi3 (q=3, a=1, mode=6):  ANCHOR — U = pi/3 = 1.047198 exact by construction (SE = 0).
+  candidate matching is vacuous here; the channel calibrates the others.
+
+chi4 (q=4, a=1, mode=8):  U_A = 2.002079 +- 0.035738   [U_B = 2.043092 +- 0.009236]
+    [NAMED] 2=4/2          = 2.00000000    z_A =   +0.06   (z_B =     +4.67)
+    [grid ] 7pi/11         = 1.99919533    z_A =   +0.08   (z_B =     +4.75)
+    [grid ] 5pi/8          = 1.96349541    z_A =   +1.08   (z_B =     +8.62)
+  near misses (2 < |z| <= 3):
+    [grid ] 2pi/3          = 2.09439510    z_A =   -2.58
+  >>> unique NAMED match: 2=4/2 (z = +0.06); not unique overall — grid rivals within 2 sigma: 7pi/11 (z=+0.08), 5pi/8 (z=+1.08)
+      (top two candidate values differ by only 0.000805 = 0.02 sigma — this dataset cannot separate them)
+
+chi5quad (q=5, a=0, mode=5):  U_A = 0.707855 +- 0.007221   [U_B = 0.749565 +- 0.002090]
+    [NAMED] 1/sqrt(2)=sqrt(2)/2 = 0.70710678    z_A =   +0.10   (z_B =    +20.32)
+    [grid ] 5/7            = 0.71428571    z_A =   -0.89   (z_B =    +16.88)
+    [grid ] 7/10           = 0.70000000    z_A =   +1.09   (z_B =    +23.72)
+    [grid ] 2pi/9          = 0.69813170    z_A =   +1.35   (z_B =    +24.61)
+  near misses (2 < |z| <= 3):
+    [grid ] 9/13           = 0.69230769    z_A =   +2.15
+    [grid ] 8/11           = 0.72727273    z_A =   -2.69
+    [grid ] 11/16          = 0.68750000    z_A =   +2.82
+  >>> unique NAMED match: 1/sqrt(2)=sqrt(2)/2 (z = +0.10); not unique overall — grid rivals within 2 sigma: 5/7 (z=-0.89), 7/10 (z=+1.09), 2pi/9 (z=+1.35)
+      (top two candidate values differ by only 0.007179 = 0.99 sigma — this dataset cannot separate them)
+
+chi5c4 (q=5, a=1, mode=10):  U_A = 3.759950 +- 0.094742   [U_B = 3.969221 +- 0.020424]
+    [grid ] 15/4           = 3.75000000    z_A =   +0.11   (z_B =    +10.73)
+    [NAMED] 6pi/5          = 3.76991118    z_A =   -0.11   (z_B =     +9.76)
+    [grid ] 11pi/9         = 3.83972435    z_A =   -0.84   (z_B =     +6.34)
+    [grid ] 11/3           = 3.66666667    z_A =   +0.98   (z_B =    +14.81)
+    [grid ] 7pi/6          = 3.66519143    z_A =   +1.00   (z_B =    +14.89)
+    [grid ] 5pi/4          = 3.92699082    z_A =   -1.76   (z_B =     +2.07)
+    [grid ] 8pi/7          = 3.59039160    z_A =   +1.79   (z_B =    +18.55)
+  near misses (2 < |z| <= 3):
+    [grid ] 9pi/8          = 3.53429174    z_A =   +2.38
+    [grid ] 4              = 4.00000000    z_A =   -2.53
+    [grid ] 7/2            = 3.50000000    z_A =   +2.74
+    [grid ] 10pi/9         = 3.49065850    z_A =   +2.84
+    [grid ] 9pi/7          = 4.03919055    z_A =   -2.95
+  >>> unique NAMED match: 6pi/5 (z = -0.11); not unique overall — grid rivals within 2 sigma: 15/4 (z=+0.11), 11pi/9 (z=-0.84), 11/3 (z=+0.98), 7pi/6 (z=+1.00), 5pi/4 (z=-1.76), 8pi/7 (z=+1.79)
+      (top two candidate values differ by only 0.019911 = 0.21 sigma — this dataset cannot separate them)
+
+chi7quad (q=7, a=1, mode=14):  U_A = 13.814644 +- 0.212163   [U_B = 15.058421 +- 0.081982]
+    [grid ] 14             = 14.00000000   z_A =   -0.87   (z_B =    +12.91)
+    [grid ] 9pi/2          = 14.13716694   z_A =   -1.52   (z_B =    +11.24)
+  >>> no NAMED candidate within 2 sigma; grid matches: 14 (z=-0.87), 9pi/2 (z=-1.52)
+
+chi8quad (q=8, a=0, mode=8):  U_A = 1.844465 +- 0.032969   [U_B = 2.038605 +- 0.011669]
+    [grid ] 11/6           = 1.83333333    z_A =   +0.34   (z_B =    +17.59)
+    [grid ] 7pi/12         = 1.83259571    z_A =   +0.36   (z_B =    +17.66)
+    [grid ] 13/7           = 1.85714286    z_A =   -0.38   (z_B =    +15.55)
+    [grid ] 15/8           = 1.87500000    z_A =   -0.93   (z_B =    +14.02)
+    [grid ] 3pi/5          = 1.88495559    z_A =   -1.23   (z_B =    +13.17)
+    [grid ] 9/5            = 1.80000000    z_A =   +1.35   (z_B =    +20.45)
+    [grid ] 4pi/7          = 1.79519580    z_A =   +1.49   (z_B =    +20.86)
+  near misses (2 < |z| <= 3):
+    [grid ] 16/9           = 1.77777778    z_A =   +2.02
+    [grid ] 7/4            = 1.75000000    z_A =   +2.87
+  >>> no NAMED candidate within 2 sigma; grid matches: 11/6 (z=+0.34), 7pi/12 (z=+0.36), 13/7 (z=-0.38), 15/8 (z=-0.93), 3pi/5 (z=-1.23), 9/5 (z=+1.35), 4pi/7 (z=+1.49)
+
+----------------------------------------------------------------------------------------------------
+SECTION 4 — chi4 FOCUS: is U = 2 exact?  How hard is pi/2 excluded?
+----------------------------------------------------------------------------------------------------
+  estimator A: U = 2.002079 +- 0.035738
+      U = 2      : z =     +0.06  -> CONSISTENT at |z| = 0.06 sigma
+      U = pi/2   : z =    +12.07  -> excluded at 12.1 sigma
+  estimator B: U = 2.043092 +- 0.009236
+      U = 2      : z =     +4.67  -> EXCLUDED at |z| = 4.67 sigma
+      U = pi/2   : z =    +51.14  -> excluded at 51.1 sigma
+  kernel-row check: U = 2 implies C = e^8*pi/8 = 1170.619;   measured C_A = 1166.977 +- 63.202  (z = -0.06)
+  degeneracy warning: |2 - 7pi/11| = 0.000805 = 0.02 sigma_A — the grid candidate
+  7pi/11 = 1.999195 is indistinguishable from 2 at this precision; only the named tier prefers 2.
+  mode-8 sibling chi8quad (q=8,a=0, same mode=8): U_A = 1.844465 +- 0.032969
+    chi4 vs chi8quad under A: separated by +3.24 sigma -> estimator A sees channel structure
+    beyond mode; under B the two are identical (2.0431 vs 2.0386).
+
+----------------------------------------------------------------------------------------------------
+SECTION 5 — implied pitch P_f = sqrt(pi/C_f), errors, and the same candidate test
+----------------------------------------------------------------------------------------------------
+channel                   P_A +- SE                  P_B +- SE
+zeta          0.0650169 +- 0.0009222     0.0535749 +- 0.0002355
+chi3          0.0533531 +- 0.0000000     0.0533531 +- 0.0000000
+chi4          0.0518852 +- 0.0013874     0.0534877 +- 0.0003626
+chi5quad      0.0488855 +- 0.0007470     0.0532694 +- 0.0002228
+chi5c4        0.0491248 +- 0.0018549     0.0532826 +- 0.0004111
+chi7quad      0.0468218 +- 0.0010775     0.0532853 +- 0.0004352
+chi8quad      0.0458805 +- 0.0012329     0.0533116 +- 0.0004578
+
+  zeta       [grid ] 1/15           = 0.06666667    z_A =   -1.79
+  chi3       P = sqrt(pi/C_3) = 0.0533531 exact (anchor).
+  chi4       no P-candidate within 2 sigma (nearest: 1/16 = 0.062500 at z = -7.7).
+  chi5quad   no P-candidate within 2 sigma (nearest: 1/16 = 0.062500 at z = -18.2).
+  chi5c4     no P-candidate within 2 sigma (nearest: 1/16 = 0.062500 at z = -7.2).
+  chi7quad   no P-candidate within 2 sigma (nearest: 1/16 = 0.062500 at z = -14.6).
+  chi8quad   no P-candidate within 2 sigma (nearest: 1/16 = 0.062500 at z = -13.5).
+
+====================================================================================================
+VERDICTS (one line per channel)
+====================================================================================================
+zeta       U_A = 0.225657 +- 0.002134 | MULTIPLE named matches in 2 sigma: 7/31 (z=-0.07), e/12 (z=-0.41), 2/9 (z=+1.61) | A/B DISAGREE (z=+12.4)
+chi3       U_A = 1.047198 +- 0.000000 | anchor: U = pi/3 exact by construction
+chi4       U_A = 2.002079 +- 0.035738 | unique NAMED match U = 2=4/2 (z = +0.06); grid rivals in 2 sigma: 7pi/11 (z=+0.08), 5pi/8 (z=+1.08) | A/B agree (z=-1.1)
+chi5quad   U_A = 0.707855 +- 0.007221 | unique NAMED match U = 1/sqrt(2)=sqrt(2)/2 (z = +0.10); grid rivals in 2 sigma: 5/7 (z=-0.89), 7/10 (z=+1.09), 2pi/9 (z=+1.35) | A/B DISAGREE (z=-5.8)
+chi5c4     U_A = 3.759950 +- 0.094742 | unique NAMED match U = 6pi/5 (z = -0.11); grid rivals in 2 sigma: 15/4 (z=+0.11), 11pi/9 (z=-0.84), 11/3 (z=+0.98), 7pi/6 (z=+1.00), 5pi/4 (z=-1.76), 8pi/7 (z=+1.79) | A/B DISAGREE (z=-2.6)
+chi7quad   U_A = 13.814644 +- 0.212163 | no named match; grid matches in 2 sigma: 14 (z=-0.87), 9pi/2 (z=-1.52) | A/B DISAGREE (z=-6.1)
+chi8quad   U_A = 1.844465 +- 0.032969 | no named match; grid matches in 2 sigma: 11/6 (z=+0.34), 7pi/12 (z=+0.36), 13/7 (z=-0.38), 15/8 (z=-0.93), 3pi/5 (z=-1.23), 9/5 (z=+1.35), 4pi/7 (z=+1.49) | A/B DISAGREE (z=-6.5)
+
+====================================================================================================
+GLOBAL VERDICT
+====================================================================================================
+
+1. ERROR BARS. Jackknife errors on estimator A are sigma_U/U ~ 1-2% per channel (Section 1); the
+   previous point estimates are reproduced to <3e-5. The anchor chi3 is exact by construction.
+
+2. EXACT-CONSTANT SCORECARD (estimator A, named candidates, 2-sigma):
+     chi4     -> 2          at z = +0.06 (unique named hit; pi/2 EXCLUDED at 12.1 sigma; kernel row
+                 C = e^8*pi/8 = 1170.6 matches measured 1167.0 +- 63.2)
+     chi5quad -> 1/sqrt(2)  at z = +0.10 (unique named hit)
+     chi5c4   -> 6pi/5      at z = -0.11 (unique named hit, but DEAD HEAT with 15/4 at z = +0.11)
+     zeta     -> 7/31       at z = -0.07 (NOT unique: e/12 at -0.41, 2/9 at +1.61 also inside 2 sigma)
+     chi7quad -> no named candidate within 2 sigma (best grid: 14 at z = -0.87)
+     chi8quad -> no named candidate within 2 sigma (bonus channel)
+   None of these is unique against the dense grids ((p/r)*pi, p,r<=12; p/r, p,r<=16): at sigma ~ 1-2%
+   every channel has 2-7 grid candidates inside 2 sigma. In particular 2 vs 7pi/11 (chi4) differ by
+   0.0008 = 0.02 sigma; separating them at 3 sigma needs sigma_U ~ 2.7e-4, far beyond 100 zeros.
+
+3. THE TWO ESTIMATORS DISAGREE (Section 2): A and B differ at |z| = 2.6-12.4 for every non-anchor
+   channel except chi4 (z = -1.1, and only because sigma_A(chi4) is the ratio's widest). More
+   pointedly, estimator B finds C_B consistent with C_3 for EVERY channel (all |z| < 1): once the
+   log-density factor is divided out, no channel structure remains in the cost data. Estimator A's
+   channel-to-channel spread in C (743 -> 1492) is carried by exactly the window-dependent
+   log factor that B removes.
+
+4. SMOOTH-LAW COUNTERFACTUAL (Sections 2b, 2c). Replacing the measured spacings by the universal
+   density law at the same observed heights reproduces every U_A to within 1.2 sigma_A
+   (chi4: U_smooth = 1.9791, i.e. "almost 2" already at the smooth level; chi5c4: U_smooth = 3.7664,
+   0.004 from 6pi/5). Half-window refits drift with the smooth prediction rather than pinning to
+   the constants (chi5quad halves: 0.7139 / 0.6639, straddling 1/sqrt(2)).
+
+5. BOTTOM LINE. With first-100-zero jackknife errors: U(chi4) = 2 is CONSISTENT at 0.06 sigma and
+   pi/2 is excluded at 12.1 sigma (51 sigma under B) — but every named hit (2, 1/sqrt(2), 6pi/5,
+   7/31) is also reproduced, within errors, by the universal smooth density evaluated on that
+   channel's window, with no per-channel constant beyond q and parity. The present data cannot
+   distinguish "exact helix constants" from "window readout of the universal density law".
+   Discriminating measurements, in order of cheapness: (i) extend the chi4 window — testing
+   U(chi4) = 2 against the smooth-law value 1.979 (gap 0.023) at 3 sigma needs sigma ~ 8e-3,
+   i.e. roughly 2,000 zeros at 1/sqrt(N) scaling; (ii) zeta's 7/31-vs-e/12 separation needs
+   sigma ~ 2.4e-4, i.e. O(10^4) zeros; (iii) disjoint high windows (the Section-2c test with real
+   statistical power) — a true constant must hold in every window, while the smooth-law readout
+   keeps sliding.
+
+6. PITCH (Section 5). P_A matches nothing in the candidate set for any channel (the nearest grid
+   value 1/16 sits 7-18 sigma away); only zeta has a weak grid match (1/15 at -1.8 sigma). The
+   pitch values are not the clean constants here; the U-gauge is where the candidates land.
+

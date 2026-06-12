@@ -1,0 +1,105 @@
+==============================================================================
+OFF-LINE LANDSCAPE SCAN -- five Dirichlet L channels
+==============================================================================
+date: 2026-06-11 22:53:52
+
+Quantity: |L_M(sigma + i t)|, L_M(s) = sum_{n<=M} chi(n) n^{-s} (truncated Dirichlet series), M = 400,000.
+Grid: sigma in [0.30, 0.70] step 0.02 (21 values); t in [2*pi/q + 0.2, gamma_10 + 5] step 0.05.
+Evaluator: chunked numpy (complex128), phase recurrence along the t-grid
+  (per-step rounding ~1e-16, accumulated <= n_t*eps ~ 1e-13, negligible vs the
+  truncation scale); chunk budget 9,000,000 complex (cap 15M = 150 x 100k).
+M = 2,000,000 values are exact partial-sum snapshots taken mid-accumulation;
+the convergence subsample is additionally recomputed through an independent
+path (different chunking and recurrence step).
+
+Truncation model (partial summation, bounded character sums):
+  |L - L_M| <= C_chi M^{-sigma} (1 + |t|/sigma);  bare floor f(sigma, M) = q*M^{-sigma}.
+
+Channels and grids:
+  L2_chi3_q3       q=3  t in [2.2944, 38.8974] (733 points) x 21 sigmas; evaluator-vs-mpmath check (M=20000, 2 pts): 1.65e-14
+  L3_chi4_q4       q=4  t in [1.7708, 34.6564] (658 points) x 21 sigmas; evaluator-vs-mpmath check (M=20000, 2 pts): 5.70e-14
+
+------------------------------------------------------------------------------
+1. CONVERGENCE  (M = 2e6 -> 4e6 on the subsample: every 5th sigma row,
+   every 10th t column; 'abs' = | |L_4M| - |L_2M| |, 'cplx' = |L_4M - L_2M|)
+------------------------------------------------------------------------------
+channel             max abs   max cplx  whole-grid  snap-vs-rec  eff.exp
+L2_chi3_q3        2.238e-02  2.247e-02   2.247e-02     5.66e-13    1.033
+L3_chi4_q4        2.217e-02  2.327e-02   2.327e-02     4.34e-13    1.024
+
+Per-sigma maxima of |L_4M - L_2M| over the t-subsample, against the bare
+floor f = q*(2e6)^{-sigma} (rat = measured / f):
+ sigma | L2_chi3_q        f   rat | L3_chi4_q        f   rat
+  0.30 | 2.247e-02 7.71e-02  0.29 | 2.327e-02 1.03e-01  0.23
+  0.40 | 6.355e-03 2.27e-02  0.28 | 6.660e-03 3.03e-02  0.22
+  0.50 | 1.799e-03 6.71e-03  0.27 | 1.908e-03 8.94e-03  0.21
+  0.60 | 5.101e-04 1.98e-03  0.26 | 5.475e-04 2.64e-03  0.21
+  0.70 | 1.448e-04 5.84e-04  0.25 | 1.572e-04 7.79e-04  0.20
+
+eff.exp = fitted alpha in rowmax ~ C*(2e6)^{-alpha*sigma}; alpha ~ 1 means the
+change scales as M^{-sigma}, i.e. the partial-summation truncation law.
+
+------------------------------------------------------------------------------
+2. DIP CENTERS  -- direct off-line measurement of zero positions
+   t_min: parabola-refined minimum of |L|^2 along sigma = 0.5 (step 0.01);
+   sigma_hat: vertex of the parabola fit of |L(sigma, t_min)|^2,
+   sigma in [0.38, 0.62] step 0.01 (25 points).  err = LSQ vertex stderr;
+   D_trunc = sigma_hat(4e6) - sigma_hat(2e6);
+   D_window = sigma_hat(wide [0.38,0.62]) - sigma_hat(narrow [0.44,0.56]).
+------------------------------------------------------------------------------
+
+L2_chi3_q3  (q = 3)
+  m          gamma_m  t_min-gamma    |L|dip  sigma_hat  sig_hat-0.5       err   D_trunc  D_window
+  1   8.039737155681      0.00016    0.0010    0.50774      0.00774   0.00067   0.00244   0.00503
+  2  11.249206207773      0.00048    0.0005    0.50725      0.00725   0.00072  -0.00115   0.00551
+  3  15.704619176722      0.00050    0.0006    0.50875      0.00875   0.00087   0.00005   0.00657
+
+L3_chi4_q4  (q = 4)
+  m          gamma_m  t_min-gamma    |L|dip  sigma_hat  sig_hat-0.5       err   D_trunc  D_window
+  1   6.020948904698     -0.00044    0.0006    0.50542      0.00542   0.00055  -0.00055   0.00428
+  2  10.243770304167      0.00001    0.0008    0.50932      0.00932   0.00087   0.00004   0.00648
+  3  12.988098012312      0.00030    0.0003    0.50948      0.00948   0.00093  -0.00007   0.00698
+
+Per-channel statistics of (sigma_hat - 0.5):
+channel              set       mean        std     max|.|
+L2_chi3_q3         m<=10   +0.00791    0.00076    0.00875
+L2_chi3_q3          m<=3   +0.00791    0.00076    0.00875
+L3_chi4_q4         m<=10   +0.00807    0.00230    0.00948
+L3_chi4_q4          m<=3   +0.00807    0.00230    0.00948
+
+Accuracy limit of the sigma_hat instrument (per channel, over fitted zeros):
+channel           max err(fit)  max|D_trunc|  max|D_window|  max|t_min-gamma|
+L2_chi3_q3             0.00087       0.00244        0.00657           0.00050
+L3_chi4_q4             0.00093       0.00055        0.00698           0.00044
+
+------------------------------------------------------------------------------
+3. OFF-LINE MINIMA  (grid restricted to |sigma - 0.5| >= 0.06)
+   flag rule: off-line min < max(3 * max-convergence-change, 2 * max on-line
+   dip floor m<=10)  ==> would indicate a candidate off-line near-zero.
+------------------------------------------------------------------------------
+channel             min|L|  sigma*        t*  near.gam  maxdip10   flaglev  flag
+L2_chi3_q3          0.0670    0.56    8.0444    0.0047    0.0010    0.0674   YES
+L3_chi4_q4          0.0757    0.56    6.0208    0.0002    0.0008    0.0698    no
+
+Smallest 8-neighbour-interior local minima in the off-line region
+(a true off-line zero would appear here with |L| ~ truncation floor):
+  L2_chi3_q3       none in off-line interior
+  L3_chi4_q4       none in off-line interior
+
+Doubling re-verification of each global off-line minimum (fine local grid
+sigma* +- 0.03 step 0.005, t* +- 0.10 step 0.005, M = 4e6 vs 8e6):
+channel           min(4e6)  min(8e6)  ratio  vertex4  vertex8  q*8e6^-s min8/floor
+L2_chi3_q3          0.0336    0.0345  1.025   0.4930   0.4922  1.48e-03       23.2
+L3_chi4_q4          0.0389    0.0381  0.981   0.4920   0.4926  1.98e-03       19.3
+
+Reading: ratio ~ 1 and min8 >> truncation floor means the off-line value is a
+stable nonzero of the function (the skirt of an on-line zero when near.gam is
+small), NOT an off-line zero; vertex4/vertex8 give the sigma-parabola vertex
+at the minimizing t -- a vertex pulled to ~0.5 means the local sigma-profile
+slopes back toward the critical line.
+
+------------------------------------------------------------------------------
+4. ANOMALIES
+------------------------------------------------------------------------------
+L2_chi3_q3: off-line minimum below flag level -- candidate off-line near-zero (see verification table).
+

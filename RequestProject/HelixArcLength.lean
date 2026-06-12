@@ -181,4 +181,93 @@ theorem radius_theta_sqrtn {mode U n k : ℝ} (hk : 1 ≤ k) (hU : 0 ≤ U) (_hn
     calc radius mode k = Real.sqrt ((radius mode k) ^ 2) := (Real.sqrt_sq hrad0).symm
       _ ≤ Real.sqrt (Real.exp mode * U / Real.pi * n) := Real.sqrt_le_sqrt hhi
 
+/-! ### The placement EXISTS and is unique — the accumulator is total
+
+The header's noted follow-up, discharged: the arc length is continuous and strictly monotone
+(speed ≥ slope, since `√(1+(2πt)²) ≥ 1`), it starts at `0` and is unbounded (`arc0_lower`), so by
+the intermediate value theorem EVERY integer `n` has exactly one loop position `kₙ ≥ 0` with
+`arc mode kₙ = n·U`. The even-spacing accumulator is total: each consumed integer owns one place
+on the spiral, determined by the two constants (slope `e^mode`, pitch `U`) and nothing else. -/
+
+/-- The speed never drops below `1`. -/
+theorem one_le_speed0 (t : ℝ) : 1 ≤ speed0 t := by
+  unfold speed0
+  have h : (1 : ℝ) ≤ 1 + (2 * Real.pi * t) ^ 2 := by nlinarith [sq_nonneg (2 * Real.pi * t)]
+  calc (1 : ℝ) = Real.sqrt 1 := Real.sqrt_one.symm
+    _ ≤ Real.sqrt (1 + (2 * Real.pi * t) ^ 2) := Real.sqrt_le_sqrt h
+
+/-- The slope-free arc length is continuous. -/
+theorem arc0_continuous : Continuous arc0 := by
+  rw [continuous_iff_continuousAt]
+  intro b
+  have h := intervalIntegral.integral_hasDerivAt_right
+    (speed0_cont.intervalIntegrable 0 b)
+    (speed0_cont.stronglyMeasurableAtFilter _ _)
+    speed0_cont.continuousAt
+  exact h.continuousAt
+
+/-- The slope-free arc length is strictly monotone. -/
+theorem arc0_strictMono : StrictMono arc0 := by
+  intro a b hab
+  have hsplit : arc0 a + ∫ t in a..b, speed0 t = arc0 b := by
+    unfold arc0
+    exact intervalIntegral.integral_add_adjacent_intervals
+      (speed0_cont.intervalIntegrable 0 a) (speed0_cont.intervalIntegrable a b)
+  have hpos : b - a ≤ ∫ t in a..b, speed0 t := by
+    have hconst : (∫ t in a..b, (1 : ℝ)) = b - a := by
+      rw [intervalIntegral.integral_const]
+      simp
+    rw [← hconst]
+    apply intervalIntegral.integral_mono_on (le_of_lt hab)
+      ((continuous_const).intervalIntegrable _ _)
+      (speed0_cont.intervalIntegrable _ _)
+    intro x _
+    exact one_le_speed0 x
+  linarith
+
+/-- **The placement exists and is unique**: for every `n ≥ 0` and pitch `U > 0` there is exactly
+    one `k ≥ 0` with `arc mode k = n·U`. The accumulator is total — every integer has its one
+    place on the spiral, from the constants alone. -/
+theorem existsUnique_placed (mode : ℝ) {U : ℝ} (hU : 0 < U) {n : ℝ} (hn : 0 ≤ n) :
+    ∃! k : ℝ, 0 ≤ k ∧ placed mode U n k := by
+  have hem : (0 : ℝ) < Real.exp mode := Real.exp_pos mode
+  set T : ℝ := n * U / Real.exp mode with hT
+  have hT0 : 0 ≤ T := by positivity
+  set k₀ : ℝ := Real.sqrt (T / Real.pi) + 1 with hk₀
+  have hk₀0 : 0 ≤ k₀ := by positivity
+  have hceil : T ≤ arc0 k₀ := by
+    have hs : Real.sqrt (T / Real.pi) ^ 2 = T / Real.pi :=
+      Real.sq_sqrt (by positivity)
+    have h2 : T / Real.pi ≤ k₀ ^ 2 := by
+      rw [hk₀]
+      nlinarith [Real.sqrt_nonneg (T / Real.pi), hs]
+    have h1 : T ≤ Real.pi * k₀ ^ 2 := by
+      calc T = Real.pi * (T / Real.pi) := by
+            field_simp
+        _ ≤ Real.pi * k₀ ^ 2 := by
+            apply mul_le_mul_of_nonneg_left h2 (le_of_lt Real.pi_pos)
+    exact le_trans h1 (arc0_lower hk₀0)
+  have harc00 : arc0 0 = 0 := by
+    unfold arc0
+    simp
+  have hivt : ∃ k ∈ Set.Icc 0 k₀, arc0 k = T := by
+    have hcont : ContinuousOn arc0 (Set.Icc 0 k₀) := arc0_continuous.continuousOn
+    have hmem : T ∈ Set.Icc (arc0 0) (arc0 k₀) := by
+      rw [harc00]
+      exact ⟨hT0, hceil⟩
+    obtain ⟨k, hk, hkeq⟩ := intermediate_value_Icc hk₀0 hcont hmem
+    exact ⟨k, hk, hkeq⟩
+  obtain ⟨k, hkmem, hkeq⟩ := hivt
+  refine ⟨k, ⟨hkmem.1, ?_⟩, ?_⟩
+  · unfold placed arc
+    rw [hkeq, hT]
+    field_simp
+  · rintro k' ⟨hk'0, hk'pl⟩
+    unfold placed arc at hk'pl
+    have hk'eq : arc0 k' = T := by
+      rw [hT]
+      field_simp at hk'pl ⊢
+      linarith [hk'pl]
+    exact arc0_strictMono.injective (by rw [hk'eq, hkeq])
+
 end HelixArcLength

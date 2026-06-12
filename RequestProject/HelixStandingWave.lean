@@ -1612,6 +1612,350 @@ theorem alternation_le_nodeCountChar {N : ℕ} [NeZero N] {χ : DirichletCharact
     (fun i _ => hmem i) hinj
   simpa [nodeCountChar] using hcard
 
+/-! ### The `W = −1` branch — the purely-imaginary wave, landing on the SAME counters
+
+For root number `−1` the self-dual wave is purely imaginary on the line
+(`waveChar_re_zero_of_rootNumber_neg_one`), so the standing wave is `Im Φ_χ`. Everything
+downstream of the alternation bound (`nodeCountChar`, `boxCountChar`, the window and global
+payoffs) counts `waveCharC`-zeros and is root-number-free — both branches feed one census. -/
+
+/-- The `W = −1` standing wave: `Z⁻_χ(t) = Im Φ_χ(½+it)`. -/
+noncomputable def standingWaveCharIm {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
+    (t : ℝ) : ℝ :=
+  (waveChar χ (1 / 2 + (t : ℂ) * I)).im
+
+/-- The `W = −1` wave is continuous. -/
+theorem standingWaveCharIm_continuous {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) : Continuous (standingWaveCharIm χ) := by
+  have hG : Continuous (waveCharC χ) := (waveCharC_differentiable hχ).continuous
+  have : Continuous fun t : ℝ => (waveCharC χ (t : ℂ)).im :=
+    Complex.continuous_im.comp (hG.comp Complex.continuous_ofReal)
+  exact this
+
+/-- A node of the `W = −1` wave IS a completed-`L` zero on the line (the real part already
+    vanishes identically, so the imaginary part carries the whole wave). -/
+theorem standingWaveCharIm_node_iff {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) (hsd : χ.ringHomComp (starRingEnd ℂ) = χ)
+    (hW : χ.rootNumber = -1) (t : ℝ) :
+    standingWaveCharIm χ t = 0
+      ↔ DirichletCharacter.completedLFunction χ (1 / 2 + (t : ℂ) * I) = 0 := by
+  rw [← waveChar_zero_iff]
+  have hre := waveChar_re_zero_of_rootNumber_neg_one hχ hχp hsd hW t
+  constructor
+  · intro h
+    apply Complex.ext
+    · simpa using hre
+    · simpa [standingWaveCharIm] using h
+  · intro h
+    rw [standingWaveCharIm, h]
+    simp
+
+/-- **The classical hook, `W = −1` branch**: a sign flip of the imaginary wave forces a
+    completed-`L` zero on the critical line, strictly between. -/
+theorem online_zero_of_signFlip_char_neg {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) (hsd : χ.ringHomComp (starRingEnd ℂ) = χ)
+    (hW : χ.rootNumber = -1) {a b : ℝ} (hab : a < b)
+    (h : standingWaveCharIm χ a * standingWaveCharIm χ b < 0) :
+    ∃ t ∈ Set.Ioo a b,
+      DirichletCharacter.completedLFunction χ (1 / 2 + (t : ℂ) * I) = 0 := by
+  have hc : ContinuousOn (standingWaveCharIm χ) (Set.Icc a b) :=
+    (standingWaveCharIm_continuous hχ).continuousOn
+  rcases mul_neg_iff.mp h with ⟨ha, hb⟩ | ⟨ha, hb⟩
+  · obtain ⟨t, ht, h0⟩ := intermediate_value_Ioo' hab.le hc (Set.mem_Ioo.mpr ⟨hb, ha⟩)
+    exact ⟨t, ht, (standingWaveCharIm_node_iff hχ hχp hsd hW t).mp h0⟩
+  · obtain ⟨t, ht, h0⟩ := intermediate_value_Ioo hab.le hc (Set.mem_Ioo.mpr ⟨ha, hb⟩)
+    exact ⟨t, ht, (standingWaveCharIm_node_iff hχ hχp hsd hW t).mp h0⟩
+
+/-- **The census engine, `W = −1` branch**: `k` sign alternations of the imaginary wave yield `k`
+    strictly increasing on-line completed-`L` zeros. -/
+theorem online_zeros_of_alternation_char_neg {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) (hsd : χ.ringHomComp (starRingEnd ℂ) = χ)
+    (hW : χ.rootNumber = -1) (ts : ℕ → ℝ) (hmono : StrictMono ts) (k : ℕ)
+    (halt : ∀ i, i < k → standingWaveCharIm χ (ts i) * standingWaveCharIm χ (ts (i + 1)) < 0) :
+    ∃ z : ℕ → ℝ,
+      (∀ i, i < k → z i ∈ Set.Ioo (ts i) (ts (i + 1)) ∧
+        DirichletCharacter.completedLFunction χ (1 / 2 + (z i : ℂ) * I) = 0) ∧
+      (∀ i j, i < k → j < k → i < j → z i < z j) := by
+  have h := fun i (hi : i < k) =>
+    online_zero_of_signFlip_char_neg hχ hχp hsd hW (hmono (Nat.lt_succ_self i)) (halt i hi)
+  choose f hf using h
+  refine ⟨fun i => if hi : i < k then f i hi else 0, fun i hi => ?_, fun i j hi hj hij => ?_⟩
+  · simp only [dif_pos hi]
+    exact ⟨(hf i hi).1, (hf i hi).2⟩
+  · simp only [dif_pos hi, dif_pos hj]
+    have h1 : f i hi < ts (i + 1) := (hf i hi).1.2
+    have h2 : ts j < f j hj := (hf j hj).1.1
+    have h3 : ts (i + 1) ≤ ts j := hmono.le_iff_le.mpr (by omega)
+    linarith
+
+/-- **Alternation tables for the `W = −1` wave bound the SAME node count from below** — both
+    root-number branches feed one census. -/
+theorem alternation_le_nodeCountChar_neg {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) (hsd : χ.ringHomComp (starRingEnd ℂ) = χ)
+    (hW : χ.rootNumber = -1) {a b : ℝ} (ts : ℕ → ℝ) (hmono : StrictMono ts) (k : ℕ)
+    (ha : a ≤ ts 0) (hb : ts k ≤ b)
+    (halt : ∀ i, i < k → standingWaveCharIm χ (ts i) * standingWaveCharIm χ (ts (i + 1)) < 0) :
+    k ≤ nodeCountChar hχ a b := by
+  obtain ⟨z, hz, hord⟩ := online_zeros_of_alternation_char_neg hχ hχp hsd hW ts hmono k halt
+  have hmem : ∀ i : Fin k, z i.1 ∈ (standingWaveChar_nodes_finite hχ a b).toFinset := by
+    intro i
+    rw [Set.Finite.mem_toFinset]
+    have hzi := hz i.1 i.2
+    refine ⟨⟨?_, ?_⟩, ?_⟩
+    · have h1 : ts 0 ≤ ts i.1 := hmono.le_iff_le.mpr (Nat.zero_le _)
+      have h2 := hzi.1.1
+      linarith
+    · have h2 := hzi.1.2
+      have h3 : ts (i.1 + 1) ≤ ts k := hmono.le_iff_le.mpr i.2
+      linarith
+    · show waveCharC χ ((z i.1 : ℝ) : ℂ) = 0
+      rw [waveCharC, waveChar_zero_iff]
+      exact hzi.2
+  have hinj : Set.InjOn (fun i : Fin k => z i.1) (Finset.univ : Finset (Fin k)) := by
+    intro i _ j _ hij
+    by_contra hne
+    rcases lt_or_gt_of_ne (fun h : i.1 = j.1 => hne (Fin.ext h)) with h | h
+    · exact absurd hij (ne_of_lt (hord i.1 j.1 i.2 j.2 h))
+    · exact absurd hij.symm (ne_of_lt (hord j.1 i.1 j.2 i.2 h))
+  have hcard := Finset.card_le_card_of_injOn (fun i : Fin k => z i.1)
+    (fun i _ => hmem i) hinj
+  simpa [nodeCountChar] using hcard
+
+/-! ### The general branch — EVERY primitive character, the half-phase `ε` wave
+
+Self-duality is not needed for a standing wave. For any primitive `χ ≠ 1` the completed Schwarz
+reflection plus the functional equation give `conj Φ_χ(½+it) = W(χ⁻¹)·Φ_χ(½+it)` — the same line
+relation as the self-dual case, with the conjugate character resolved through `χ̄ = χ⁻¹`. Running
+the relation through itself at a non-vanishing line value forces `conj W·W = 1` (unimodularity, no
+Gauss sums), so a HALF-PHASE `ε` with `ε² = W`, `conj ε·ε = 1` exists (ℂ algebraically closed), and
+`ε·Φ_χ` is REAL on the line. The whole census then runs for every character: the `ε`-wave's nodes
+are exactly the line zeros, and its alternations bound the same `nodeCountChar` from below.
+`W = +1` is `ε = 1`; `W = −1` is `ε = I`. -/
+
+/-- **The line relation, every primitive character** (self-duality dropped):
+    `conj Φ_χ(½+it) = W(χ⁻¹)·Φ_χ(½+it)`. -/
+theorem waveChar_line_conj_gen {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) (t : ℝ) :
+    (starRingEnd ℂ) (waveChar χ (1 / 2 + (t : ℂ) * I))
+      = (χ⁻¹).rootNumber * waveChar χ (1 / 2 + (t : ℂ) * I) := by
+  have hNarg : ((N : ℂ)).arg ≠ Real.pi := by
+    have h0 : ((N : ℂ)).arg = 0 := by
+      rw [show ((N : ℕ) : ℂ) = ((N : ℝ) : ℂ) from by push_cast; ring]
+      exact Complex.arg_ofReal_of_nonneg (Nat.cast_nonneg N)
+    rw [h0]
+    exact fun h => Real.pi_ne_zero h.symm
+  have hconjarg : (starRingEnd ℂ) ((1 : ℂ) / 2 - (t : ℂ) * I) = 1 / 2 + (t : ℂ) * I := by
+    simp only [map_sub, map_mul, map_div₀, map_one, Complex.conj_I, Complex.conj_ofReal,
+      map_ofNat]
+    ring
+  -- conj Λχ(½+it) = Λ_{χ⁻¹}(½−it)  (Schwarz reflection + χ̄ = χ⁻¹):
+  have hΛconj : (starRingEnd ℂ)
+      (DirichletCharacter.completedLFunction χ (1 / 2 + (t : ℂ) * I))
+      = DirichletCharacter.completedLFunction χ⁻¹ (1 / 2 - (t : ℂ) * I) := by
+    have h := completedLFunction_conj χ hχ (1 / 2 - (t : ℂ) * I)
+    rw [hconjarg, ringHomComp_star_eq_inv] at h
+    exact h
+  have hNconj : (starRingEnd ℂ) ((N : ℂ) ^ (((1 : ℂ) / 2 + (t : ℂ) * I) / 2))
+      = (N : ℂ) ^ (((1 : ℂ) / 2 - (t : ℂ) * I) / 2) := by
+    have h := Complex.cpow_conj ((N : ℂ)) (((1 : ℂ) / 2 - (t : ℂ) * I) / 2) hNarg
+    rw [show (starRingEnd ℂ) ((N : ℕ) : ℂ) = ((N : ℕ) : ℂ) from Complex.conj_natCast _] at h
+    rw [show (starRingEnd ℂ) (((1 : ℂ) / 2 - (t : ℂ) * I) / 2)
+        = ((1 : ℂ) / 2 + (t : ℂ) * I) / 2 from by
+      rw [show (starRingEnd ℂ) (((1 : ℂ) / 2 - (t : ℂ) * I) / 2)
+          = (starRingEnd ℂ) ((1 : ℂ) / 2 - (t : ℂ) * I) / 2 from by
+        simp only [map_div₀, map_ofNat], hconjarg]] at h
+    rw [h, Complex.conj_conj]
+  rw [waveChar, map_mul, hΛconj, hNconj]
+  -- = N^{(½−it)/2}·Λ_{χ⁻¹}(1−(½+it)) = W(χ⁻¹)·Φ(½+it) by the FE for χ⁻¹:
+  have hfe := (DirichletLHadamard.isPrimitive_inv hχp).completedLFunction_one_sub
+    (1 / 2 + (t : ℂ) * I)
+  rw [show (1 : ℂ) - (1 / 2 + (t : ℂ) * I) = 1 / 2 - (t : ℂ) * I from by ring,
+    inv_inv] at hfe
+  rw [hfe]
+  have hN : ((N : ℂ)) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne N)
+  rw [show (N : ℂ) ^ (((1 : ℂ) / 2 - (t : ℂ) * I) / 2)
+      * ((N : ℂ) ^ (((1 : ℂ) / 2 + (t : ℂ) * I) - 1 / 2) * (χ⁻¹).rootNumber
+        * DirichletCharacter.completedLFunction χ (1 / 2 + (t : ℂ) * I))
+      = ((N : ℂ) ^ (((1 : ℂ) / 2 - (t : ℂ) * I) / 2)
+          * (N : ℂ) ^ (((1 : ℂ) / 2 + (t : ℂ) * I) - 1 / 2)) * (χ⁻¹).rootNumber
+        * DirichletCharacter.completedLFunction χ (1 / 2 + (t : ℂ) * I) from by ring,
+    ← Complex.cpow_add _ _ hN,
+    show ((1 : ℂ) / 2 - (t : ℂ) * I) / 2 + (((1 : ℂ) / 2 + (t : ℂ) * I) - 1 / 2)
+      = ((1 : ℂ) / 2 + (t : ℂ) * I) / 2 from by ring]
+  ring
+
+/-- The wave does not vanish identically on the line: some line value is nonzero. -/
+theorem exists_waveCharC_line_ne_zero {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) : ∃ t : ℝ, waveCharC χ (t : ℂ) ≠ 0 :=
+  (standingWaveChar_nodes_isolated hχ 0).exists
+
+/-- **The wave constant is unimodular**: `conj W(χ⁻¹) · W(χ⁻¹) = 1` — the line relation reflected
+    through itself at a non-vanishing line value. No Gauss sums. -/
+theorem rootNumber_inv_conj_mul {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) :
+    (starRingEnd ℂ) ((χ⁻¹).rootNumber) * (χ⁻¹).rootNumber = 1 := by
+  obtain ⟨t, ht⟩ := exists_waveCharC_line_ne_zero hχ
+  have hΦ : waveChar χ (1 / 2 + (t : ℂ) * I) ≠ 0 := ht
+  have h1 := waveChar_line_conj_gen hχ hχp t
+  have h2 := congrArg (starRingEnd ℂ) h1
+  rw [Complex.conj_conj, map_mul, h1] at h2
+  have key : ((starRingEnd ℂ) ((χ⁻¹).rootNumber) * (χ⁻¹).rootNumber)
+      * waveChar χ (1 / 2 + (t : ℂ) * I)
+      = 1 * waveChar χ (1 / 2 + (t : ℂ) * I) := by
+    rw [one_mul]
+    linear_combination -h2
+  exact mul_right_cancel₀ hΦ key
+
+/-- **The half-phase exists**: a unit `ε` with `ε² = W(χ⁻¹)` and `conj ε · ε = 1`
+    (ℂ is algebraically closed; unimodularity descends to the root). -/
+theorem exists_halfPhase {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) :
+    ∃ ε : ℂ, ε ^ 2 = (χ⁻¹).rootNumber ∧ (starRingEnd ℂ) ε * ε = 1 := by
+  obtain ⟨ε, hε⟩ := IsAlgClosed.exists_pow_nat_eq ((χ⁻¹).rootNumber) (n := 2) (by norm_num)
+  refine ⟨ε, hε, ?_⟩
+  have hW := rootNumber_inv_conj_mul hχ hχp
+  have hreal : (starRingEnd ℂ) ε * ε = (Complex.normSq ε : ℂ) := by
+    rw [mul_comm, Complex.mul_conj]
+  have hsq : ((Complex.normSq ε : ℝ) : ℂ) ^ 2 = 1 := by
+    rw [← hreal]
+    calc ((starRingEnd ℂ) ε * ε) ^ 2
+        = (starRingEnd ℂ) (ε ^ 2) * ε ^ 2 := by rw [map_pow]; ring
+      _ = 1 := by rw [hε, hW]
+  have hx2 : (Complex.normSq ε) ^ 2 = 1 := by
+    have : (((Complex.normSq ε ^ 2 : ℝ)) : ℂ) = 1 := by push_cast at hsq ⊢; exact hsq
+    exact_mod_cast this
+  have hx0 : 0 ≤ Complex.normSq ε := Complex.normSq_nonneg ε
+  have hx1 : Complex.normSq ε = 1 := by nlinarith
+  rw [hreal, hx1]
+  norm_num
+
+/-- **The half-phase wave is REAL on the line, every primitive character**: with `ε² = W(χ⁻¹)` and
+    `conj ε·ε = 1`, the twisted wave `ε·Φ_χ(½+it)` is its own conjugate — the general standing
+    wave. `W = +1` is `ε = 1`; `W = −1` is `ε = I`; complex `W` takes the genuine half-phase. -/
+theorem waveCharGen_line_real {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) {ε : ℂ}
+    (hε2 : ε ^ 2 = (χ⁻¹).rootNumber) (hεu : (starRingEnd ℂ) ε * ε = 1) (t : ℝ) :
+    (starRingEnd ℂ) (ε * waveChar χ (1 / 2 + (t : ℂ) * I))
+      = ε * waveChar χ (1 / 2 + (t : ℂ) * I) := by
+  rw [map_mul, waveChar_line_conj_gen hχ hχp, ← hε2]
+  calc (starRingEnd ℂ) ε * (ε ^ 2 * waveChar χ (1 / 2 + (t : ℂ) * I))
+      = ((starRingEnd ℂ) ε * ε) * (ε * waveChar χ (1 / 2 + (t : ℂ) * I)) := by ring
+    _ = ε * waveChar χ (1 / 2 + (t : ℂ) * I) := by rw [hεu, one_mul]
+
+/-- The general (`ε`-twisted) standing wave: `Z^ε_χ(t) = Re (ε·Φ_χ(½+it))`. -/
+noncomputable def standingWaveCharGen {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
+    (ε : ℂ) (t : ℝ) : ℝ :=
+  (ε * waveChar χ (1 / 2 + (t : ℂ) * I)).re
+
+/-- The general wave is continuous. -/
+theorem standingWaveCharGen_continuous {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (ε : ℂ) : Continuous (standingWaveCharGen χ ε) := by
+  have hG : Continuous (waveCharC χ) := (waveCharC_differentiable hχ).continuous
+  have : Continuous fun t : ℝ => (ε * waveCharC χ (t : ℂ)).re :=
+    Complex.continuous_re.comp ((continuous_const.mul (hG.comp Complex.continuous_ofReal)))
+  exact this
+
+/-- A node of the general wave IS a completed-`L` zero on the line: reality makes the real part
+    the whole value, and the unit `ε` never vanishes. -/
+theorem standingWaveCharGen_node_iff {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) {ε : ℂ}
+    (hε2 : ε ^ 2 = (χ⁻¹).rootNumber) (hεu : (starRingEnd ℂ) ε * ε = 1) (t : ℝ) :
+    standingWaveCharGen χ ε t = 0
+      ↔ DirichletCharacter.completedLFunction χ (1 / 2 + (t : ℂ) * I) = 0 := by
+  have hεne : ε ≠ 0 := by
+    intro h
+    rw [h] at hεu
+    simp at hεu
+  have hreal := waveCharGen_line_real hχ hχp hε2 hεu t
+  constructor
+  · intro h
+    have hval : ε * waveChar χ (1 / 2 + (t : ℂ) * I)
+        = (((ε * waveChar χ (1 / 2 + (t : ℂ) * I)).re : ℝ) : ℂ) :=
+      (Complex.conj_eq_iff_re.mp hreal).symm
+    rw [standingWaveCharGen] at h
+    rw [h, Complex.ofReal_zero] at hval
+    rcases mul_eq_zero.mp hval with hc | hc
+    · exact absurd hc hεne
+    · rwa [waveChar_zero_iff] at hc
+  · intro h
+    rw [standingWaveCharGen, ← waveChar_zero_iff χ] at *
+    rw [h, mul_zero]
+    simp
+
+/-- **The classical hook, every primitive character**: a sign flip of the `ε`-wave forces a
+    completed-`L` zero on the critical line, strictly between. -/
+theorem online_zero_of_signFlip_char_gen {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) {ε : ℂ}
+    (hε2 : ε ^ 2 = (χ⁻¹).rootNumber) (hεu : (starRingEnd ℂ) ε * ε = 1) {a b : ℝ} (hab : a < b)
+    (h : standingWaveCharGen χ ε a * standingWaveCharGen χ ε b < 0) :
+    ∃ t ∈ Set.Ioo a b,
+      DirichletCharacter.completedLFunction χ (1 / 2 + (t : ℂ) * I) = 0 := by
+  have hc : ContinuousOn (standingWaveCharGen χ ε) (Set.Icc a b) :=
+    (standingWaveCharGen_continuous hχ ε).continuousOn
+  rcases mul_neg_iff.mp h with ⟨ha, hb⟩ | ⟨ha, hb⟩
+  · obtain ⟨t, ht, h0⟩ := intermediate_value_Ioo' hab.le hc (Set.mem_Ioo.mpr ⟨hb, ha⟩)
+    exact ⟨t, ht, (standingWaveCharGen_node_iff hχ hχp hε2 hεu t).mp h0⟩
+  · obtain ⟨t, ht, h0⟩ := intermediate_value_Ioo hab.le hc (Set.mem_Ioo.mpr ⟨ha, hb⟩)
+    exact ⟨t, ht, (standingWaveCharGen_node_iff hχ hχp hε2 hεu t).mp h0⟩
+
+/-- **Alternation tables of the `ε`-wave bound the SAME node count from below** — every primitive
+    character feeds the one census; the counters and payoffs upstream are unchanged. -/
+theorem alternation_le_nodeCountChar_gen {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) {ε : ℂ}
+    (hε2 : ε ^ 2 = (χ⁻¹).rootNumber) (hεu : (starRingEnd ℂ) ε * ε = 1)
+    {a b : ℝ} (ts : ℕ → ℝ) (hmono : StrictMono ts) (k : ℕ)
+    (ha : a ≤ ts 0) (hb : ts k ≤ b)
+    (halt : ∀ i, i < k →
+      standingWaveCharGen χ ε (ts i) * standingWaveCharGen χ ε (ts (i + 1)) < 0) :
+    k ≤ nodeCountChar hχ a b := by
+  have h := fun i (hi : i < k) =>
+    online_zero_of_signFlip_char_gen hχ hχp hε2 hεu (hmono (Nat.lt_succ_self i)) (halt i hi)
+  choose f hf using h
+  have hmem : ∀ i : Fin k, f i.1 i.2 ∈ (standingWaveChar_nodes_finite hχ a b).toFinset := by
+    intro i
+    rw [Set.Finite.mem_toFinset]
+    obtain ⟨hIoo, hzero⟩ := hf i.1 i.2
+    refine ⟨⟨?_, ?_⟩, ?_⟩
+    · have h1 : ts 0 ≤ ts i.1 := hmono.le_iff_le.mpr (Nat.zero_le _)
+      linarith [hIoo.1]
+    · have h3 : ts (i.1 + 1) ≤ ts k := hmono.le_iff_le.mpr i.2
+      linarith [hIoo.2]
+    · show waveCharC χ ((f i.1 i.2 : ℝ) : ℂ) = 0
+      rw [waveCharC, waveChar_zero_iff]
+      exact hzero
+  have hinj : Set.InjOn (fun i : Fin k => f i.1 i.2) (Finset.univ : Finset (Fin k)) := by
+    intro i _ j _ hij
+    by_contra hne
+    have hne' : i.1 ≠ j.1 := fun h => hne (Fin.ext h)
+    have hij' : f i.1 i.2 = f j.1 j.2 := hij
+    rcases lt_or_gt_of_ne hne' with h | h
+    · have h1 : f i.1 i.2 < ts (i.1 + 1) := (hf i.1 i.2).1.2
+      have h2 : ts j.1 < f j.1 j.2 := (hf j.1 j.2).1.1
+      have h3 : ts (i.1 + 1) ≤ ts j.1 := hmono.le_iff_le.mpr (by omega)
+      linarith
+    · have h1 : f j.1 j.2 < ts (j.1 + 1) := (hf j.1 j.2).1.2
+      have h2 : ts i.1 < f i.1 i.2 := (hf i.1 i.2).1.1
+      have h3 : ts (j.1 + 1) ≤ ts i.1 := hmono.le_iff_le.mpr (by omega)
+      linarith
+  have hcard := Finset.card_le_card_of_injOn (fun i : Fin k => f i.1 i.2)
+    (fun i _ => hmem i) hinj
+  simpa [nodeCountChar] using hcard
+
+/-- **The universal standing wave**: EVERY primitive `χ ≠ 1` carries a real standing wave on the
+    critical line whose nodes are exactly its completed-`L` line zeros — packaged with its
+    half-phase. The census framework (counters, window payoff, global packaging) applies to every
+    Dirichlet L-function. -/
+theorem exists_standingWave_universal {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) :
+    ∃ ε : ℂ, ((starRingEnd ℂ) ε * ε = 1) ∧
+      (∀ t : ℝ, (starRingEnd ℂ) (ε * waveChar χ (1 / 2 + (t : ℂ) * I))
+        = ε * waveChar χ (1 / 2 + (t : ℂ) * I)) ∧
+      (∀ t : ℝ, standingWaveCharGen χ ε t = 0
+        ↔ DirichletCharacter.completedLFunction χ (1 / 2 + (t : ℂ) * I) = 0) := by
+  obtain ⟨ε, hε2, hεu⟩ := exists_halfPhase hχ hχp
+  exact ⟨ε, hεu, fun t => waveCharGen_line_real hχ hχp hε2 hεu t,
+    fun t => standingWaveCharGen_node_iff hχ hχp hε2 hεu t⟩
+
 /-- **The character strip census is finite** — no height restriction needed: the window's box sits
     inside a closed ball, where the repo's divisor-finiteness applies. -/
 theorem stripBox_zeros_finite_char {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
@@ -1633,10 +1977,10 @@ theorem stripBox_zeros_finite_char {N : ℕ} [NeZero N] {χ : DirichletCharacter
     constructor
     · have := him.1
       have := neg_abs_le a
-      linarith
+      linarith [abs_nonneg b]
     · have := him.2
       have := le_abs_self b
-      linarith
+      linarith [abs_nonneg a]
   linarith
 
 /-- The character strip count. -/
@@ -1697,6 +2041,199 @@ theorem grh_in_window_of_counters_agree_char {N : ℕ} [NeZero N] {χ : Dirichle
   obtain ⟨t, _, hteq⟩ := hsurj (Finset.mem_coe.mpr hsmem)
   rw [← hteq]
   simp
+
+/-- **The global packaging, character-general: GRH from a certificate family.** If the two counters
+    agree on every symmetric window `[−(n+1), n+1]`, then `GRH χ` holds outright. Unlike the `ζ`
+    packaging (which must dodge the poles of `Λ` at `0,1` with a height floor and reflect negative
+    heights through the FE), `Λχ` is ENTIRE for `χ ≠ 1`, so the symmetric windows cover every height
+    directly — real-axis zeros included. Unconditional: the certificate family is the situational
+    input. -/
+theorem grh_of_window_certificates_char {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1)
+    (hcert : ∀ n : ℕ, boxCountChar hχ (-(n + 1 : ℝ)) (n + 1)
+      ≤ nodeCountChar hχ (-(n + 1 : ℝ)) (n + 1)) :
+    GRHSpectral.GRH χ := by
+  intro ρ hρ
+  have hΛ : DirichletCharacter.completedLFunction χ ρ = 0 :=
+    DirichletLHadamard.completedLFunction_eq_zero_of_mem hρ
+  obtain ⟨n, hn⟩ := exists_nat_gt |ρ.im|
+  have hn' : |ρ.im| < (n : ℝ) + 1 := hn.trans (lt_add_one _)
+  have hwin : ρ ∈ stripBox (-(n + 1 : ℝ)) (n + 1) := by
+    refine ⟨⟨hρ.1.le, hρ.2.1.le⟩, ?_, ?_⟩
+    · have := neg_abs_le ρ.im
+      linarith
+    · have := le_abs_self ρ.im
+      linarith
+  exact grh_in_window_of_counters_agree_char hχ (hcert n) ρ hwin hΛ
+
+/-- **The strip census is Jensen-bounded** — `boxCountChar ≤ C·R·log R` for any window enclosed by
+    the radius-`R` disk. The upper counter is an explicit analytic quantity (the repo's
+    order-1-growth Jensen bound, every zero counting with multiplicity ≥ 1), so the certificate
+    `boxCountChar ≤ nodeCountChar` asks an alternation table to reach a concrete, computable
+    target. -/
+theorem boxCountChar_le_of_jensen {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) :
+    ∃ C > (0 : ℝ), ∃ R₀ > (0 : ℝ), ∀ a b : ℝ, ∀ R, R₀ ≤ R → 1 + |a| + |b| ≤ R →
+      (boxCountChar hχ a b : ℝ) ≤ C * R * Real.log R := by
+  classical
+  obtain ⟨C, hC, R₀, hR₀, hbound⟩ :=
+    DirichletLHadamard.completedL_weighted_zero_count_disk_bound hχ hχp
+  refine ⟨C, hC, R₀, hR₀, fun a b R hR hRab => ?_⟩
+  set T := (stripBox_zeros_finite_char hχ a b).toFinset with hT
+  have hmemZ : ∀ s ∈ T, s ∈ GRHSpectral.NontrivialZeros χ := by
+    intro s hs
+    rw [hT, Set.Finite.mem_toFinset] at hs
+    exact DirichletLHadamard.completedLFunction_zero_mem_NontrivialZeros hχ hχp hs.2
+  set S : Finset {ρ : ℂ // ρ ∈ GRHSpectral.NontrivialZeros χ} :=
+    T.attach.map ⟨fun x => ⟨x.1, hmemZ x.1 x.2⟩,
+      fun x y hxy => Subtype.ext (by simpa using congrArg Subtype.val hxy)⟩ with hS
+  have hSnorm : ∀ ρ ∈ S, ‖ρ.val‖ ≤ R := by
+    intro ρ hρS
+    rw [hS, Finset.mem_map] at hρS
+    obtain ⟨x, _, hx⟩ := hρS
+    have hval : ρ.val = x.1 := (congrArg Subtype.val hx).symm
+    have hsT : x.1 ∈ {s ∈ stripBox a b | DirichletCharacter.completedLFunction χ s = 0} :=
+      (Set.Finite.mem_toFinset _).mp x.2
+    have hre := hsT.1.1
+    have him := hsT.1.2
+    have h1 : ‖x.1‖ ≤ |x.1.re| + |x.1.im| := Complex.norm_le_abs_re_add_abs_im _
+    have h2 : |x.1.re| ≤ 1 := by
+      rw [abs_le]
+      exact ⟨by linarith [hre.1], hre.2⟩
+    have h3 : |x.1.im| ≤ |a| + |b| := by
+      rw [abs_le]
+      constructor
+      · have := him.1
+        have := neg_abs_le a
+        linarith [abs_nonneg b]
+      · have := him.2
+        have := le_abs_self b
+        linarith [abs_nonneg a]
+    rw [hval]
+    linarith
+  have hkey := hbound R hR S hSnorm
+  have hcard : S.card = T.card := by
+    rw [hS, Finset.card_map, Finset.card_attach]
+  have hcount : boxCountChar hχ a b = S.card := by
+    rw [hcard, hT, boxCountChar]
+  rw [hcount]
+  calc (S.card : ℝ) = ∑ _ρ ∈ S, (1 : ℝ) := by
+        rw [Finset.sum_const, nsmul_eq_mul, mul_one]
+    _ ≤ ∑ ρ ∈ S, (DirichletLHadamard.lOrderNat χ ρ.val : ℝ) := by
+        refine Finset.sum_le_sum fun ρ _ => ?_
+        exact_mod_cast DirichletLHadamard.lOrderNat_pos hχ ρ.2
+    _ ≤ C * R * Real.log R := hkey
+
+/-! ## THE VOID — the one gate, staged
+
+`ExteriorVoid χ` says the spectral image never leaves the closed unit disk: no zero with
+`‖w(ρ)‖ > 1`, equivalently (`w_norm_le_one_iff`) no zero with `Re ρ < ½`. **This is
+GRH-equivalent — the open weld, stated plainly** (with `w_norm_eq_one_of_le_one` and
+`grh_iff_w_image_unit` it gives the circle, hence the line; conversely GRH trivially implies it).
+By the re-pairing below, proving EITHER half-strip empty proves both. The structure's case against
+the exterior: unit phasors, conserved fiber, zero net ledger mass, one-sided `√n` radial packing
+(`radial_refl_mismatch`). Closing this Prop closes the program. -/
+
+/-- **The void, named**: the spectral image stays in the closed disk. GRH-equivalent. -/
+def ExteriorVoid {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) : Prop :=
+  ∀ ρ ∈ GRHSpectral.NontrivialZeros χ, ‖SpectralSide.w ρ‖ ≤ 1
+
+/-- **The coordinate bridge**: `‖w(ρ)‖ ≤ 1 ⟺ ½ ≤ Re ρ` (for `ρ ≠ 0`). The void's spectral and
+    strip faces are formally the same statement. -/
+theorem w_norm_le_one_iff {ρ : ℂ} (hρ : ρ ≠ 0) :
+    ‖SpectralSide.w ρ‖ ≤ 1 ↔ 1 / 2 ≤ ρ.re := by
+  have hnorm : ‖SpectralSide.w ρ‖ = ‖ρ - 1‖ / ‖ρ‖ := by
+    rw [SpectralSide.w, show (1 : ℂ) - 1 / ρ = (ρ - 1) / ρ from by field_simp, norm_div]
+  rw [hnorm, div_le_one (norm_pos_iff.mpr hρ)]
+  constructor
+  · intro h
+    have h2 : ‖ρ - 1‖ ^ 2 ≤ ‖ρ‖ ^ 2 := by
+      have := norm_nonneg (ρ - 1)
+      nlinarith
+    rw [← Complex.normSq_eq_norm_sq, ← Complex.normSq_eq_norm_sq] at h2
+    simp only [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.one_re,
+      Complex.one_im] at h2
+    nlinarith
+  · intro h
+    have h2 : ‖ρ - 1‖ ^ 2 ≤ ‖ρ‖ ^ 2 := by
+      rw [← Complex.normSq_eq_norm_sq, ← Complex.normSq_eq_norm_sq]
+      simp only [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.one_re,
+        Complex.one_im]
+      nlinarith
+    have := norm_nonneg ρ
+    nlinarith [norm_nonneg (ρ - 1)]
+
+/-- **The re-pairing**: every zero's quartet partner sits at the reflected real part
+    `Re(σρ) = 1 − Re ρ`. Hence the two half-strips of `Z(χ)` are in bijection — emptiness of
+    EITHER half is the void. -/
+theorem zero_re_pairing {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) {ρ : ℂ}
+    (hρ : ρ ∈ GRHSpectral.NontrivialZeros χ) :
+    (1 - (starRingEnd ℂ) ρ) ∈ GRHSpectral.NontrivialZeros χ ∧
+      (1 - (starRingEnd ℂ) ρ).re = 1 - ρ.re :=
+  ⟨one_sub_conj_mem_NontrivialZeros hχ hχp hρ, by
+    simp [Complex.sub_re, Complex.conj_re]⟩
+
+/-- **The gate is exact — the equivalence, kernel-proven**: `GRH χ ⟺ ExteriorVoid χ`. Forward:
+    on-line zeros have unit spectral norm. Backward: the void puts every zero in `Re ≥ ½`; the
+    quartet partner obeys the same bound at the reflected real part `1 − Re ρ`, squeezing
+    `Re = ½`. The one-sided disk bound IS the line — the docstring's claim, verified. -/
+theorem grh_iff_exteriorVoid {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) :
+    GRHSpectral.GRH χ ↔ ExteriorVoid χ := by
+  constructor
+  · intro hgrh ρ hρ
+    have hne : ρ ≠ 0 := GRHSpectral.nontrivial_ne_zero hρ
+    exact (w_norm_le_one_iff hne).mpr (hgrh ρ hρ).ge
+  · intro hvoid ρ hρ
+    have hne : ρ ≠ 0 := GRHSpectral.nontrivial_ne_zero hρ
+    have h1 : 1 / 2 ≤ ρ.re := (w_norm_le_one_iff hne).mp (hvoid ρ hρ)
+    obtain ⟨hmem, hre⟩ := zero_re_pairing hχ hχp hρ
+    have hne' : (1 - (starRingEnd ℂ) ρ) ≠ 0 := GRHSpectral.nontrivial_ne_zero hmem
+    have h2 : 1 / 2 ≤ (1 - (starRingEnd ℂ) ρ).re :=
+      (w_norm_le_one_iff hne').mp (hvoid _ hmem)
+    rw [hre] at h2
+    linarith
+
+/-- **The ledger in log form**: over any `σ`-closed finite window of the spectrum, the
+    `log`-norms of the spectral values sum to ZERO. -/
+theorem sum_log_w_norm_eq_zero {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (S : Finset ℂ) (hS : ∀ ρ ∈ S, ρ ∈ GRHSpectral.NontrivialZeros χ)
+    (hσ : ∀ ρ ∈ S, 1 - (starRingEnd ℂ) ρ ∈ S) :
+    ∑ ρ ∈ S, Real.log ‖SpectralSide.w ρ‖ = 0 := by
+  have hne : ∀ ρ ∈ S, ‖SpectralSide.w ρ‖ ≠ 0 :=
+    fun ρ hρ => norm_ne_zero_iff.mpr (w_ne_zero_of_mem (hS ρ hρ))
+  rw [← Real.log_prod hne, prod_w_norm_eq_one S hS hσ, Real.log_one]
+
+/-- **The balanced-distance law** (the void's Jensen-ready face): over any `σ`-closed window, the
+    zeros' aggregate log-distance to `1` equals their aggregate log-distance to `0`:
+    `Σ log‖ρ−1‖ = Σ log‖ρ‖`. This is exactly the quantity Jensen's formula measures from the two
+    centers — the functional equation's balance, in the coordinates where the one-sided mass bound
+    must meet it. -/
+theorem sum_log_dist_balanced {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (S : Finset ℂ) (hS : ∀ ρ ∈ S, ρ ∈ GRHSpectral.NontrivialZeros χ)
+    (hσ : ∀ ρ ∈ S, 1 - (starRingEnd ℂ) ρ ∈ S) :
+    ∑ ρ ∈ S, Real.log ‖ρ - 1‖ = ∑ ρ ∈ S, Real.log ‖ρ‖ := by
+  have key := sum_log_w_norm_eq_zero S hS hσ
+  have hterm : ∀ ρ ∈ S, Real.log ‖SpectralSide.w ρ‖
+      = Real.log ‖ρ - 1‖ - Real.log ‖ρ‖ := by
+    intro ρ hρ
+    have hρ0 : ρ ≠ 0 := by
+      intro h
+      have := (hS ρ hρ).1
+      rw [h] at this
+      simpa using this
+    have hρ1 : ρ - 1 ≠ 0 := by
+      intro h
+      have h1 : ρ = 1 := by linear_combination h
+      have := (hS ρ hρ).2.1
+      rw [h1] at this
+      simpa using this
+    rw [show SpectralSide.w ρ = (ρ - 1) / ρ from by
+      rw [SpectralSide.w]; field_simp, norm_div,
+      Real.log_div (norm_ne_zero_iff.mpr hρ1) (norm_ne_zero_iff.mpr hρ0)]
+  rw [Finset.sum_congr rfl hterm, Finset.sum_sub_distrib] at key
+  linarith
 
 
 /-! ## The Laguerre node-detector — "no node ever lifts" (the local line inequality)

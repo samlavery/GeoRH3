@@ -1,0 +1,69 @@
+OFF-LINE SCAN (finish): M=4000000, sigma in [0.30,0.70] step 0.02
+dip centers sigma_hat per zero (parabola in sigma of |L|^2 at refined t)
+
+L2_chi3_q3: off-line min|L| = 0.0673 at sigma=0.56, t=8.04   (on-line dip floor: 0.0023)
+  zero  1 (t=   8.0397): sigma_hat = 0.5072  (dev +0.0072)
+  zero  2 (t=  11.2492): sigma_hat = 0.5084  (dev +0.0084)
+  zero  3 (t=  15.7046): sigma_hat = 0.5097  (dev +0.0097)
+  zero  4 (t=  18.2620): sigma_hat = 0.5107  (dev +0.0107)
+  zero  5 (t=  20.4558): sigma_hat = 0.5115  (dev +0.0115)
+  zero  6 (t=  24.0594): sigma_hat = 0.5119  (dev +0.0119)
+  zero  7 (t=  26.5779): sigma_hat = 0.5126  (dev +0.0126)
+  zero  8 (t=  28.2182): sigma_hat = 0.5134  (dev +0.0134)
+  zero  9 (t=  30.7450): sigma_hat = 0.5131  (dev +0.0131)
+  zero 10 (t=  33.8974): sigma_hat = 0.5132  (dev +0.0132)
+  summary: mean dev +0.01117, std 0.00203, max|dev| 0.01344
+
+L3_chi4_q4: off-line min|L| = 0.0756 at sigma=0.56, t=6.02   (on-line dip floor: 0.0004)
+  zero  1 (t=   6.0209): sigma_hat = 0.5063  (dev +0.0063)
+  zero  2 (t=  10.2438): sigma_hat = 0.5096  (dev +0.0096)
+  zero  3 (t=  12.9881): sigma_hat = 0.5104  (dev +0.0104)
+  zero  4 (t=  16.3426): sigma_hat = 0.5117  (dev +0.0117)
+  zero  5 (t=  18.2920): sigma_hat = 0.5123  (dev +0.0123)
+  zero  6 (t=  21.4506): sigma_hat = 0.5132  (dev +0.0132)
+  zero  7 (t=  23.2784): sigma_hat = 0.5129  (dev +0.0129)
+  zero  8 (t=  25.7288): sigma_hat = 0.5135  (dev +0.0135)
+  zero  9 (t=  28.3596): sigma_hat = 0.5138  (dev +0.0138)
+  zero 10 (t=  29.6564): sigma_hat = 0.5145  (dev +0.0145)
+  summary: mean dev +0.01182, std 0.00233, max|dev| 0.01446
+
+L4_chi5quad_q5: off-line min|L| = 0.0899 at sigma=0.56, t=17.56   (on-line dip floor: 0.0034)
+  zero  1 (t=   6.6485): sigma_hat = 0.5083  (dev +0.0083)
+  zero  2 (t=   9.8314): sigma_hat = 0.5106  (dev +0.0106)
+  zero  3 (t=  11.9588): sigma_hat = 0.5110  (dev +0.0110)
+  zero  4 (t=  16.0338): sigma_hat = 0.5129  (dev +0.0129)
+  zero  5 (t=  17.5670): sigma_hat = 0.5128  (dev +0.0128)
+  zero  6 (t=  19.5407): sigma_hat = 0.5135  (dev +0.0135)
+  zero  7 (t=  22.2274): sigma_hat = 0.5143  (dev +0.0143)
+  zero  8 (t=  24.5885): sigma_hat = 0.5147  (dev +0.0147)
+  zero  9 (t=  26.7761): sigma_hat = 0.5151  (dev +0.0151)
+  zero 10 (t=  28.4610): sigma_hat = 0.5149  (dev +0.0149)
+  summary: mean dev +0.01281, std 0.00211, max|dev| 0.01509
+
+L5_chi5c4_q5: off-line min|L| = 0.0732 at sigma=0.56, t=6.21   (on-line dip floor: 0.0011)
+  zero  1 (t=   6.1836): sigma_hat = 0.5087  (dev +0.0087)
+  zero  2 (t=   8.4572): sigma_hat = 0.5089  (dev +0.0089)
+  zero  3 (t=  12.6749): sigma_hat = 0.5113  (dev +0.0113)
+  zero  4 (t=  14.8250): sigma_hat = 0.5124  (dev +0.0124)
+  zero  5 (t=  17.3378): sigma_hat = 0.5133  (dev +0.0133)
+  zero  6 (t=  18.9986): sigma_hat = 0.5134  (dev +0.0134)
+  zero  7 (t=  22.4876): sigma_hat = 0.5143  (dev +0.0143)
+  zero  8 (t=  24.3653): sigma_hat = 0.5144  (dev +0.0144)
+  zero  9 (t=  25.5312): sigma_hat = 0.5154  (dev +0.0154)
+  zero 10 (t=  27.9828): sigma_hat = 0.5155  (dev +0.0155)
+  summary: mean dev +0.01277, std 0.00232, max|dev| 0.01554
+
+L6_chi7quad_q7: off-line min|L| = 0.0739 at sigma=0.56, t=4.50   (on-line dip floor: 0.0036)
+  zero  1 (t=   4.4757): sigma_hat = 0.5080  (dev +0.0080)
+  zero  2 (t=   6.8455): sigma_hat = 0.5101  (dev +0.0101)
+  zero  3 (t=  11.1602): sigma_hat = 0.5121  (dev +0.0121)
+  zero  4 (t=  12.4896): sigma_hat = 0.5129  (dev +0.0129)
+  zero  5 (t=  15.1129): sigma_hat = 0.5142  (dev +0.0142)
+  zero  6 (t=  16.8029): sigma_hat = 0.5140  (dev +0.0140)
+  zero  7 (t=  19.6119): sigma_hat = 0.5151  (dev +0.0151)
+  zero  8 (t=  21.8999): sigma_hat = 0.5149  (dev +0.0149)
+  zero  9 (t=  23.1630): sigma_hat = 0.5152  (dev +0.0152)
+  zero 10 (t=  24.4988): sigma_hat = 0.5159  (dev +0.0159)
+  summary: mean dev +0.01326, std 0.00241, max|dev| 0.01594
+
+DONE

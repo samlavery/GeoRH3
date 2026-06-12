@@ -579,6 +579,21 @@ theorem cChar_eq_LFunction (χ : DirichletCharacter ℂ N)
     exact cChar_eq_LFunction_of_one_lt_re χ hχ z hz
   exact hf.eqOn_of_preconnected_of_eventuallyEq hg hUconn h₀ hfg hσ
 
+/-- **The uniform polynomial growth bound on the whole right half-plane**: for `χ ≠ 1`,
+    `‖L(χ,s)‖ ≤ N·‖s‖/Re s` for every `s` with `Re s > 0`. Elementary and explicit — the bounded
+    running character sum (`norm_Asum_le`) through the Abel-summation continuation; no functional
+    equation, no Stirling. This is the `M(T) ≍ T` input the classical zero-free region consumes:
+    on any edge disk `‖s − (1+iy)‖ ≤ r < 1` it gives `‖L‖ ≤ N(|y|+2)/(1−r)`. -/
+theorem norm_LFunction_le_half_plane (χ : DirichletCharacter ℂ N)
+    (hχ : χ ≠ 1) (s : ℂ) (hσ : 0 < s.re) :
+    ‖DirichletCharacter.LFunction χ s‖ ≤ (N : ℝ) * ‖s‖ / s.re := by
+  rw [← cChar_eq_LFunction χ hχ s hσ, cChar, norm_mul]
+  have htail := norm_tail_le χ hχ s hσ (le_refl (1 : ℝ))
+  rw [Real.one_rpow] at htail
+  calc ‖s‖ * ‖tail χ s 1‖ ≤ ‖s‖ * ((N : ℝ) * 1 / s.re) :=
+        mul_le_mul_of_nonneg_left htail (norm_nonneg s)
+    _ = (N : ℝ) * ‖s‖ / s.re := by ring
+
 /-! ## Section 5: The closure ledger — exact leading term and the rate bound
 
   Combining `abel_identity` with `cChar = LFunction`, the partial-sum defect is the running
