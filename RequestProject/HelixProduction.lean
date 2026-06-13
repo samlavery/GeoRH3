@@ -2,6 +2,7 @@ import RequestProject.HelixStandingWave
 import RequestProject.DirichletClosureLedger
 import RequestProject.HelixDualOperator
 import RequestProject.HelixFlowClosureLedger
+import RequestProject.HelixArcLength
 
 /-!
 # The production program (route 3) — zero events ARE the source's real-height flips
@@ -2314,5 +2315,869 @@ theorem pair_signature_touches_iff_online (ρ : ℂ) :
     exact ⟨ρ, h, by simp⟩
 
 end Dichotomy
+
+/-! ## Part 24 — `LossAwareHelixProjectionFaithful`: the line readout is observable
+
+**Helix projection observability** (Sam's spec): the analytic zero state is uniquely
+recoverable from the on-line readout — (real-height flip readout) + (radial defect
+ledger). Three vocabularies, one content:
+
+* *Functional analysis*: the pair factor on the line is the Pythagorean split
+  `(Re ρ − ½)² + (t − Im ρ)²` — radial defect² + height mismatch²
+  (`offline_pair_line_factor`, Part 21). The projection is lossy in coordinates but
+  loss-AWARE: the discarded radial coordinate is paid into the amplitude ledger.
+* *Category/model theory*: the readout functor (zero state ↦ line signature) is
+  FAITHFUL — injective on states (`line_readout_faithful` below); the analytic frame
+  is a conservative extension at the readout level: it can distinguish nothing the
+  line data does not already distinguish.
+* *Control theory*: full-state OBSERVABILITY — the Kalman-style separation: distinct
+  states yield distinct readouts; flips recover the on-line members
+  (`line_readout_zero_iff_member` + the Part 23 dichotomy); the leftover ledger,
+  built from strictly-positive-floor factors (`offline_pair_positive_floor`),
+  recovers the radial defects.
+
+Honest scope: this proves the instrument suite is COMPLETE — no two zero states are
+readout-equivalent, so a ghost cannot be information-free (the DPI beam). The open
+identity remains what it was: that the ACTUAL state has an empty defect ledger. -/
+
+section Observability
+
+open Polynomial
+
+/-- **The line readout is faithful**: two finite zero configurations with the same
+line signature are equal. The whole zero state — on-line and off-line members alike,
+with multiplicity — is uniquely recoverable from values on the critical line. -/
+theorem line_readout_faithful (Z W : Multiset ℂ)
+    (h : ∀ t : ℝ, ((Z.map (fun ρ => (1/2 + t*Complex.I) - ρ)).prod
+                 = (W.map (fun ρ => (1/2 + t*Complex.I) - ρ)).prod)) :
+    Z = W := by
+  have hpoly : (Z.map (fun ρ => (X : ℂ[X]) - C ρ)).prod
+             = (W.map (fun ρ => (X : ℂ[X]) - C ρ)).prod := by
+    have hroot : ∀ t : ℝ,
+        ((Z.map (fun ρ => (X : ℂ[X]) - C ρ)).prod
+          - (W.map (fun ρ => (X : ℂ[X]) - C ρ)).prod).IsRoot (1/2 + t*Complex.I) := by
+      intro t
+      have hz := h t
+      simp only [IsRoot, eval_sub, eval_multiset_prod, Multiset.map_map,
+        Function.comp_def, eval_sub, eval_X, eval_C]
+      rw [sub_eq_zero]
+      simpa using hz
+    by_contra hne
+    have hsub : (Z.map (fun ρ => (X : ℂ[X]) - C ρ)).prod
+              - (W.map (fun ρ => (X : ℂ[X]) - C ρ)).prod ≠ 0 := sub_ne_zero.mpr hne
+    have hinj : Function.Injective (fun t : ℝ => (1/2 : ℂ) + t*Complex.I) := by
+      intro a b hab
+      have := congrArg Complex.im hab
+      simpa using this
+    have hss : Set.range (fun t : ℝ => (1/2 : ℂ) + t*Complex.I)
+        ⊆ {x : ℂ | ((Z.map (fun ρ => (X : ℂ[X]) - C ρ)).prod
+              - (W.map (fun ρ => (X : ℂ[X]) - C ρ)).prod).IsRoot x} := by
+      rintro x ⟨t, rfl⟩
+      exact hroot t
+    exact (Polynomial.finite_setOf_isRoot hsub).not_infinite
+      ((Set.infinite_range_of_injective hinj).mono hss)
+  have := congrArg Polynomial.roots hpoly
+  rwa [Polynomial.roots_multiset_prod_X_sub_C, Polynomial.roots_multiset_prod_X_sub_C] at this
+
+/-- **The flip part of the readout**: the signature vanishes at real height `t` iff
+`½ + it` is a member of the configuration — flips read off exactly the on-line
+members; everything else sits in the never-vanishing defect ledger. -/
+theorem line_readout_zero_iff_member (Z : Multiset ℂ) (t : ℝ) :
+    ((Z.map (fun ρ => (1/2 + t*Complex.I) - ρ)).prod = 0)
+      ↔ (1/2 + t*Complex.I : ℂ) ∈ Z := by
+  rw [Multiset.prod_eq_zero_iff]
+  constructor
+  · rintro hmem
+    obtain ⟨ρ, hρ, hzero⟩ := Multiset.mem_map.mp hmem
+    rw [sub_eq_zero.mp hzero]
+    exact hρ
+  · intro hmem
+    exact Multiset.mem_map.mpr ⟨_, hmem, sub_self _⟩
+
+
+/-- **`SourceObservability` — the Kalman rank condition, literal.** A configuration of
+at most `n` zeros is uniquely determined by its line signature at any `n + 1` distinct
+heights: finitely many on-line samples reconstruct the full analytic zero state, and
+the inverse is explicit (interpolate the degree-`≤ n` polynomial through the samples,
+take its roots). This is the round-trip/adjoint beam of the loss-aware projection law:
+not merely that distinct states are distinguishable (`line_readout_faithful`), but
+that recovery needs only finite output data — observability in the engineering sense,
+with `n + 1` as the rank bound. -/
+theorem source_observability {n : ℕ} (Z W : Multiset ℂ)
+    (hZ : Multiset.card Z ≤ n) (hW : Multiset.card W ≤ n)
+    (ts : Finset ℝ) (hts : n < ts.card)
+    (h : ∀ t ∈ ts, ((Z.map (fun ρ => (1/2 + t*Complex.I) - ρ)).prod
+                  = (W.map (fun ρ => (1/2 + t*Complex.I) - ρ)).prod)) :
+    Z = W := by
+  set P : Polynomial ℂ := (Z.map (fun ρ => (Polynomial.X) - Polynomial.C ρ)).prod with hP
+  set Q : Polynomial ℂ := (W.map (fun ρ => (Polynomial.X) - Polynomial.C ρ)).prod with hQ
+  have hPdeg : P.natDegree = Multiset.card Z :=
+    Polynomial.natDegree_multiset_prod_X_sub_C_eq_card Z
+  have hQdeg : Q.natDegree = Multiset.card W :=
+    Polynomial.natDegree_multiset_prod_X_sub_C_eq_card W
+  have hPQ : P = Q := by
+    by_contra hne
+    have hD : P - Q ≠ 0 := sub_ne_zero.mpr hne
+    have hdeg : (P - Q).natDegree ≤ n :=
+      le_trans (Polynomial.natDegree_sub_le P Q) (by omega)
+    -- every sample height is a root of the difference
+    have hroot : ∀ t ∈ ts, (P - Q).IsRoot (1/2 + t*Complex.I) := by
+      intro t hts'
+      have hz := h t hts'
+      simp only [Polynomial.IsRoot, Polynomial.eval_sub, hP, hQ,
+        Polynomial.eval_multiset_prod, Multiset.map_map, Function.comp_def,
+        Polynomial.eval_sub, Polynomial.eval_X, Polynomial.eval_C]
+      rw [sub_eq_zero]
+      simpa using hz
+    -- the sample image is a set of > n distinct roots
+    have hinj : Function.Injective (fun t : ℝ => (1/2 : ℂ) + t*Complex.I) := by
+      intro a b hab
+      have := congrArg Complex.im hab
+      simpa using this
+    have hsub : (ts.image (fun t : ℝ => (1/2 : ℂ) + t*Complex.I)) ⊆ (P - Q).roots.toFinset := by
+      intro x hx
+      obtain ⟨t, ht, rfl⟩ := Finset.mem_image.mp hx
+      rw [Multiset.mem_toFinset, Polynomial.mem_roots hD]
+      exact hroot t ht
+    have hcount : ts.card ≤ (P - Q).natDegree := by
+      calc ts.card = (ts.image (fun t : ℝ => (1/2 : ℂ) + t*Complex.I)).card :=
+            (Finset.card_image_of_injective ts hinj).symm
+        _ ≤ (P - Q).roots.toFinset.card := Finset.card_le_card hsub
+        _ ≤ Multiset.card (P - Q).roots := Multiset.toFinset_card_le _
+        _ ≤ (P - Q).natDegree := Polynomial.card_roots' _
+    omega
+  have := congrArg Polynomial.roots hPQ
+  rwa [hP, hQ, Polynomial.roots_multiset_prod_X_sub_C,
+    Polynomial.roots_multiset_prod_X_sub_C] at this
+
+end Observability
+
+/-! ## Part 25 — the chart dictionary: every ½ is a transcendental in disguise
+
+Recoordination (Sam): the value `½` never was the bare rational — it is the unit-1
+shadow of a transcendental quantity, read in the wrong chart. Context decides which:
+σ-type halves (positions, in channel-arc units, U = π/3 for χ₃) are **π/6** — half
+the unit; phase-type halves (the anchor, the level offset, in radians) are **π/2** —
+half the quantum. The dictionary below proves the translations are exact and
+content-free: every kernel theorem closes identically in the transcendental
+statement. Computations rerun at the floor: `m·π − θ − π/2 − π·S = 0` at 3×10⁻¹⁴
+with π/2 entered exactly; dip centers within 6×10⁻⁴ of π/6 in arc units. -/
+
+section ChartDictionary
+
+/-- **σ-context**: in channel-arc units the critical line is `π/6` — half the χ₃
+unit. The translation is exact and invertible. -/
+theorem line_arc_units (x : ℝ) :
+    (Real.pi/3) * x = Real.pi/6 ↔ x = 1/2 := by
+  constructor
+  · intro h
+    have hπ : Real.pi ≠ 0 := Real.pi_ne_zero
+    field_simp at h
+    linarith [h]
+  · intro h
+    rw [h]; ring
+
+/-- **Phase-context**: levels sit at `m·π + π/2` — integer quanta plus half a
+quantum; the `(m + ½)·π` form is the same transcendental statement. -/
+theorem level_phase_units (m : ℕ) :
+    ((m : ℝ) + 1/2) * Real.pi = m * Real.pi + Real.pi/2 := by ring
+
+/-- **GRH in transcendental units**: every nontrivial zero sits at `π/6`
+channel-arc units — the statement is exactly GRH; the chart change is content-free. -/
+theorem GRH_arc_units {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) :
+    GRHSpectral.GRH χ ↔
+      ∀ ρ ∈ GRHSpectral.NontrivialZeros χ, (Real.pi/3) * ρ.re = Real.pi/6 := by
+  constructor
+  · intro h ρ hρ
+    exact (line_arc_units ρ.re).mpr (h ρ hρ)
+  · intro h ρ hρ
+    exact (line_arc_units ρ.re).mp (h ρ hρ)
+
+/-- **The uniformity dichotomy in transcendental units**: a zero's pair signature
+touches the line iff the zero sits at `π/6` arc units. -/
+theorem pair_signature_touches_iff_arc (ρ : ℂ) :
+    (∃ s : ℂ, s.re = 1 / 2 ∧ (s - ρ) * (s - (1 - (starRingEnd ℂ) ρ)) = 0) ↔
+      (Real.pi/3) * ρ.re = Real.pi/6 := by
+  rw [pair_signature_touches_iff_online ρ, ← line_arc_units]
+
+end ChartDictionary
+
+/-! ## Part 26 — the supply-side register instantiated: the helix arc IS an Accumulation
+
+The purchase-model socket is inhabited by the geometry itself: the helix arc length is an
+`Accumulation` — strictly monotone (length only grows), continuous, anchored, unbounded (the
+area law `πk² ≤ arc0 k`). The abstract ladder/staircase/payment theorems (steps 7–9) therefore
+hold for the helix's own arc. This is the supply-side register instantiated; the channel
+staircase (the gauge phase) is the companion instantiation, built separately. -/
+
+section GeometricAccumulation
+
+/-- **The helix arc is an accumulation.** The slope-free planar arc length
+`arc0 k = ∫₀ᵏ √(1+(2πt)²) dt` (`HelixArcLength.arc0`) is strictly monotone (speed never drops
+below 1), continuous (primitive of a continuous integrand), anchored at `arc0 0 = 0`, and
+unbounded (the area law `πk² ≤ arc0 k`). -/
+noncomputable def geometricAccumulation : Accumulation where
+  E := HelixArcLength.arc0
+  mono := HelixArcLength.arc0_strictMono
+  cont := HelixArcLength.arc0_continuous
+  zero := by unfold HelixArcLength.arc0; simp
+  unbounded := by
+    intro c
+    rcases le_or_gt c 0 with hc | hc
+    · refine ⟨0, le_refl 0, ?_⟩
+      have h0 : HelixArcLength.arc0 0 = 0 := by unfold HelixArcLength.arc0; simp
+      rw [h0]; exact hc
+    · refine ⟨Real.sqrt (c / Real.pi), Real.sqrt_nonneg _, ?_⟩
+      have hs : Real.sqrt (c / Real.pi) ^ 2 = c / Real.pi :=
+        Real.sq_sqrt (by positivity)
+      calc c = Real.pi * (c / Real.pi) := by field_simp
+        _ = Real.pi * Real.sqrt (c / Real.pi) ^ 2 := by rw [hs]
+        _ ≤ HelixArcLength.arc0 (Real.sqrt (c / Real.pi)) :=
+            HelixArcLength.arc0_lower (Real.sqrt_nonneg _)
+
+@[simp] theorem geometricAccumulation_E :
+    geometricAccumulation.E = HelixArcLength.arc0 := rfl
+
+/-- **The geometric ladder**: every harmonic has its purchase on the helix's own arc —
+a height `≥ 0` where the arc length reads exactly `n·π`. -/
+theorem geometric_ladder (n : ℕ) :
+    0 ≤ geometricAccumulation.purchaseHeight n ∧
+      HelixArcLength.arc0 (geometricAccumulation.purchaseHeight n) = n * Real.pi :=
+  geometricAccumulation.purchaseHeight_spec n
+
+/-- **The geometric ladder is strictly ordered**: later harmonics purchase strictly
+higher on the arc. -/
+theorem geometric_ladder_strictMono :
+    StrictMono geometricAccumulation.purchaseHeight :=
+  geometricAccumulation.purchaseHeight_strictMono
+
+/-- **The arc staircase reads the geometric ladder exactly**: at the n-th purchase the
+harmonic count of the arc length is `n`. -/
+theorem geometric_staircase (n : ℕ) :
+    harmonicCount HelixArcLength.arc0 (geometricAccumulation.purchaseHeight n) = n :=
+  geometricAccumulation.harmonicCount_purchase n
+
+/-- **The geometric ladder is discrete at infinity**: only finitely many purchases
+below any ceiling. -/
+theorem geometric_ladder_discrete (R : ℝ) :
+    {n : ℕ | |geometricAccumulation.purchaseHeight n| ≤ R}.Finite :=
+  geometricAccumulation.purchaseHeight_discrete R
+
+/-- **The purchase model holds in full for the helix's own arc**: ladder existence and
+calibration, strict order, exact staircase readout, discreteness at infinity, and the
+off-axis non-resonance of the regularized resolvent trace — all for the geometric arc
+length, no spectral input. -/
+theorem geometric_purchase_model_complete :
+    (∀ n : ℕ, 0 ≤ geometricAccumulation.purchaseHeight n ∧
+        HelixArcLength.arc0 (geometricAccumulation.purchaseHeight n) = n * Real.pi) ∧
+    StrictMono geometricAccumulation.purchaseHeight ∧
+    (∀ n : ℕ, harmonicCount HelixArcLength.arc0 (geometricAccumulation.purchaseHeight n) = n) ∧
+    (∀ R : ℝ, {n : ℕ | |geometricAccumulation.purchaseHeight n| ≤ R}.Finite) ∧
+    (∀ c : ℕ → ℝ, (∀ n, 0 ≤ c n) →
+      Summable (fun n => c n / (geometricAccumulation.purchaseHeight (n + 1)) ^ 2) →
+      ∀ w : ℂ, w.im ≠ 0 → DifferentiableAt ℂ
+        (fun z : ℂ => ∑' n : ℕ, (c n : ℂ)
+          * (1 / (z - (geometricAccumulation.purchaseHeight (n + 1) : ℂ))
+            + 1 / (geometricAccumulation.purchaseHeight (n + 1) : ℂ))) w) :=
+  geometricAccumulation.purchase_model_complete
+
+/-! ### Height is energy
+
+There is nothing to reconstruct: for any accumulation — hence for the helix's
+own arc — every energy level is attained at EXACTLY ONE height, and every
+height carries exactly one energy. The two coordinates are the same coordinate
+read in two directions; the ladder (`purchaseHeight`) is this conversion
+evaluated at the quanta `n·π`. The induction's reconstruction clause is the
+identity map. -/
+
+/-- **Height is energy (socket form)**: every energy `c ≥ 0` has exactly one
+height. `E` is an order bijection of `[0,∞)` onto itself — the continuum form
+of `exists_unique_purchase`. -/
+theorem Accumulation.exists_unique_height (A : Accumulation) {c : ℝ}
+    (hc : 0 ≤ c) : ∃! t : ℝ, 0 ≤ t ∧ A.E t = c := by
+  obtain ⟨b, hb0, hbc⟩ := A.unbounded c
+  have hzero : A.E 0 ≤ c := by rw [A.zero]; exact hc
+  exact existsUnique_threshold A.cont A.mono hzero hb0 hbc
+
+/-- **Height is energy (the helix's own arc)**: every arc-energy is reached at
+exactly one height of the pre-defined helix. -/
+theorem geometric_height_is_energy {c : ℝ} (hc : 0 ≤ c) :
+    ∃! t : ℝ, 0 ≤ t ∧ HelixArcLength.arc0 t = c :=
+  geometricAccumulation.exists_unique_height hc
+
+/-! ### One helix, every conductor
+
+The helix is the same for everything. A channel enters ONLY through its
+capture rate — how much the fiber/harmonic accrues while moving from crossing
+to crossing. Any admissible rate composed with an accumulation is again an
+accumulation: same geometry, channel-specific crossing heights. The crossings
+sit at different heights for different conductors because conductors accrue
+energy at different rates — never because the helix changed. -/
+
+/-- A capture rate: strictly monotone, continuous, anchored, unbounded — the
+conductor's entire contribution to the channel. -/
+structure CaptureRate where
+  r : ℝ → ℝ
+  mono : StrictMono r
+  cont : Continuous r
+  zero : r 0 = 0
+  unbounded : ∀ c : ℝ, ∃ s : ℝ, 0 ≤ s ∧ c ≤ r s
+
+/-- **One helix, many conductors**: reweighting an accumulation by a capture
+rate yields an accumulation — the channel's staircase on the SAME helix. -/
+noncomputable def Accumulation.reweight (A : Accumulation) (R : CaptureRate) :
+    Accumulation where
+  E := R.r ∘ A.E
+  mono := R.mono.comp A.mono
+  cont := R.cont.comp A.cont
+  zero := by simp [Function.comp, A.zero, R.zero]
+  unbounded := by
+    intro c
+    obtain ⟨s, hs0, hsc⟩ := R.unbounded c
+    obtain ⟨t, ht0, hts⟩ := A.unbounded s
+    exact ⟨t, ht0, le_trans hsc (R.mono.monotone hts)⟩
+
+/-- **The channel's crossings, on the same helix**: the n-th crossing of the
+reweighted fiber is at the unique height where the conductor's accrued energy
+reaches `n·π` — different heights for different rates, one geometry for all. -/
+theorem reweight_ladder (A : Accumulation) (R : CaptureRate) (n : ℕ) :
+    0 ≤ (A.reweight R).purchaseHeight n ∧
+      R.r (A.E ((A.reweight R).purchaseHeight n)) = n * Real.pi :=
+  (A.reweight R).purchaseHeight_spec n
+
+/-- The reweighted ladder keeps the full purchase model: strict order and the
+exact staircase, on the one helix, at the conductor's own heights. -/
+theorem reweight_strictMono (A : Accumulation) (R : CaptureRate) :
+    StrictMono (A.reweight R).purchaseHeight :=
+  (A.reweight R).purchaseHeight_strictMono
+
+/-! ### Ladder rigidity — the matching theorem (the W3 core)
+
+Any crossing sequence obeying the conversion law IS the ladder: heights
+satisfying `E = n·π` have no freedom — uniqueness of the purchase pins every
+crossing to its rung, all of them at once. RegisterMatch needs only the
+conversion law, and the conversion law is height-is-energy at the quanta.
+The induction is rigidity: base, step, and closure are all consequences of
+the unique purchase. -/
+
+/-- **Ladder rigidity**: a crossing sequence with the conversion law equals
+the ladder, index by index. -/
+theorem Accumulation.ladder_rigidity (A : Accumulation) (c : ℕ → ℝ)
+    (hc0 : ∀ n, 0 ≤ c n) (hcE : ∀ n, A.E (c n) = n * Real.pi) :
+    ∀ n, c n = A.purchaseHeight n := fun n =>
+  (A.exists_unique_purchase n).unique ⟨hc0 n, hcE n⟩ (A.purchaseHeight_spec n)
+
+/-- **Residue collection counts exactly**: with the integers placed evenly
+along the arc — one per `U`, the placement law — the collector's intake is
+linear and remainder-free: integer `n` is collected by arc-level `a` iff
+`n ∈ [1, ⌊a/U⌋]`, so the count collected by level `a` is exactly `⌊a/U⌋`.
+This is the supply meter of the capture rate: the conductor's character then
+weights WHICH residues count; the amount collected is exact at every level.
+The `log` of the analytic readout emerges downstream in collection totals
+(harmonic sums over the collected residues), never in the construction. -/
+theorem collected_iff (U a : ℝ) (hU : 0 < U) (ha : 0 ≤ a) (n : ℕ) :
+    ((n : ℝ) * U ≤ a ∧ 0 < n) ↔ n ∈ Finset.Icc 1 ⌊a / U⌋₊ := by
+  rw [Finset.mem_Icc]
+  constructor
+  · rintro ⟨hna, hn⟩
+    refine ⟨hn, Nat.le_floor ?_⟩
+    rw [le_div_iff₀ hU]
+    exact hna
+  · rintro ⟨hn, hnf⟩
+    refine ⟨?_, hn⟩
+    have h1 : (n : ℝ) ≤ a / U :=
+      (Nat.le_floor_iff (by positivity)).mp hnf
+    rw [le_div_iff₀ hU] at h1
+    exact h1
+
+/-- The collection count at arc-level `a` is exactly `⌊a/U⌋` — the supply
+side of residue collection, exact, no remainder. -/
+theorem collection_count (U a : ℝ) :
+    (Finset.Icc 1 ⌊a / U⌋₊).card = ⌊a / U⌋₊ := by
+  rw [Nat.card_Icc]
+  omega
+
+/-! ### What residues matter is up to the conductor
+
+The helix and its placed integers are universal; the conductor is a SELECTION
+RULE on residues. A channel's weights are supported exactly on the conductor's
+coprime classes — the conductor's entire identity is its answer to "which
+residues count, with what weight." -/
+
+/-- **The conductor decides**: a channel's weight at a residue is nonzero
+exactly on the units — the conductor's selection rule, as an iff. -/
+theorem conductor_decides {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q)
+    (a : ZMod q) : χ a ≠ 0 ↔ IsUnit a := by
+  constructor
+  · intro h
+    by_contra hu
+    exact h (χ.map_nonunit hu)
+  · intro hu h0
+    have h1 : χ a * χ (((hu.unit⁻¹ : (ZMod q)ˣ) : ZMod q)) = 1 := by
+      rw [← map_mul, hu.mul_val_inv, map_one]
+    rw [h0, zero_mul] at h1
+    exact zero_ne_one h1
+
+/-- **The conductor's collection**: the integers gathered by arc-level `a`
+whose residues the conductor admits — the placement meter filtered by the
+selection rule. -/
+noncomputable def conductorCollection (q : ℕ) (U a : ℝ) : Finset ℕ :=
+  (Finset.Icc 1 ⌊a / U⌋₊).filter (fun n => n.Coprime q)
+
+/-- Membership in the conductor's collection: placed below the level AND
+admitted by the selection rule. -/
+theorem mem_conductorCollection (q : ℕ) {U a : ℝ} (hU : 0 < U) (ha : 0 ≤ a)
+    (n : ℕ) : n ∈ conductorCollection q U a ↔
+      (((n : ℝ) * U ≤ a ∧ 0 < n) ∧ n.Coprime q) := by
+  rw [conductorCollection, Finset.mem_filter, ← collected_iff U a hU ha]
+
+/-- **The selection rule in channel weights**: an integer's residue matters to
+the channel — carries nonzero weight — exactly when the conductor admits it
+(coprimality). What residues matter is up to the conductor, as a theorem. -/
+theorem conductor_decides_nat {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q)
+    (n : ℕ) : χ (n : ZMod q) ≠ 0 ↔ n.Coprime q := by
+  rw [conductor_decides χ, ZMod.isUnit_iff_coprime]
+
+/-- **The rung growth — the area law on the register**: the geometric
+register's n-th rung sits at height at least `√n − 1`. From the arc's upper
+bound `arc0 t ≤ t + πt²` and the purchase equation `arc0 tₙ = nπ`: the
+quadratic forces `tₙ` up like the square root — the `√n` law read on the
+ladder, no spectral input. -/
+theorem geometric_rung_growth (n : ℕ) :
+    Real.sqrt n - 1 ≤ geometricAccumulation.purchaseHeight n := by
+  obtain ⟨ht0, htE⟩ := geometric_ladder n
+  set t := geometricAccumulation.purchaseHeight n with htdef
+  have hub : (n : ℝ) * Real.pi ≤ t + Real.pi * t ^ 2 := by
+    rw [← htE]
+    exact HelixArcLength.arc0_upper ht0
+  by_contra hlt
+  push_neg at hlt
+  have hsn : (1 : ℝ) ≤ Real.sqrt n := by
+    by_contra hs1
+    push_neg at hs1
+    linarith
+  have hs0 : (0 : ℝ) ≤ Real.sqrt n - 1 := by linarith
+  have hmono : t + Real.pi * t ^ 2
+      < (Real.sqrt n - 1) + Real.pi * (Real.sqrt n - 1) ^ 2 := by
+    nlinarith [mul_pos (sub_pos.mpr hlt)
+      (show (0:ℝ) < 1 + Real.pi * ((Real.sqrt n - 1) + t) by positivity)]
+  have hnn : Real.sqrt n * Real.sqrt n = n :=
+    Real.mul_self_sqrt (Nat.cast_nonneg n)
+  have hfinal : (Real.sqrt n - 1) + Real.pi * (Real.sqrt n - 1) ^ 2
+      ≤ n * Real.pi := by
+    nlinarith [Real.pi_gt_three, hsn, hnn]
+  linarith
+
+/-- **The weighted collection**: the channel's accrued measure at arc-level
+`a` — the conductor-admitted integers collected so far, each contributing its
+non-negative amount. The skeleton of the capture rate: its jumps are the
+admits; the continuous rate is its smooth interpolation across the bridge. -/
+noncomputable def collectionMeasure (q : ℕ) (U : ℝ) (w : ℕ → ℝ) (a : ℝ) : ℝ :=
+  ∑ n ∈ conductorCollection q U a, w n
+
+/-- **Collection only accrues**: with non-negative amounts the weighted
+collection is monotone — the fiber never refunds a residue. The rate's
+monotonicity, from the amounts alone. -/
+theorem collectionMeasure_mono (q : ℕ) {U : ℝ} (hU : 0 < U) (w : ℕ → ℝ)
+    (hw : ∀ n, 0 ≤ w n) : Monotone (collectionMeasure q U w) := by
+  intro a b hab
+  apply Finset.sum_le_sum_of_subset_of_nonneg
+  · apply Finset.filter_subset_filter
+    apply Finset.Icc_subset_Icc le_rfl
+    exact Nat.floor_mono (by gcongr)
+  · intro n _ _
+    exact hw n
+
+/-- **The W3 skeleton, assembled**: for ANY channel — any capture rate on the
+one helix — a fiber whose crossings satisfy the conversion law (the n-th
+crossing carries energy exactly `n·π`) has its crossings EQUAL to the
+register's rungs: match at every index, strict order, discreteness at
+infinity, all inherited. What instantiates this for a concrete `L`: naming
+the channel's `CaptureRate` and showing its crossings obey the conversion
+law — the rate identification. -/
+theorem registerMatch_of_conversion (A : Accumulation) (R : CaptureRate)
+    (crossing : ℕ → ℝ) (h0 : ∀ n, 0 ≤ crossing n)
+    (hconv : ∀ n, R.r (A.E (crossing n)) = n * Real.pi) :
+    (∀ n, crossing n = (A.reweight R).purchaseHeight n) ∧
+    StrictMono crossing ∧
+    (∀ Rad : ℝ, {n : ℕ | |crossing n| ≤ Rad}.Finite) := by
+  have hmatch := (A.reweight R).ladder_rigidity crossing h0 hconv
+  refine ⟨hmatch, ?_, ?_⟩
+  · intro a b hab
+    rw [hmatch a, hmatch b]
+    exact (A.reweight R).purchaseHeight_strictMono hab
+  · intro Rad
+    have hset : {n : ℕ | |crossing n| ≤ Rad}
+        = {n : ℕ | |(A.reweight R).purchaseHeight n| ≤ Rad} := by
+      ext n; simp only [Set.mem_setOf_eq, hmatch n]
+    rw [hset]
+    exact (A.reweight R).purchaseHeight_discrete Rad
+
+/-! ## Part 27 — the amplitude law on the register: concrete non-resonance, and the register product
+
+The model's own amplitude law on the geometric register: weight `1/(n+1)` at the
+`(n+1)`-st rung — `(1/√arc)²` read at arc `≈ (n+1)·π`, the planar-packing amplitude.
+Everything here is unconditional, with no spectral input anywhere:
+
+* `geometric_amplitude_summable` — against the rung growth `purchaseHeight (n+1) ≥ √(n+1) − 1`
+  (the area law, `geometric_rung_growth`), the amplitude-weighted regularization
+  `Σ (1/(n+1))/t_{n+1}²` converges: the clause-5 admission ticket, discharged.
+* `geometric_resolvent_offAxis` — clause 5 of the purchase model instantiated with this law:
+  the concrete Hilbert–Pólya resolvent over the geometric register cannot resonate off-axis.
+* `registerProduct` — the genus-1 Weierstrass product over the register's **squared** rungs
+  (the even pairing `±t ↦ t²`, exactly as `sin(πz)/(πz) = ∏(1 − z²/n²)` pairs `±n`): the
+  bare-rung genus-1 product diverges (`Σ 1/t_n² ≍ Σ 1/n` — the `√n` area law sits exactly at
+  the divergence edge), so the convergent canonical object lives in the energy variable `t²`,
+  where `Σ 1/(t_n²)² ≍ Σ 1/n²` converges. Uniform convergence on closed balls via the repo's
+  own factor apparatus (`ZD.xiWeierstrassTerm`); every rung energy is in its divisor.
+* `logDeriv_registerProduct` — **the face-wiring identity**: off the rung energies,
+  `logDeriv registerProduct z = Σₙ (1/(z − t_{n+1}²) + 1/t_{n+1}²)` — the product face and
+  the partial-fraction face of one object, exchanged by Mathlib's `logDeriv_tprod_eq_tsum`
+  (the port of `logDeriv_xiProductMult_partial_fraction` to the geometric register). -/
+
+/-- **Quantitative rung growth, squared tail form**: from the fourth rung on,
+`purchaseHeight (n+4)² ≥ (n+4)/4`. From `geometric_rung_growth`: `t_{n+4} ≥ √(n+4) − 1`,
+and `√(n+4) ≥ 2` turns the `−1` into a factor `½`. The shared engine for the
+amplitude-law and quartic summabilities. -/
+theorem geometric_rung_sq_lower (n : ℕ) :
+    ((n : ℝ) + 4) / 4 ≤ geometricAccumulation.purchaseHeight (n + 3 + 1) ^ 2 := by
+  have hx : (0 : ℝ) < (n : ℝ) + 4 := by positivity
+  have hg := geometric_rung_growth (n + 3 + 1)
+  have hcast : ((n + 3 + 1 : ℕ) : ℝ) = (n : ℝ) + 4 := by push_cast; ring
+  rw [hcast] at hg
+  have hs2 : (2 : ℝ) ≤ Real.sqrt ((n : ℝ) + 4) := by
+    have h4 : Real.sqrt 4 = 2 := by
+      rw [show (4 : ℝ) = 2 ^ 2 by norm_num]
+      exact Real.sqrt_sq (by norm_num)
+    rw [← h4]
+    exact Real.sqrt_le_sqrt (le_add_of_nonneg_left (Nat.cast_nonneg n))
+  have hp2 : Real.sqrt ((n : ℝ) + 4) / 2
+      ≤ geometricAccumulation.purchaseHeight (n + 3 + 1) := by linarith
+  have hmul := mul_self_le_mul_self (by positivity) hp2
+  have hsq : Real.sqrt ((n : ℝ) + 4) * Real.sqrt ((n : ℝ) + 4) = (n : ℝ) + 4 :=
+    Real.mul_self_sqrt hx.le
+  nlinarith [hmul, hsq]
+
+/-- **The amplitude law is admissible**: the model's own weights `c n = 1/(n+1)` are summable
+against the squared rungs, `Σ (1/(n+1)) / purchaseHeight (n+1)² < ∞`. The rung growth
+`t_{n+1} ≥ √(n+1) − 1` makes the tail `≤ 4/(n+1)²`, a convergent p-series; the finitely many
+small rungs are absorbed by an index shift. This discharges the clause-5 summability
+hypothesis with the geometry's own amplitude — no tuning. -/
+theorem geometric_amplitude_summable :
+    Summable (fun n : ℕ =>
+      (1 / (n + 1 : ℝ)) / (geometricAccumulation.purchaseHeight (n + 1)) ^ 2) := by
+  have hbase : Summable (fun n : ℕ => 1 / ((n : ℝ) + 1) ^ 2) := by
+    have h0 : Summable (fun n : ℕ => 1 / (n : ℝ) ^ 2) :=
+      Real.summable_one_div_nat_pow.mpr one_lt_two
+    exact ((summable_nat_add_iff 1).mpr h0).congr fun n => by push_cast; ring
+  have hmaj : Summable (fun n : ℕ => 4 / ((n : ℝ) + 1) ^ 2) :=
+    (hbase.mul_left 4).congr fun n => by rw [mul_one_div]
+  have htail : Summable (fun n : ℕ =>
+      (1 / ((n + 3 : ℕ) + 1 : ℝ))
+        / (geometricAccumulation.purchaseHeight ((n + 3) + 1)) ^ 2) := by
+    refine Summable.of_nonneg_of_le (fun n => by positivity) (fun n => ?_) hmaj
+    have hsq := geometric_rung_sq_lower n
+    have hp0 : 0 < geometricAccumulation.purchaseHeight (n + 3 + 1) :=
+      geometricAccumulation.purchaseHeight_pos (n + 3)
+    have hcast : ((n + 3 : ℕ) : ℝ) + 1 = (n : ℝ) + 4 := by push_cast; ring
+    rw [hcast, div_div,
+      div_le_div_iff₀ (mul_pos (by positivity) (pow_pos hp0 2)) (by positivity)]
+    nlinarith [mul_le_mul_of_nonneg_left hsq (show (0 : ℝ) ≤ (n : ℝ) + 4 by positivity),
+      (show (0 : ℝ) ≤ (n : ℝ) by positivity)]
+  exact (summable_nat_add_iff 3).mp htail
+
+/-- **Concrete off-axis non-resonance over the geometric register**: the Hilbert–Pólya
+resolvent over the register's rungs with the model's own amplitude law (`(1/√arc)²` read at
+the `n`-th purchase, i.e. weight `1/(n+1)`) is differentiable at every non-real point —
+clause 5 of `geometric_purchase_model_complete` with **all hypotheses discharged**: the
+weights are non-negative by inspection and summable by `geometric_amplitude_summable`.
+No spectral input anywhere. -/
+theorem geometric_resolvent_offAxis :
+    ∀ w : ℂ, w.im ≠ 0 → DifferentiableAt ℂ
+      (fun z : ℂ => ∑' n : ℕ, ((1 / (n + 1 : ℝ) : ℝ) : ℂ)
+        * (1 / (z - (geometricAccumulation.purchaseHeight (n + 1) : ℂ))
+          + 1 / (geometricAccumulation.purchaseHeight (n + 1) : ℂ))) w :=
+  geometric_purchase_model_complete.2.2.2.2 (fun n => 1 / (n + 1 : ℝ))
+    (fun n => one_div_nonneg.mpr (by positivity)) geometric_amplitude_summable
+
+/-- **The register trace** — the named resolvent object of `geometric_resolvent_offAxis`:
+the Hadamard-regularized trace over the geometric register's rungs, weighted by the model's
+own amplitude law `1/(n+1)`. This is the register's **logDeriv face** (the partial-fraction
+side of a factorization); the exponential/product face over the bare rungs is NOT built here
+— at genus 1 it diverges (`Σ 1/t_n² ≍ Σ 1/n`), and its convergent energy-variable form is
+`registerProduct` below. The identity wiring the two faces (logDeriv of the product = the
+unweighted squared-rung trace) is `logDeriv_registerProduct` below. -/
+noncomputable def registerTrace (z : ℂ) : ℂ :=
+  ∑' n : ℕ, ((1 / (n + 1 : ℝ) : ℝ) : ℂ)
+    * (1 / (z - (geometricAccumulation.purchaseHeight (n + 1) : ℂ))
+      + 1 / (geometricAccumulation.purchaseHeight (n + 1) : ℂ))
+
+/-- The register trace cannot resonate off-axis: differentiable at every non-real point. -/
+theorem registerTrace_differentiableAt_offAxis {w : ℂ} (hw : w.im ≠ 0) :
+    DifferentiableAt ℂ registerTrace w :=
+  geometric_resolvent_offAxis w hw
+
+/-- **Quartic admissibility of the squared rungs**: `Σ 1/(t_{n+1}²)² < ∞`. The genus-1
+Weierstrass weight law for the register product in the energy variable: the rungs grow like
+`√n`, so their squares grow like `n` and the fourth powers give a convergent p-series. -/
+theorem geometric_register_quartic_summable :
+    Summable (fun n : ℕ =>
+      1 / ((geometricAccumulation.purchaseHeight (n + 1)) ^ 2) ^ 2) := by
+  have hbase : Summable (fun n : ℕ => 1 / ((n : ℝ) + 1) ^ 2) := by
+    have h0 : Summable (fun n : ℕ => 1 / (n : ℝ) ^ 2) :=
+      Real.summable_one_div_nat_pow.mpr one_lt_two
+    exact ((summable_nat_add_iff 1).mpr h0).congr fun n => by push_cast; ring
+  have hmaj : Summable (fun n : ℕ => 16 / ((n : ℝ) + 1) ^ 2) :=
+    (hbase.mul_left 16).congr fun n => by rw [mul_one_div]
+  have htail : Summable (fun n : ℕ =>
+      1 / ((geometricAccumulation.purchaseHeight ((n + 3) + 1)) ^ 2) ^ 2) := by
+    refine Summable.of_nonneg_of_le (fun n => by positivity) (fun n => ?_) hmaj
+    have hsq := geometric_rung_sq_lower n
+    have hp0 : 0 < geometricAccumulation.purchaseHeight (n + 3 + 1) :=
+      geometricAccumulation.purchaseHeight_pos (n + 3)
+    have h44 : (((n : ℝ) + 4) / 4) ^ 2
+        ≤ ((geometricAccumulation.purchaseHeight (n + 3 + 1)) ^ 2) ^ 2 :=
+      pow_le_pow_left₀ (by positivity) hsq 2
+    rw [div_le_div_iff₀ (pow_pos (pow_pos hp0 2) 2) (by positivity)]
+    nlinarith [h44, (show (0 : ℝ) ≤ (n : ℝ) by positivity)]
+  exact (summable_nat_add_iff 3).mp htail
+
+/-- **The register product (W2)** — the genus-1 Weierstrass product over the geometric
+register's **squared** rungs: `∏ₙ E₁(z / t_{n+1}²)` with `E₁(w) = (1−w)·exp w`. The squaring
+is the even pairing `±t ↦ t²` (as `sin(πz)/(πz) = ∏(1 − z²/n²)` pairs `±n`): the bare-rung
+genus-1 product diverges, the energy-variable product converges
+(`geometric_register_quartic_summable`). In the height variable `w` (set `z = w²`) the
+factors read `(1 − w²/t_n²)·exp(w²/t_n²)` — zeros exactly at `w = ±t_n`, the full
+two-sided register. -/
+noncomputable def registerProduct (z : ℂ) : ℂ :=
+  ∏' n : ℕ, (1 + ZD.xiWeierstrassTerm
+    (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) z)
+
+/-- **The register product converges uniformly on every closed ball** — via the repo's own
+factor apparatus (`ZD.norm_xiWeierstrassTerm_le`, quadratic bound `3‖z‖²/‖ρ‖²`) against the
+quartic weight law of the squared rungs. Only finitely many rungs sit below any ball radius
+(`geometric_ladder_discrete`), and the far tail is dominated by `3M²/(t_{n+1}²)²`. -/
+theorem registerProduct_multipliableUniformlyOn_closedBall (M : ℝ) (_hM : 0 < M) :
+    MultipliableUniformlyOn
+      (fun n : ℕ => fun z : ℂ => 1 + ZD.xiWeierstrassTerm
+        (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) z)
+      (Metric.closedBall (0 : ℂ) M) := by
+  have hu_summable : Summable (fun n : ℕ =>
+      3 * M ^ 2 / ((geometricAccumulation.purchaseHeight (n + 1)) ^ 2) ^ 2) :=
+    (geometric_register_quartic_summable.mul_left (3 * M ^ 2)).congr
+      fun n => by rw [mul_one_div]
+  have h_bound : ∀ᶠ n : ℕ in cofinite,
+      ∀ z ∈ Metric.closedBall (0 : ℂ) M,
+        ‖ZD.xiWeierstrassTerm
+            (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) z‖
+          ≤ 3 * M ^ 2 / ((geometricAccumulation.purchaseHeight (n + 1)) ^ 2) ^ 2 := by
+    have h_bad_fin :
+        {n : ℕ | (geometricAccumulation.purchaseHeight (n + 1)) ^ 2 < M}.Finite := by
+      have hsub : {n : ℕ | (geometricAccumulation.purchaseHeight (n + 1)) ^ 2 < M}
+          ⊆ (fun n : ℕ => n + 1) ⁻¹'
+            {m : ℕ | |geometricAccumulation.purchaseHeight m| ≤ Real.sqrt M} := by
+        intro n hn
+        simp only [Set.mem_setOf_eq] at hn
+        simp only [Set.mem_preimage, Set.mem_setOf_eq]
+        have hp0 : 0 ≤ geometricAccumulation.purchaseHeight (n + 1) :=
+          (geometric_ladder (n + 1)).1
+        rw [abs_of_nonneg hp0]
+        have h := Real.sqrt_le_sqrt hn.le
+        rwa [Real.sqrt_sq hp0] at h
+      exact (Set.Finite.preimage (Set.injOn_of_injective (add_left_injective 1))
+        (geometric_ladder_discrete (Real.sqrt M))).subset hsub
+    filter_upwards [h_bad_fin.compl_mem_cofinite] with n hn
+    have hge : M ≤ (geometricAccumulation.purchaseHeight (n + 1)) ^ 2 := not_lt.mp hn
+    intro z hz
+    rw [Metric.mem_closedBall, dist_zero_right] at hz
+    have hp0 : 0 < geometricAccumulation.purchaseHeight (n + 1) :=
+      geometricAccumulation.purchaseHeight_pos n
+    have hρ_ne : (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) ≠ 0 := by
+      exact_mod_cast (pow_pos hp0 2).ne'
+    have hnorm : ‖(((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ)‖
+        = (geometricAccumulation.purchaseHeight (n + 1)) ^ 2 := by
+      rw [Complex.norm_real, Real.norm_of_nonneg (by positivity)]
+    have hz_le : ‖z‖ ≤ ‖(((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ)‖ := by
+      rw [hnorm]
+      exact le_trans hz hge
+    have hb := ZD.norm_xiWeierstrassTerm_le hρ_ne hz_le
+    rw [hnorm] at hb
+    refine le_trans hb ?_
+    have h_z_sq : ‖z‖ ^ 2 ≤ M ^ 2 := pow_le_pow_left₀ (norm_nonneg z) hz 2
+    apply div_le_div_of_nonneg_right _ (by positivity)
+    linarith
+  apply Summable.multipliableUniformlyOn_one_add (isCompact_closedBall _ _) hu_summable h_bound
+  intro n
+  have hρ_ne : (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) ≠ 0 := by
+    exact_mod_cast (pow_pos (geometricAccumulation.purchaseHeight_pos n) 2).ne'
+  exact (ZD.xiWeierstrassTerm_differentiable hρ_ne).continuous.continuousOn
+
+/-- The register product converges locally uniformly on all of `ℂ`. -/
+theorem registerProduct_multipliableLocallyUniformlyOn_univ :
+    MultipliableLocallyUniformlyOn
+      (fun n : ℕ => fun z : ℂ => 1 + ZD.xiWeierstrassTerm
+        (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) z)
+      Set.univ := by
+  apply multipliableLocallyUniformlyOn_of_of_forall_exists_nhds
+  intro z _
+  refine ⟨Metric.closedBall z 1,
+    nhdsWithin_le_nhds (Metric.closedBall_mem_nhds z zero_lt_one), ?_⟩
+  have hM_pos : (0 : ℝ) < ‖z‖ + 1 := by positivity
+  have h_sub : Metric.closedBall z 1 ⊆ Metric.closedBall (0 : ℂ) (‖z‖ + 1) := by
+    intro w hw
+    rw [Metric.mem_closedBall, dist_zero_right]
+    rw [Metric.mem_closedBall] at hw
+    calc ‖w‖ ≤ ‖w - z‖ + ‖z‖ := by
+          have := norm_sub_norm_le w z; linarith
+      _ = dist w z + ‖z‖ := by rw [dist_eq_norm]
+      _ ≤ 1 + ‖z‖ := by linarith
+      _ = ‖z‖ + 1 := by ring
+  exact (registerProduct_multipliableUniformlyOn_closedBall (‖z‖ + 1) hM_pos).mono h_sub
+
+/-- The register product converges at every point of `ℂ`. -/
+theorem registerProduct_multipliable (z : ℂ) :
+    Multipliable (fun n : ℕ => 1 + ZD.xiWeierstrassTerm
+      (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) z) :=
+  registerProduct_multipliableLocallyUniformlyOn_univ.multipliable (Set.mem_univ z)
+
+/-- **Every rung energy is in the register product's divisor**: the product vanishes at
+`t_{n+1}²` for every `n` — the factor at index `n` is `E₁(1) = 0`. -/
+theorem registerProduct_zero_at_rung_energy (n : ℕ) :
+    registerProduct (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) = 0 := by
+  unfold registerProduct
+  apply tprod_of_exists_eq_zero
+  refine ⟨n, ?_⟩
+  apply ZD.one_add_xiWeierstrassTerm_at_zero
+  exact_mod_cast (pow_pos (geometricAccumulation.purchaseHeight_pos n) 2).ne'
+
+/-- **The face-wiring identity**: the register product's logDeriv IS the register trace over
+squared rungs — the product face and the partial-fraction face of the same object, exchanged
+by `logDeriv_tprod_eq_tsum`. Port of `logDeriv_xiProductMult_partial_fraction` with rung
+energies in place of zeros: off the rung energies,
+`logDeriv registerProduct z = Σₙ (1/(z − t_{n+1}²) + 1/t_{n+1}²)`. -/
+theorem logDeriv_registerProduct {z : ℂ}
+    (hz : ∀ n : ℕ, z ≠ (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ)) :
+    logDeriv registerProduct z
+      = ∑' n : ℕ, (1 / (z - (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ))
+          + 1 / (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ)) := by
+  -- The rung energies are nonzero (rungs are strictly positive) and their norms
+  -- are the squared rungs themselves.
+  have ha_ne : ∀ n : ℕ,
+      (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) ≠ 0 := fun n => by
+    exact_mod_cast (pow_pos (geometricAccumulation.purchaseHeight_pos n) 2).ne'
+  have ha_norm : ∀ n : ℕ,
+      ‖(((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ)‖
+        = (geometricAccumulation.purchaseHeight (n + 1)) ^ 2 := fun n => by
+    rw [Complex.norm_real, Real.norm_of_nonneg (by positivity)]
+  -- Factor nonvanishing at `z`.
+  have hf : ∀ n : ℕ, (1 + ZD.xiWeierstrassTerm
+      (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) z) ≠ 0 := fun n =>
+    ZD.one_add_xiWeierstrassTerm_ne_zero_of_ne (ha_ne n) (hz n)
+  -- Per-factor differentiability.
+  have hd : ∀ n : ℕ, DifferentiableOn ℂ (fun w => 1 + ZD.xiWeierstrassTerm
+      (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) w) Set.univ := fun n =>
+    (ZD.one_add_xiWeierstrassTerm_differentiable (ha_ne n)).differentiableOn
+  -- Per-factor logDeriv value.
+  have h_per_factor : ∀ n : ℕ,
+      logDeriv (fun w => 1 + ZD.xiWeierstrassTerm
+          (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) w) z
+        = z / ((((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ)
+            * (z - (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ))) :=
+    fun n => ZD.logDeriv_one_add_xiWeierstrassTerm (ha_ne n) (hz n)
+  -- Only finitely many squared rungs sit below any threshold.
+  have h_small_fin : ∀ M : ℝ,
+      {n : ℕ | (geometricAccumulation.purchaseHeight (n + 1)) ^ 2 < M}.Finite := by
+    intro M
+    have hsub : {n : ℕ | (geometricAccumulation.purchaseHeight (n + 1)) ^ 2 < M}
+        ⊆ (fun n : ℕ => n + 1) ⁻¹'
+          {m : ℕ | |geometricAccumulation.purchaseHeight m| ≤ Real.sqrt M} := by
+      intro n hn
+      simp only [Set.mem_setOf_eq] at hn
+      simp only [Set.mem_preimage, Set.mem_setOf_eq]
+      have hp0 : 0 ≤ geometricAccumulation.purchaseHeight (n + 1) :=
+        (geometric_ladder (n + 1)).1
+      rw [abs_of_nonneg hp0]
+      have h := Real.sqrt_le_sqrt hn.le
+      rwa [Real.sqrt_sq hp0] at h
+    exact (Set.Finite.preimage (Set.injOn_of_injective (add_left_injective 1))
+      (geometric_ladder_discrete (Real.sqrt M))).subset hsub
+  -- The far-tail estimate: `‖z/(a(z−a))‖ ≤ 2‖z‖/‖a‖²` once `‖a‖ ≥ 2‖z‖ + 1`.
+  have key : ∀ a : ℂ, 2 * ‖z‖ + 1 ≤ ‖a‖ →
+      ‖z / (a * (z - a))‖ ≤ 2 * ‖z‖ / ‖a‖ ^ 2 := by
+    intro a hK
+    have ha_pos : 0 < ‖a‖ := by linarith [norm_nonneg z]
+    have h_z_sub : ‖z‖ + 1 ≤ ‖z - a‖ := by
+      have h_abs : |‖a‖ - ‖z‖| ≤ ‖a - z‖ := abs_norm_sub_norm_le _ _
+      have h_rev : ‖a - z‖ = ‖z - a‖ := norm_sub_rev _ _
+      have h1 : ‖a‖ - ‖z‖ ≤ ‖z - a‖ := by
+        have := le_abs_self (‖a‖ - ‖z‖)
+        linarith
+      linarith
+    have h_zsub_pos : 0 < ‖z - a‖ := by linarith [norm_nonneg z]
+    rw [norm_div, norm_mul]
+    rw [div_le_div_iff₀ (mul_pos ha_pos h_zsub_pos) (pow_pos ha_pos 2)]
+    have h_triangle : ‖a‖ ≤ ‖z‖ + ‖z - a‖ := by
+      have h := norm_sub_norm_le a z
+      have hrev : ‖a - z‖ = ‖z - a‖ := norm_sub_rev _ _
+      linarith
+    have h_gap : ‖a‖ * (‖a‖ - 2 * ‖z - a‖) ≤ 0 :=
+      mul_nonpos_of_nonneg_of_nonpos (norm_nonneg _) (by linarith)
+    nlinarith [h_gap, norm_nonneg z, (mul_pos ha_pos h_zsub_pos).le]
+  -- Summability of the per-factor logDerivs at `z`: majorant `2‖z‖/(t_{n+1}²)²`
+  -- against the quartic weight law of the squared rungs.
+  have hm : Summable (fun n : ℕ => logDeriv (fun w => 1 + ZD.xiWeierstrassTerm
+      (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) w) z) := by
+    have h_maj : Summable (fun n : ℕ =>
+        2 * ‖z‖ / ((geometricAccumulation.purchaseHeight (n + 1)) ^ 2) ^ 2) :=
+      (geometric_register_quartic_summable.mul_left (2 * ‖z‖)).congr
+        fun n => by rw [mul_one_div]
+    refine h_maj.of_norm_bounded_eventually ?_
+    filter_upwards [(h_small_fin (2 * ‖z‖ + 1)).compl_mem_cofinite] with n hn
+    have hge : 2 * ‖z‖ + 1 ≤ (geometricAccumulation.purchaseHeight (n + 1)) ^ 2 :=
+      not_lt.mp hn
+    rw [h_per_factor n]
+    have hb := key (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ)
+      (by rw [ha_norm n]; exact hge)
+    rwa [ha_norm n] at hb
+  -- The product converges locally uniformly and is nonzero at `z`
+  -- (all factors nonzero, summable factor norms).
+  have htend := registerProduct_multipliableLocallyUniformlyOn_univ
+  have hnez : (∏' n : ℕ, (1 + ZD.xiWeierstrassTerm
+      (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) z)) ≠ 0 := by
+    apply tprod_one_add_ne_zero_of_summable hf
+    have h_maj : Summable (fun n : ℕ =>
+        3 * (‖z‖ + 1) ^ 2 / ((geometricAccumulation.purchaseHeight (n + 1)) ^ 2) ^ 2) :=
+      (geometric_register_quartic_summable.mul_left (3 * (‖z‖ + 1) ^ 2)).congr
+        fun n => by rw [mul_one_div]
+    refine h_maj.of_norm_bounded_eventually ?_
+    filter_upwards [(h_small_fin (‖z‖ + 1)).compl_mem_cofinite] with n hn
+    have hge : ‖z‖ + 1 ≤ (geometricAccumulation.purchaseHeight (n + 1)) ^ 2 := not_lt.mp hn
+    have hp0 : 0 < geometricAccumulation.purchaseHeight (n + 1) :=
+      geometricAccumulation.purchaseHeight_pos n
+    have hz_le : ‖z‖ ≤ ‖(((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ)‖ := by
+      rw [ha_norm n]; linarith
+    have hb := ZD.norm_xiWeierstrassTerm_le (ha_ne n) hz_le
+    rw [ha_norm n] at hb
+    rw [Real.norm_of_nonneg (norm_nonneg _)]
+    refine le_trans hb ?_
+    have h_z_sq : ‖z‖ ^ 2 ≤ (‖z‖ + 1) ^ 2 :=
+      pow_le_pow_left₀ (norm_nonneg z) (by linarith [norm_nonneg z]) 2
+    apply div_le_div_of_nonneg_right _ (by positivity)
+    linarith
+  -- Exchange the two faces: logDeriv of the product = sum of per-factor logDerivs.
+  have h_log : logDeriv registerProduct z
+      = ∑' n : ℕ, logDeriv (fun w => 1 + ZD.xiWeierstrassTerm
+          (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) w) z :=
+    logDeriv_tprod_eq_tsum isOpen_univ (Set.mem_univ z) hf hd hm htend hnez
+  rw [h_log]
+  refine tsum_congr fun n => ?_
+  rw [h_per_factor n]
+  have ha := ha_ne n
+  have hsub_ne : z - (((geometricAccumulation.purchaseHeight (n + 1)) ^ 2 : ℝ) : ℂ) ≠ 0 :=
+    sub_ne_zero.mpr (hz n)
+  field_simp
+  ring
+
+end GeometricAccumulation
 
 end HelixProduction

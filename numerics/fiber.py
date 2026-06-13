@@ -762,3 +762,36 @@ def main_coil(label: str = "L2_chi3_q3"):
           f"  std/mean = {d.std()/d.mean():.3f}")
     print(f"  material to zero 100: {int(n_at[99])} integers (constant-pitch row needs"
           f" ~{int(np.exp(CHANNEL_TABLE[label]['mode'])*math.pi/(math.pi/CHANNEL_TABLE[label]['helixUnit'])**3 * g[99]**2):,})")
+
+
+# ===========================================================================
+# THE UNIFIED MODEL (2026-06-12): zero free parameters
+# ===========================================================================
+# The constants-hunt deflation RESOLVED: the per-channel geometric constants
+# were window readouts; the data wants ONE universal object.  Measured law
+# (all nine channels):
+#
+#   UNIVERSAL : the object (unit Archimedean spiral A = U, even spacing,
+#               area law n ~ k^2, amplitude 1/sqrt(arc)), the quantum pi,
+#               and the half-level anchor.
+#   CHANNEL   : nothing fitted -- the standard analytic data only:
+#               (q, a)        -> the chart velocity theta_chi (the coil
+#                                z(k) = N^{-1}(k); one zero per loop);
+#               eps           -> the anchor phase:
+#                                  c_chi = 1/2 - arg(eps)/(2*pi) + [chi = 1]
+#                                measured: real channels c = 1/2 to 3 decimals
+#                                (chi3: 0.4998 over 1000 zeros); zeta c =
+#                                1.4999 (the pole pays one quantum); L5
+#                                -0.0898 vs predicted -0.0881; L8 +0.0740 vs
+#                                predicted +0.0732;
+#               chi(n) signs  -> the capture arrangement (everything else).
+#
+# CHANNEL_TABLE below is retained as (i) the kernel table's rows, which the
+# parity law mode = q*(1+a) reveals to be a RECORDING OF (q, a) -- the chart
+# data -- in one number, and (ii) chart bookkeeping for the constant-pitch
+# runs.  It is NOT a table of physical constants.  The canonical geometry is
+# tightening_coil (the universal object in the channel's own chart).
+
+def anchor_law(eps: complex, principal: bool = False) -> float:
+    """The unified anchor: c = 1/2 - arg(eps)/2pi  (+1 for the principal pole)."""
+    return 0.5 - math.atan2(eps.imag, eps.real) / (2 * math.pi) + (1.0 if principal else 0.0)

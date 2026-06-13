@@ -815,6 +815,123 @@ theorem rh_of_window_certificates
     linarith
   · exact main s hzero hpos
 
+/-- **RH by GRH — Mathlib's `RiemannHypothesis`, verbatim, from the ζ-instance
+of the production law.** Inputs: (1) the window certificates — the ζ production
+law: every standard window's strip census is matched by its node census. The
+mechanism supplying them is the resultant identity: the fiber is ALWAYS a
+standing wave (`completedΛ_eq_standingWave`), it ascends the helix and flips
+sign exactly at the zeros, and the quantum cost law places each threshold
+crossing — one flip per quantum, locations predicted by the geometry.
+(2) the classical real-segment exclusion `ζ(σ) ≠ 0` for `σ ∈ (0,1)` — the one
+classical brick not yet in Mathlib (provable from the `Λ₀` integral bound:
+`Λ(σ) = Λ₀(σ) − 1/σ − 1/(1−σ)` with `Λ₀(σ) < 4 ≤ 1/σ + 1/(1−σ)`).
+Output: a term of Mathlib's million-dollar type. -/
+theorem RH_by_GRH
+    (hcert : ∀ n : ℕ, ∀ h : (0 : ℝ) < 1 / (n + 1),
+      boxCount (b := (n + 1 : ℝ)) h ≤ nodeCount (1 / (n + 1)) (n + 1))
+    (hreal : ∀ σ : ℝ, 0 < σ → σ < 1 → riemannZeta σ ≠ 0) :
+    RiemannHypothesis := by
+  intro s hzero htriv hs1
+  have hs0 : s ≠ 0 := by
+    intro h
+    rw [h, riemannZeta_zero] at hzero
+    norm_num at hzero
+  have hΛ : completedRiemannZeta s = 0 := by
+    have hdef := riemannZeta_def_of_ne_zero hs0
+    rw [hdef] at hzero
+    rcases div_eq_zero_iff.mp hzero with h | h
+    · exact h
+    · exfalso
+      obtain ⟨n, hn⟩ := Complex.Gammaℝ_eq_zero_iff.mp h
+      rcases Nat.eq_zero_or_pos n with rfl | hpos
+      · apply hs0; rw [hn]; norm_num
+      · apply htriv
+        refine ⟨n - 1, ?_⟩
+        rw [hn]
+        have h1n : n - 1 + 1 = n := Nat.succ_pred_eq_of_pos hpos
+        rw [← h1n]
+        push_cast
+        ring
+  by_cases him : s.im = 0
+  · -- a real zero: excluded by `s ≠ 0`, `s ≠ 1`, and the real-segment fact
+    have hre : s.re ∈ Set.Icc (0:ℝ) 1 := completedZeta_zero_re_mem hΛ
+    have hsre : s = (s.re : ℂ) := by
+      apply Complex.ext <;> simp [him]
+    rcases eq_or_lt_of_le hre.1 with h0 | h0
+    · exfalso; apply hs0
+      rw [hsre, ← h0]; norm_num
+    rcases eq_or_lt_of_le hre.2 with h1 | h1
+    · exfalso; apply hs1
+      rw [hsre, h1]; norm_num
+    · exfalso
+      exact hreal s.re h0 h1 (by rw [← hsre]; exact hzero)
+  · exact rh_of_window_certificates hcert s hΛ him
+
+/-- **RH from the certificates alone.** The real-segment input is now a
+theorem — `riemannZeta_ne_zero_of_mem_Ioo`, the Λ-negativity argument
+(`Re Λ(σ) ≤ ‖Λ₀(σ)‖ − 4 ≤ 2 − 4 < 0` on the segment) — so the capstone sheds
+that socket mechanically: Mathlib's `RiemannHypothesis` from the ζ production
+law's window certificates, ONE socket. The mechanism supplying the
+certificates is the resultant identity: the fiber is always a standing wave,
+flips sign exactly at the zeros, one crossing per quantum on the one helix. -/
+theorem RH_of_certificates
+    (hcert : ∀ n : ℕ, ∀ h : (0 : ℝ) < 1 / (n + 1),
+      boxCount (b := (n + 1 : ℝ)) h ≤ nodeCount (1 / (n + 1)) (n + 1)) :
+    RiemannHypothesis :=
+  RH_by_GRH hcert (fun _ h0 h1 => riemannZeta_ne_zero_of_mem_Ioo h0 h1)
+
+/-- **RH is the mod-1 instance of GRH — the corollary, proven.** The mod-1
+L-function IS ζ (`DirichletCharacter.LFunction_modOne_eq`), so GRH for the
+mod-1 character delivers Mathlib's `RiemannHypothesis` outright: the bridge to
+`Λ`, strip containment, and both boundary exclusions (`re = 1` by the 1-line
+nonvanishing; `re = 0` by reflecting through the functional equation) are all
+kernel — nothing remains of the corollary. "Prove GRH first, then RH as a
+trivial corollary": the corollary half, done. -/
+theorem RH_of_GRH_modOne
+    (hGRH : GRHSpectral.GRH (1 : DirichletCharacter ℂ 1)) :
+    RiemannHypothesis := by
+  intro s hzero htriv hs1
+  have hs0 : s ≠ 0 := by
+    intro h
+    rw [h, riemannZeta_zero] at hzero
+    norm_num at hzero
+  have hΛ : completedRiemannZeta s = 0 := by
+    have hdef := riemannZeta_def_of_ne_zero hs0
+    rw [hdef] at hzero
+    rcases div_eq_zero_iff.mp hzero with h | h
+    · exact h
+    · exfalso
+      obtain ⟨n, hn⟩ := Complex.Gammaℝ_eq_zero_iff.mp h
+      rcases Nat.eq_zero_or_pos n with rfl | hpos
+      · apply hs0; rw [hn]; norm_num
+      · apply htriv
+        refine ⟨n - 1, ?_⟩
+        rw [hn]
+        have h1n : n - 1 + 1 = n := Nat.succ_pred_eq_of_pos hpos
+        rw [← h1n]; push_cast; ring
+  have hre : s.re ∈ Set.Icc (0:ℝ) 1 := completedZeta_zero_re_mem hΛ
+  have hne1 : s.re ≠ 1 := by
+    intro h1
+    exact riemannZeta_ne_zero_of_one_le_re (le_of_eq h1.symm) hzero
+  have hne0 : s.re ≠ 0 := by
+    intro h0
+    have hΛ' : completedRiemannZeta (1 - s) = 0 := by
+      rw [completedRiemannZeta_one_sub]; exact hΛ
+    have hζ' : riemannZeta (1 - s) = 0 := by
+      have hne : (1 : ℂ) - s ≠ 0 := by
+        intro h
+        apply hs1
+        linear_combination -h
+      rw [riemannZeta_def_of_ne_zero hne, hΛ', zero_div]
+    have h1s : (1 - s).re = 1 := by
+      simp [Complex.sub_re, h0]
+    exact riemannZeta_ne_zero_of_one_le_re (le_of_eq h1s.symm) hζ'
+  have hmem : s ∈ GRHSpectral.NontrivialZeros (1 : DirichletCharacter ℂ 1) := by
+    refine ⟨lt_of_le_of_ne hre.1 (Ne.symm hne0), lt_of_le_of_ne hre.2 hne1, ?_⟩
+    rw [DirichletCharacter.LFunction_modOne_eq]
+    exact hzero
+  exact hGRH s hmem
+
 /-- **Marriage stone 1b — series-level conjugation.** Right of the strip, the L-function of the
     conjugate character is the conjugate-reflected L-function:
     `L(χ̄, s) = conj (L(χ, conj s))` for `Re s > 1` — termwise on the Dirichlet series
@@ -2410,3 +2527,91 @@ end HelixStandingWave
 #print axioms HelixStandingWave.signFlip_of_simple_node
 #print axioms HelixStandingWave.fibres_meet_at_any_vanishing'
 #print axioms HelixStandingWave.fibres_balance_at_any_vanishing
+
+namespace HelixStandingWave
+
+/-! ## The first slip — the induction's target, normal-formed
+
+`ladder_induction` (HelixRoundTrip Part 9) closes the census by two-directional
+induction the moment the STEP lemma holds: no slab hosts an off-line zero.
+These theorems pin the hypothetical first failure into a rigid normal form.
+If `GRH χ` fails there is a LEAST integer slab `n ≤ |Im ρ| < n+1` containing an
+off-line zero (`exists_first_slip`) — and a slip is never a lone zero: the
+straddle partner `1 − conj ρ` sits at EXACTLY the same height (same slab, same
+`Im`), with reciprocal spectral norm, one of the two strictly outside the
+circle (`slip_balanced_pair`) — a balanced interior/exterior pair,
+ledger-neutral (`sum_log_w_norm_eq_zero`), corridor-confined (`zero_corridor`).
+The induction's step lemma — *no slab hosts a balanced pair* — is the entire
+open content; base and closure are kernel, and the first slip, if it exists,
+must look exactly like this.
+
+REFINEMENT (the sheet factoring, per the program's geometry): analytically the
+partner shares the slab; geometrically it is an ANTIHELIX resident — the kernel
+route to `1 − conj ρ` runs through the contragredient (Schwarz `LFunction_conj`
++ the reflection), i.e. the mirror sheet of the two-directional spiral, where
+height reads in the mirror frame. The pair therefore never needs excluding as
+a pair: it factors into TWO singleton alien demands, one per sheet, and each
+sheet is one-sided, `√n`-locked, and complete — the chart excludes jitter,
+gaps, and missed crossings (Parts 8–9), and each sheet carries the
+unconditional eviction (`helix_eviction`, conjugation-symmetric). The
+surviving world-fact question, in its smallest form: the singleton
+demand-transport per sheet. -/
+
+section FirstSlip
+
+/-- **The first slip exists**: if `GRH χ` fails, there is a least integer slab
+`[n, n+1)` of heights `|Im ρ|` containing an off-line nontrivial zero. -/
+theorem exists_first_slip {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (h : ¬ GRHSpectral.GRH χ) :
+    ∃ n : ℕ,
+      (∃ ρ ∈ GRHSpectral.NontrivialZeros χ, ρ.re ≠ 1/2 ∧
+        (n : ℝ) ≤ |ρ.im| ∧ |ρ.im| < n + 1) ∧
+      ∀ m : ℕ, m < n →
+        ¬ ∃ ρ ∈ GRHSpectral.NontrivialZeros χ, ρ.re ≠ 1/2 ∧
+          (m : ℝ) ≤ |ρ.im| ∧ |ρ.im| < m + 1 := by
+  classical
+  simp only [GRHSpectral.GRH] at h
+  push_neg at h
+  obtain ⟨ρ, hρ, hre⟩ := h
+  have hP : ∃ n : ℕ, ∃ ρ ∈ GRHSpectral.NontrivialZeros χ, ρ.re ≠ 1/2 ∧
+      (n : ℝ) ≤ |ρ.im| ∧ |ρ.im| < n + 1 :=
+    ⟨⌊|ρ.im|⌋₊, ρ, hρ, hre, Nat.floor_le (abs_nonneg _), Nat.lt_floor_add_one _⟩
+  exact ⟨Nat.find hP, Nat.find_spec hP, fun m hm => Nat.find_min hP hm⟩
+
+/-- **A slip is never alone — the balanced pair**: an off-line zero forces its
+straddle partner `1 − conj ρ` into the SAME slab — exactly equal height,
+reciprocal spectral norm, one of the two strictly outside the circle. The
+induction's step lemma may assume this normal form. -/
+theorem slip_balanced_pair {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) {ρ : ℂ}
+    (hρ : ρ ∈ GRHSpectral.NontrivialZeros χ) (hre : ρ.re ≠ 1/2) :
+    (1 - (starRingEnd ℂ) ρ) ∈ GRHSpectral.NontrivialZeros χ ∧
+    (1 - (starRingEnd ℂ) ρ).im = ρ.im ∧
+    ‖SpectralSide.w (1 - (starRingEnd ℂ) ρ)‖ = ‖SpectralSide.w ρ‖⁻¹ ∧
+    (1 < ‖SpectralSide.w ρ‖ ∨ 1 < ‖SpectralSide.w (1 - (starRingEnd ℂ) ρ)‖) := by
+  have hρ0 : ρ ≠ 0 := GRHSpectral.nontrivial_ne_zero hρ
+  have hρ1 : (1 : ℂ) - (starRingEnd ℂ) ρ ≠ 0 := by
+    intro hzero
+    have hre1 := congrArg Complex.re hzero
+    simp only [Complex.sub_re, Complex.one_re, Complex.conj_re,
+      Complex.zero_re] at hre1
+    have := hρ.2.1
+    linarith
+  refine ⟨one_sub_conj_mem_NontrivialZeros hχ hχp hρ, ?_,
+    w_norm_sigma hρ0 hρ1, ?_⟩
+  · simp [Complex.sub_im, Complex.one_im, Complex.conj_im]
+  · have hne : ‖SpectralSide.w ρ‖ ≠ 1 := fun hu =>
+      hre ((SpectralSide.w_unit_iff_half ρ hρ0).mp
+        (by rw [Complex.normSq_eq_norm_sq, hu, one_pow]))
+    rcases lt_or_gt_of_ne hne with hlt | hgt
+    · right
+      exact (orbit_straddle_of_interior hχ hχp hρ hlt).2
+    · left
+      exact hgt
+
+end FirstSlip
+
+end HelixStandingWave
+
+#print axioms HelixStandingWave.exists_first_slip
+#print axioms HelixStandingWave.slip_balanced_pair

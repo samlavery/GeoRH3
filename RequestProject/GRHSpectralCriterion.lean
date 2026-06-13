@@ -24,9 +24,19 @@ variable {N : ℕ} [NeZero N]
 def NontrivialZeros (χ : DirichletCharacter ℂ N) : Set ℂ :=
   {s | 0 < s.re ∧ s.re < 1 ∧ LFunction χ s = 0}
 
-/-- **GRH for χ**: every nontrivial zero of `L(s,χ)` lies on the critical line. -/
+/-- **GRH for χ** — the per-character instance: every nontrivial zero of
+`L(s,χ)` lies on the critical line. -/
 def GRH (χ : DirichletCharacter ℂ N) : Prop :=
   ∀ ρ ∈ NontrivialZeros χ, ρ.re = 1 / 2
+
+/-- **The actual GRH** — the conjecture itself, not an instance: EVERY
+Dirichlet L-function, every modulus, every character, principal included,
+has all its nontrivial zeros on the critical line. Contains RH (the
+principal characters' strip zeros are ζ's: the finite Euler factors vanish
+only on `re = 0`). The program's per-character capstones cover the `χ ≠ 1`
+instances; the principal instances are the ζ content. -/
+def GRHComplete : Prop :=
+  ∀ (M : ℕ) [NeZero M] (χ : DirichletCharacter ℂ M), GRH χ
 
 /-- A nontrivial zero is nonzero (its real part is positive). -/
 theorem nontrivial_ne_zero {χ : DirichletCharacter ℂ N} {ρ : ℂ}

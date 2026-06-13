@@ -1,0 +1,11 @@
+THE GRAND TEST: all constants exact transcendentals at dps 60; does everything stay exact?
+pi/3 = 1.047197551196597746154214461093167628065723133125
+
+Stage 1: 100 zeros refined in 10s; max |L| at first 10 refined zeros = 5.46e-60
+Stage 2a (25s): max |y - 1/2 - S| over 100 zeros = 9.91e-39
+          max |S-jump - 1| (simplicity) = 1.42e-18
+Stage 2c: max |A*arc0(k_n) - n*(pi/3)| (exact placement) = 1.59e-58
+Stage 2d: constant-law target pi/3 + pi/8 = 1.439896632895321900962044884 (exact transcendental)
+          (capture-limited measurement deferred to the ledger-corrected run)
+
+VERDICT: exact if every residual sits at its precision floor (~1e-38 for 2a; ~1e-55 for 2c)
