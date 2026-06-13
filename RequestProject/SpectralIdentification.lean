@@ -134,7 +134,7 @@ theorem spectral_id_forces_half (sigma gamma : ℝ) (hg : gamma ≠ 0)
 private theorem moebius_norm_sq_gamma_zero (σ : ℝ) (hσ : 0 < σ) :
     ‖moebius_helix σ 0‖ ^ 2 = (σ - 1) ^ 2 / σ ^ 2 := by
   have h_sq : σ ^ 2 + 0 ^ 2 ≠ 0 := by positivity
-  rw [moebius_norm_sq σ 0 h_sq]; ring
+  rw [moebius_norm_sq' σ 0 h_sq]; ring
 
 /-- For σ < 1/2 (and σ > 0), ‖moebius_helix σ 0‖ > 1. -/
 private theorem moebius_norm_gt_one_low (σ : ℝ) (hσ1 : 0 < σ) (hσ2 : σ < 1/2) :

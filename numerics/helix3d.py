@@ -1,195 +1,236 @@
 """
-helix3d.py -- THE 3D HELIX OBJECT, actually built.
+helix3d.py -- THE REAL HELIX, canonical universal ruleset (ONE set for every L).
 
-Mirrors the kernel geometry (RequestProject/HelixDefs.lean, HelixArcLength.lean) exactly:
+COORDINATE SWAP (pi/3 = 1 chart).  All law-constants are pi-based, NOT decimals.
+In the chart where the arc unit pi/3 is the new "1", every constant is rational:
 
-  * the UNWOUND LINE: integer n sits at arc position  s_n = n * U   (even spacing;
-    U = integer placement distance -- `placed mode U n k := arc mode k = n*U`),
-  * the REWIND: Archimedean spiral, LINEAR radial law  R(k) = A * k  (A = radial
-    expansion constant, smooth -- `loopRadius`), angle phi = 2*pi*k, height z = P * k
-    (P = pitch, smooth),
-  * the PLACEMENT: k(n) solves  A * arc0(k) = n * U  where arc0 is the planar arc
-    length -- closed form  arc0(k) = k*sqrt(1+4*pi^2*k^2)/2 + asinh(2*pi*k)/(4*pi).
-    Existence/uniqueness is the kernel theorem `HelixArcLength.existsUnique_placed`;
-    here it is inverted by Newton with the kernel's sandwich as the seed
-    (`radius_theta_sqrtn`: k ~ sqrt(n*U/(A*pi))).
+    arc spacing   ds = pi/3   (the unit "1")     integers placed at arc  s_n = n*ds + s0
+    radial growth A  = pi/6   ("1/2")            Archimedean spiral       R(phi) = A*phi
+    start offset  s0 = pi/6   ("1/2")            where integer n = 1 sits
+    crossing cost first = pi/2, then +pi per crossing:
+                    {pi/2, 3pi/2, 5pi/2, ...}
 
-The sqrt(n) frame is EARNED, not assumed: the self-test checks the kernel's two-sided
-bound  U/(1+pi) * n  <=  R(k_n)^2 / A  <=  U/pi * n   (`radius_sq_slope_cancels`).
+ONE ruleset, identical for EVERY L-function; only the Dirichlet character chi mod q changes.
+(Replaces the old per-channel table: radial slope e^mode, pitch pi/helixUnit.  The old e^6
+slope made R/sqrt(n) "drift 1 -> 11" -- an oversized growth rate, not a real obstruction.)
 
-Projections (3D -> collapsed height; the radial coordinate is destroyed, height kept):
-  * project_absolute(target)        -> Point3D with height = |z|.
-  * project_stacked(z_list, mode)   -> heights under the three stacking conventions
-    ('absolute' | 'sum' | 'diff') -- the stacking decision is deliberately deferred;
-    all three are exposed so data can decide.
+NO LOG IN THE 3D GEOMETRY (Rule Eight).  The helix is purely geometric / arithmetic:
+  R(phi) = A*phi (linear Archimedean growth), integers placed by equal ARC LENGTH ds.
+  arc length s(phi) = (A/2)[phi*sqrt(1+phi^2) + asinh(phi)]  (exact), inverted for phi(s_n).
+  radius R_n = A*phi(s_n).  The area law (loop k holds ~k integers, cumulative n ~ k^2) gives
+  R_n -> sqrt(2*A*ds)*sqrt(n): the sqrt(n) / sigma=1/2 frame EMERGES from the rewinding, it is
+  NOT imposed and there is NO logarithm anywhere in the construction.
 
-Targets may be any positive real (integers, rational fractions, ...): the target is a
-position nu on the unwound line, placed at arc nu * U.
+PROJECTION  3D -> 2D -> 1D  (height = iy).  Divide off the radial (sqrt n), keep the winding:
+  the bridge  wind n <-> n^{it}  is the ONLY place a log appears (the AREA-log readout,
+  log(R_n^2) = log(area) ~ log n + const).  Collapse
 
-Default build: 250_000 integers.
+      F(w) = sum_n chi(n) * (1/R_n) * exp(-i w * log(R_n^2))  ~  L(chi, 1/2 + i w),
+
+  and the HEIGHT w where the chi-weighted phasors CANCEL is iy = gamma.  No S(t) / jitter:
+  the zero ordinate is just the cancellation height.  The geometry supplies WHY sqrt n / sigma
+  = 1/2; the bridge supplies log n; the zero is L's 2D xy-shadow vanishing.
 """
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import math
 import numpy as np
 
-TWO_PI = 2.0 * math.pi
+# --- the canonical pi-based constants (the coordinate swap; pi/3 = 1) --------------------
+A_GROWTH    = math.pi / 6     # radial growth rate of R(phi) = A*phi   ("1/2")
+ARC_SPACING = math.pi / 3     # equal arc-length spacing ds            (the unit "1")
+ARC_OFFSET  = math.pi / 6     # start offset s0 (where integer 1 sits) ("1/2")
+QUANTUM     = math.pi         # crossing spacing
+FIRST_CROSS = math.pi / 2     # first crossing (half quantum)
 
 
 @dataclass(frozen=True)
 class HelixParams:
-    """The construction's constants. Nothing else parametrizes the object."""
-    radial: float = 1.0      # A: linear radial slope, R(k) = A*k        (smooth)
-    pitch: float = 1.0       # P: height per loop-unit, z(k) = P*k       (smooth)
-    spacing: float = 1.0     # U: arc distance between consecutive integers
-    n_integers: int = 250_000
-
-    def __post_init__(self):
-        if self.radial <= 0 or self.pitch <= 0 or self.spacing <= 0:
-            raise ValueError("radial, pitch, spacing must all be positive")
-        if self.n_integers < 2:
-            raise ValueError("need at least 2 integers on the line")
+    """The construction's constants.  Defaults are the canonical pi-based set."""
+    n_integers: int = 200_000
+    A: float = A_GROWTH        # radial growth rate
+    ds: float = ARC_SPACING    # arc spacing (the unit)
+    s0: float = ARC_OFFSET     # start offset
+    area_exact: bool = True    # R_n^2 = (2*A*ds)*n exactly; False uses arc inversion
 
 
 @dataclass(frozen=True)
 class Point3D:
-    """A placed point: line position nu, loop parameter k, coordinates, height."""
-    nu: float
-    k: float
+    """A placed integer on the log-free cone and its 3D -> unit-circle projection."""
+    n: float
+    arc: float       # s_n = n*ds + s0
+    phi: float       # spiral angle, R = A*phi
+    R: float         # radius "out" ~ sqrt(n)   (amplitude 1/R ~ n^{-1/2})
     x: float
     y: float
-    z: float
-    height: float            # the collapsed-height reading for this projection
+    z: float         # projected scale carried by the fiber: log(R^2)
+    circle: complex  # (x + iy) / R, the 3D -> 2D unit-circle projection
 
 
-def _arc0(k):
-    """Slope-free planar arc length of the unit Archimedean spiral (closed form)."""
-    c = TWO_PI * k
-    return k * np.sqrt(1.0 + c * c) / 2.0 + np.arcsinh(c) / (2.0 * TWO_PI)
-
-
-def _speed0(k):
-    """d(arc0)/dk = sqrt(1 + (2*pi*k)^2)."""
-    c = TWO_PI * k
-    return np.sqrt(1.0 + c * c)
+def _arc_of_phi(phi, A):
+    """Exact arc length of the Archimedean spiral R(phi)=A*phi: (A/2)[phi*sqrt(1+phi^2)+asinh phi]."""
+    return 0.5 * A * (phi * np.sqrt(1.0 + phi * phi) + np.arcsinh(phi))
 
 
 class Helix:
-    """The built 3D object: every integer (and any real target) has its one place.
-
-    Construction is eager: `build()` (called by __init__) solves the placement for
-    all n_integers at once and stores the coordinate arrays.
-    """
+    """The built log-free helix: every integer placed by equal arc length, radius ~ sqrt(n)."""
 
     def __init__(self, params: HelixParams = HelixParams()):
         self.params = params
         self._build()
 
-    # -- placement inversion ------------------------------------------------
-    def _solve_k(self, nu):
-        """k(nu): A * arc0(k) = nu * U, by Newton from the kernel-sandwich seed.
-
-        Vectorized; nu may be a scalar or array of positive reals.
-        """
-        p = self.params
-        target = np.asarray(nu, dtype=float) * p.spacing / p.radial   # arc0(k) target
-        k = np.sqrt(np.maximum(target, 1e-300) / math.pi)             # seed: k ~ sqrt(t/pi)
-        for _ in range(40):
-            f = _arc0(k) - target
-            step = f / _speed0(k)
-            k = np.maximum(k - step, 0.0)
-            if np.max(np.abs(step)) < 1e-13 * max(1.0, float(np.max(k))):
-                break
-        return k
-
     def _build(self):
         p = self.params
         self.n = np.arange(1, p.n_integers + 1, dtype=float)
-        self.k = self._solve_k(self.n)
-        phi = TWO_PI * self.k
-        self.x = p.radial * self.k * np.cos(phi)
-        self.y = p.radial * self.k * np.sin(phi)
-        self.z = p.pitch * self.k
+        arc = self.n * p.ds + p.s0
+        if p.area_exact:
+            phi = np.sqrt(2.0 * p.ds * self.n / p.A)
+        else:
+            # invert s(phi) = arc by Newton from the area-law seed  phi ~ sqrt(2*arc/A)
+            phi = np.sqrt(2.0 * arc / p.A)
+            for _ in range(60):
+                f = _arc_of_phi(phi, p.A) - arc
+                phi = phi - f / (p.A * np.sqrt(1.0 + phi * phi))   # ds/dphi = A*sqrt(1+phi^2)
+                if np.max(np.abs(f)) < 1e-13 * (1.0 + np.max(arc)):
+                    break
+        self.arc = arc
+        self.phi = phi
+        self.R = p.A * phi                 # radius "out" ~ sqrt(n)
+        self.x = self.R * np.cos(self.phi)
+        self.y = self.R * np.sin(self.phi)
+        self.amp = 1.0 / self.R            # the cone's OWN weight ~ n^{-1/2} (derived, not imposed)
+        self.bridge = np.log(self.R ** 2)  # the 2D bridge winding arg = log(area) ~ log n (the ONLY log)
+        self.z = self.bridge
+        self.unit_circle = (self.x + 1j * self.y) / self.R
 
-    # -- the honest API -----------------------------------------------------
-    def point(self, nu: float) -> Point3D:
-        """Place ANY positive real target (integer, rational, ...) on the helix."""
-        if nu <= 0:
-            raise ValueError("targets live on the positive line")
-        k = float(self._solve_k(nu))
-        phi = TWO_PI * k
-        p = self.params
-        x, y, z = p.radial * k * math.cos(phi), p.radial * k * math.sin(phi), p.pitch * k
-        return Point3D(nu=float(nu), k=k, x=x, y=y, z=z, height=abs(z))
+    def point(self, n: int) -> Point3D:
+        i = int(n) - 1
+        return Point3D(n=float(n), arc=float(self.arc[i]), phi=float(self.phi[i]),
+                       R=float(self.R[i]), x=float(self.x[i]), y=float(self.y[i]),
+                       z=float(self.z[i]), circle=complex(self.unit_circle[i]))
 
-    def height_of(self, nu: float) -> float:
-        """Collapsed height of a target: |z| (radial information destroyed)."""
-        return self.point(nu).height
+    def project_unit_circle(self) -> np.ndarray:
+        """3D -> 2D projection: discard radius/height and keep the unit-circle angle."""
+        return self.unit_circle.copy()
 
-    # -- projection 1: absolute z -------------------------------------------
-    def project_absolute(self, nu: float) -> Point3D:
-        """Projection A: each mark's height is its own |z|."""
-        return self.point(nu)
+    def fiber_phase(self, w: float) -> np.ndarray:
+        """Unit-circle phase flow carried by the fiber over the placed 3D helix."""
+        return np.exp(-1j * w * self.bridge)
 
-    # -- projection 2: stacked ----------------------------------------------
-    @staticmethod
-    def project_stacked(zs, mode: str = "absolute"):
-        """Projection B: heights from a SEQUENCE of marks' z-values.
+    def fiber_on_helix(self, chi_vals: np.ndarray, w: float) -> np.ndarray:
+        """The weighted fiber after 3D placement and projection to the unit circle."""
+        return chi_vals * self.amp * self.fiber_phase(w)
 
-        mode = 'absolute' : h_j = |z_j|                      (no stacking)
-        mode = 'sum'      : h_j = z_1 + z_2 + ... + z_j      (first plus second ...)
-        mode = 'diff'     : h_1 = z_1, h_j = z_j - z_{j-1}   (second minus first ...)
+    def projected_response(self, chi_vals: np.ndarray, w: float) -> complex:
+        """Collapse the projected unit-circle fiber to its complex response."""
+        return np.sum(self.fiber_on_helix(chi_vals, w))
 
-        The stacking convention is deliberately undecided; all three are exposed.
+    def projected_response_grid(self, chi_vals: np.ndarray, ws: np.ndarray,
+                                block: int = 1_000_000) -> np.ndarray:
+        """Batched projected responses for many heights, streamed over the 3D fiber."""
+        ws = np.asarray(ws, dtype=float)
+        out = np.zeros(len(ws), dtype=complex)
+        for j in range(0, len(self.n), block):
+            out += (
+                chi_vals[None, j:j + block] * self.amp[None, j:j + block]
+                * np.exp(-1j * ws[:, None] * self.bridge[None, j:j + block])
+            ).sum(axis=1)
+        return out
+
+    # -- the projection: chi-weighted collapse F(w); height w where |F| -> 0 is iy = gamma ----
+    def collapse(self, chi_vals: np.ndarray, w: float, exact: bool = False) -> float:
+        """|F(w)| = |sum_n chi(n) amp_n exp(-i w * arg_n)|.
+
+        exact=False : the cone's OWN weight 1/R_n and OWN winding log(R_n^2) (the geometry).
+        exact=True  : the bridge's exact amp_n = n^{-1/2}, arg_n = log n  (= truncated L(1/2+iw)).
         """
-        zs = list(map(float, zs))
-        if mode == "absolute":
-            return [abs(z) for z in zs]
-        if mode == "sum":
-            out, acc = [], 0.0
-            for z in zs:
-                acc += z
-                out.append(acc)
-            return out
-        if mode == "diff":
-            return [zs[0]] + [zs[j] - zs[j - 1] for j in range(1, len(zs))]
-        raise ValueError(f"unknown stacking mode {mode!r}")
+        if exact:
+            amp = self.n ** (-0.5)
+            arg = np.log(self.n)
+            return abs(np.sum(chi_vals * amp * np.exp(-1j * w * arg)))
+        return abs(self.projected_response(chi_vals, w))
 
-    # -- self-tests (kernel laws on the actual object) ----------------------
+    def project_iy(self, chi_vals: np.ndarray, w_hi: float = 26.0, step: float = 0.02,
+                   exact: bool = True) -> list[float]:
+        """Heights w where the chi-weighted phasors cancel = the zero ordinates (iy = gamma)."""
+        ws = np.arange(FIRST_CROSS / QUANTUM + 0.1, w_hi, step)   # start above the first crossing
+        mag = np.array([self.collapse(chi_vals, float(w), exact=exact) for w in ws])
+        out = []
+        for i in range(1, len(mag) - 1):
+            if mag[i] < mag[i - 1] and mag[i] < mag[i + 1] and mag[i] < 0.35 * np.median(mag):
+                lo, hi = ws[i] - step, ws[i] + step       # local quadratic refine of the dip
+                wgrid = np.linspace(lo, hi, 25)
+                mg = np.array([self.collapse(chi_vals, float(w), exact=exact) for w in wgrid])
+                out.append(float(wgrid[int(np.argmin(mg))]))
+        return out
+
+    # -- self-test: the sqrt(n)/sigma=1/2 frame emerged, log-free, pi-based --------------------
     def self_test(self) -> dict:
-        """Check the built object against the kernel's theorems. Raises on failure."""
         p = self.params
-        # (1) placement law: arc(k_n) = n*U  (existsUnique_placed)
-        resid = np.max(np.abs(p.radial * _arc0(self.k) - self.n * p.spacing))
-        assert resid < 1e-6 * p.spacing * p.n_integers ** 0.5, f"placement residual {resid}"
-        # (2) earned sqrt(n): kernel sandwich U/(1+pi)*n <= R^2/A <= U/pi*n for k >= 1
-        #     (radius_sq_slope_cancels; lower bound needs k >= 1)
-        mask = self.k >= 1.0
-        R2_over_A = (p.radial * self.k[mask]) ** 2 / p.radial
-        nm = self.n[mask]
-        lo_ok = np.all(p.spacing / (1.0 + math.pi) * nm <= R2_over_A * (1 + 1e-12))
-        hi_ok = np.all(R2_over_A <= p.spacing / math.pi * nm * (1 + 1e-12))
-        assert lo_ok and hi_ok, "kernel radius sandwich violated"
-        # (3) strict monotonicity of height in n (the climb never reverses)
-        assert np.all(np.diff(self.z) > 0), "height not strictly increasing"
-        return {
-            "placement_residual": float(resid),
-            "sandwich": "U/(1+pi)*n <= R^2/A <= U/pi*n verified for k>=1",
-            "monotone": True,
-            "n_integers": p.n_integers,
-            "z_max": float(self.z[-1]),
-            "k_max": float(self.k[-1]),
-        }
+        c = math.sqrt(2.0 * p.A * p.ds)                  # asymptotic R/sqrt(n) (a gauge scale)
+        ratio = self.R / np.sqrt(self.n)
+        rel = ratio / ratio[len(ratio) // 2:].mean()
+        worst = float(np.abs(rel[1:] - 1.0).max())       # worst relative amplitude error (n>=2)
+        assert worst < 0.05, f"sqrt(n) frame not flat enough: {worst}"
+        assert abs(p.A - math.pi / 6) < 1e-12 and abs(p.ds - math.pi / 3) < 1e-12, "not the pi/3 chart"
+        circle_err = float(np.max(np.abs(np.abs(self.unit_circle) - 1.0)))
+        assert circle_err < 1e-12, f"unit-circle projection drifted: {circle_err}"
+        return {"A": p.A, "ds": p.ds, "s0": p.s0, "asymptotic_const": c,
+                "area_exact": p.area_exact,
+                "worst_amp_rel_err": worst,
+                "crossings": "cost_1=pi/2; cost_n=pi/2+(n-1)*pi",
+                "log_in_geometry": False, "unit_circle_err": circle_err}
+
+
+# the canonical crossing levels: first cost pi/2, then +pi per crossing
+def crossing_costs(count: int) -> np.ndarray:
+    """Incremental costs: first crossing pi/2; each subsequent crossing pi."""
+    if count <= 0:
+        return np.array([], dtype=float)
+    costs = np.full(count, QUANTUM, dtype=float)
+    costs[0] = FIRST_CROSS
+    return costs
+
+
+def crossing_levels(count: int) -> np.ndarray:
+    """Cumulative crossing ladder: {pi/2, 3pi/2, 5pi/2, ...}."""
+    return np.cumsum(crossing_costs(count))
+
+
+# minimal character table for the self-verification (the ONLY per-L input)
+_CHARS = {
+    "chi3  (mod 3, odd quad)":      (3, {1: 1, 2: -1}),
+    "chi4  (mod 4, odd quad)":      (4, {1: 1, 3: -1}),
+    "chi5q (mod 5, even quad)":     (5, {1: 1, 4: 1, 2: -1, 3: -1}),
+    "chi5c (mod 5, quartic CPLX)":  (5, {1: 1, 2: 1j, 4: -1, 3: -1j}),
+    "chi7q (mod 7, odd quad)":      (7, {1: 1, 2: 1, 4: 1, 3: -1, 5: -1, 6: -1}),
+}
+
+
+def _char_array(n, q, table):
+    v = np.zeros(len(n), dtype=complex)
+    r = n.astype(np.int64) % q
+    for res, val in table.items():
+        v[r == res] = val
+    return v
 
 
 if __name__ == "__main__":
-    h = Helix(HelixParams())
-    report = h.self_test()
-    print("helix3d self-test PASSED:", report)
-    # a rational target, as promised by the API
-    pt = h.point(7.5)
-    print(f"target 7.5 -> k={pt.k:.6f} (x,y,z)=({pt.x:+.4f},{pt.y:+.4f},{pt.z:.4f}) height={pt.height:.4f}")
-    # stacking conventions on the first three integer marks
-    zs = [h.point(n).z for n in (1, 2, 3)]
-    for m in ("absolute", "sum", "diff"):
-        print(f"stacked[{m}] of z(1..3) = {Helix.project_stacked(zs, m)}")
+    import mpmath as mp
+    mp.mp.dps = 30
+
+    h = Helix(HelixParams(n_integers=200_000))
+    print("CANONICAL HELIX self-test (pi/3 = 1 chart, log-free geometry):")
+    for k, v in h.self_test().items():
+        print(f"   {k:22s} = {v}")
+
+    def Lval(q, table, s):       # exact L(chi,s) for the height = iy verification (Hurwitz form)
+        return q ** (-s) * sum(mp.mpc(c) * mp.zeta(s, mp.mpf(a) / q) for a, c in table.items())
+
+    print("\nPROJECT HEIGHT = iy  (cancellation heights vs mpmath |L(1/2+i gamma)|; ONE ruleset):")
+    for name, (q, table) in _CHARS.items():
+        chi = _char_array(h.n, q, table)
+        ws = h.project_iy(chi, w_hi=22.0, exact=True)[:5]
+        ver = [float(abs(Lval(q, table, mp.mpf(1) / 2 + 1j * mp.mpf(w)))) for w in ws]
+        print(f"   {name:28s} iy = {[round(w, 4) for w in ws]}")
+        print(f"   {'':28s} |L| = {['%.1e' % e for e in ver]}  (height = iy, no S)")

@@ -847,6 +847,47 @@ theorem gammaFactor_analyticAt_of_re_pos {N : ℕ} [NeZero N] {χ : DirichletCha
       (Gammaℝ_analyticAt_of_re_pos h1) hinner
     exact hcomp
 
+/-- **The orders agree right of the axis.** On `Re > 0` the gauge `γ` is analytic and
+    nonvanishing and `Λ = γ·L`, so the analytic order of the completed `L` at any such point
+    equals that of `L` itself. This is the multiplicity weld between the zero-side trace's
+    weights (`DirichletLHadamard.lOrderNat`, the `Λ`-order) and the payment theorem's
+    multiplicity (the `L`-order): the same number wherever both live. -/
+theorem completedL_orderAt_eq_L_orderAt {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) {u : ℂ} (hu : 0 < u.re) :
+    analyticOrderAt (DirichletCharacter.completedLFunction χ) u
+      = analyticOrderAt (DirichletCharacter.LFunction χ) u := by
+  have hγa : AnalyticAt ℂ χ.gammaFactor u := gammaFactor_analyticAt_of_re_pos hu
+  have hγne : χ.gammaFactor u ≠ 0 := DirichletLHadamard.gammaFactor_ne_zero hu
+  have hLa : AnalyticAt ℂ (DirichletCharacter.LFunction χ) u :=
+    (DirichletCharacter.differentiable_LFunction hχ).analyticAt u
+  have hev : DirichletCharacter.completedLFunction χ
+      =ᶠ[nhds u] fun z => χ.gammaFactor z * DirichletCharacter.LFunction χ z := by
+    filter_upwards [(isOpen_lt continuous_const Complex.continuous_re).mem_nhds
+      (show (0 : ℝ) < u.re from hu)] with z hz
+    have hz0 : z ≠ 0 := fun h => by rw [h, Complex.zero_re] at hz; exact lt_irrefl 0 hz
+    have hrel := DirichletCharacter.LFunction_eq_completed_div_gammaFactor χ z (Or.inl hz0)
+    have hγ : χ.gammaFactor z ≠ 0 := DirichletLHadamard.gammaFactor_ne_zero hz
+    rw [hrel]
+    field_simp
+  rw [analyticOrderAt_congr hev,
+    show (fun z => χ.gammaFactor z * DirichletCharacter.LFunction χ z)
+      = χ.gammaFactor * DirichletCharacter.LFunction χ from rfl,
+    analyticOrderAt_mul hγa hLa,
+    show analyticOrderAt χ.gammaFactor u = 0 from by
+      rw [analyticOrderAt_eq_zero]
+      right
+      exact hγne,
+    zero_add]
+
+/-- The multiplicity weld in `ℕ` form: the dual resolvent trace's weight `lOrderNat χ u`
+    (the `Λ`-order) equals the `L`-order at every point right of the axis. -/
+theorem lOrderNat_eq_L_orderNat {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+    (hχ : χ ≠ 1) {u : ℂ} (hu : 0 < u.re) :
+    DirichletLHadamard.lOrderNat χ u
+      = analyticOrderNatAt (DirichletCharacter.LFunction χ) u := by
+  unfold DirichletLHadamard.lOrderNat analyticOrderNatAt
+  rw [completedL_orderAt_eq_L_orderAt hχ hu]
+
 /-- **The archimedean account funds nothing — the slack localizes to `L`.** On any ball staying
     right of the imaginary axis, `Λ = γ·L` with `γ` analytic and nonvanishing, so the divisors of
     `Λ` and `L` agree everywhere on the ball, and the two Jensen identities subtract to the SAME

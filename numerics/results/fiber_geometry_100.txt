@@ -1,0 +1,12 @@
+HEIGHTS FROM THE HELIX GEOMETRY (real standing-wave flips, exact buckets, dps=30); no drift, every L
+L-function          q    #  mean|h-cert|        max   early->late (drift?)
+L1_zeta_q1            1  100      2.81e-13   5.04e-13   2.9e-13 -> 2.8e-13
+L2_chi3_q3            3  100      2.60e-13   4.94e-13   2.6e-13 -> 2.6e-13
+L3_chi4_q4            4  100      2.66e-13   4.92e-13   2.8e-13 -> 2.5e-13
+L4_chi5quad_q5        5  100      2.52e-13   5.01e-13   2.4e-13 -> 2.6e-13
+L5_chi5c4_q5          5  100      2.74e-13   5.05e-13   2.8e-13 -> 2.6e-13
+L6_chi7quad_q7        7  100      2.47e-13   4.88e-13   2.8e-13 -> 2.2e-13
+L7_chi8quad_q8        8  100      2.72e-13   4.95e-13   2.8e-13 -> 2.6e-13
+L8_chi7c3_q7          7  100      2.70e-13   5.03e-13   2.6e-13 -> 2.8e-13
+L9_chi1009quad_q1009 1009   25      2.75e-13   4.88e-13   3.1e-13 -> 2.5e-13
+  (|h-cert| ~ 1e-12 = the 12-digit certified floor; refine the table to see the dps floor.)

@@ -262,6 +262,40 @@ theorem fibres_balance_at_any_vanishing (Φ : ZMod 3 → ℂ) (hΦ : Function.Ev
   · exact absurd h h1
   · exact h
 
+/-! ## General conductor: the signed Hurwitz buckets rendezvous at any vanishing
+
+The closed-form decomposition, generalized from `mod 3` to every conductor. A Dirichlet
+`L`-function is the conductor-scaled signed sum of Hurwitz-zeta buckets over the residue
+classes (`ZMod.LFunction_def_odd`/`_even` — the exact analytic continuation, each bucket the
+helix-sum over one residue class summed to all orders). Since the scale `N^{-s}` never
+vanishes, a zero of `L` is exactly a **rendezvous**: the signed bucket sum vanishes
+(`= plusBucket − minusBucket = 0`, the buckets meet). Location-free, no line assumed,
+character-agnostic. The `mod 3` theorems above are the `N = 3` instances. -/
+
+/-- **The odd-character rendezvous, any conductor.** At any vanishing of `L(Φ,·)` for an odd
+    fibre-weighting `Φ` on `ZMod N`, the signed Hurwitz-odd bucket sum vanishes — the buckets
+    meet. -/
+theorem signed_buckets_meet_odd {N : ℕ} [NeZero N] {Φ : ZMod N → ℂ} (hΦ : Function.Odd Φ)
+    (s : ℂ) (hzero : ZMod.LFunction Φ s = 0) :
+    ∑ j : ZMod N, Φ j * HurwitzZeta.hurwitzZetaOdd (ZMod.toAddCircle j) s = 0 := by
+  have hdef := ZMod.LFunction_def_odd hΦ s
+  rw [hzero, eq_comm, mul_eq_zero] at hdef
+  rcases hdef with h | h
+  · exact absurd h (by simp [Complex.cpow_eq_zero_iff, Nat.cast_ne_zero.mpr (NeZero.ne N)])
+  · exact h
+
+/-- **The even-character rendezvous, any conductor.** At any vanishing of `L(Φ,·)` for an even
+    fibre-weighting `Φ` on `ZMod N`, the signed Hurwitz-even bucket sum vanishes. Odd buckets
+    meet, even buckets balance; both are the signed sum vanishing. -/
+theorem signed_buckets_meet_even {N : ℕ} [NeZero N] {Φ : ZMod N → ℂ} (hΦ : Function.Even Φ)
+    (s : ℂ) (hzero : ZMod.LFunction Φ s = 0) :
+    ∑ j : ZMod N, Φ j * HurwitzZeta.hurwitzZetaEven (ZMod.toAddCircle j) s = 0 := by
+  have hdef := ZMod.LFunction_def_even hΦ s
+  rw [hzero, eq_comm, mul_eq_zero] at hdef
+  rcases hdef with h | h
+  · exact absurd h (by simp [Complex.cpow_eq_zero_iff, Nat.cast_ne_zero.mpr (NeZero.ne N)])
+  · exact h
+
 /-! ## The node = flip arc: a transversal node IS a sign flip -/
 
 /-- **A simple node is a sign flip.** If `f` vanishes at `t₀` with nonzero derivative, every

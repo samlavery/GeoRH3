@@ -26,77 +26,29 @@ the zeros are *the same* set, read as that function's singularities / the dual o
 
 `hilbertPolyaChain` bundles all six, **unconditionally** (primitive non-principal `χ`), kernel-clean.
 
-## The census — where the finish lives (state of the squeeze)
-
-GRH per window = two counters agree. Both halves exist, in different files, awaiting marriage:
-
-* **UPPER (χ-general, `DirichletLZeroCount`/`DirichletLZeroSet`, kernel-done):** Jensen for `Λχ`
-  (`completedL_jensen_at_zero`), the weighted disk zero-count bound
-  (`completedL_weighted_zero_count_disk_bound`), strip containment
-  (`completedLFunction_zero_mem_NontrivialZeros`), finiteness in every ball
-  (`NontrivialZeros_inter_closedBall_finite`), `rootNumber_ne_zero` (the Möbius crack),
-  `Σ 1/|ρ|²` summability.
-* **LOWER (ζ-instantiated, `HelixStandingWave`, kernel-done):** the standing wave, nodes isolated &
-  finite, `nodeCount`/`boxCount`, the alternation engine (`k` flips ⟹ `k` ordered on-line zeros),
-  per-window RH from counter agreement (`rh_in_window_of_counters_agree`), global packaging
-  (`rh_of_window_certificates`).
-* **THE MARRIAGE — UNIVERSAL (every primitive character)** (`HelixStandingWave`, all kernel-clean):
-  the wave `Φ_χ = N^{s/2}·Λχ` satisfies `conj Φ_χ(½+it) = W(χ⁻¹)·Φ_χ(½+it)` for EVERY primitive
-  `χ ≠ 1` (`waveChar_line_conj_gen` — self-duality not needed); the constant is unimodular by
-  FE-reflection at a witness (`rootNumber_inv_conj_mul`, no Gauss sums); a half-phase `ε` with
-  `ε² = W`, `conj ε·ε = 1` exists (`exists_halfPhase`, ℂ alg. closed), and `ε·Φ_χ` is REAL on the
-  line (`exists_standingWave_universal`). Counter chain complete for all three faces — `W = +1`
-  (`standingWaveChar`), `W = −1` (`standingWaveCharIm`), general `ε`-wave (`standingWaveCharGen`) —
-  all feeding ONE census (`nodeCountChar`); the strip census is Jensen-bounded explicitly
-  (`boxCountChar_le_of_jensen`: `≤ C·R·log R`); counters agree per window ⟹ GRH in window
-  (`grh_in_window_of_counters_agree_char`); certificates on all symmetric windows ⟹ `GRH χ`
-  outright (`grh_of_window_certificates_char` — `Λχ` entire, no height dodge).
-* **THE PÓLYA REDUCTION** (`HelixStandingWave`, kernel-clean, all characters): the quartet
-  `σ(ρ) = 1 − conj ρ` maps each `Z(χ)` to itself and is CIRCLE INVERSION in Möbius coordinates
-  (`w_quartet`); GRH ⟺ the spectral image sits on the circle (`grh_iff_w_image_unit`) ⟺ the
-  one-sided bound `‖w‖ ≤ 1` (`w_norm_eq_one_of_le_one` — deficiency dies in conjugate pairs);
-  the unitarity ledger `∏‖w‖ = 1` on every σ-closed window (`prod_w_norm_eq_one`); an interior
-  zero forces a strictly exterior partner (`orbit_straddle_of_interior`).
-* **THE CORRIDOR (unconditional, `HelixZeroFreeStep`, kernel-clean):** the first interior
-  narrowing of the strip — for every primitive non-quadratic `χ`, EVERY zero obeys
-  `c/(1+|t|)⁵ ≤ Re ρ ≤ 1 − c/(1+|t|)⁵` with explicit `c > 0` (`zero_free_region_poly`,
-  `zero_corridor`). Assembly: Mathlib's dlVP product `‖L(χ⁰)³L(χ)⁴L(χ²)‖ ≥ 1` + the ledger's
-  half-plane growth `‖L‖ ≤ N‖s‖/Re s` (`norm_LFunction_le_half_plane`) through Cauchy's estimate
-  (`norm_deriv_LFunction_le`) + the mean-value zero-penalty (`norm_LFunction_le_of_zero`) +
-  height-uniform pole repulsion (`zero_repulsion_near_one`). This is the Euler-product (FTA)
-  constraint landed quantitatively: the spectrum provably cannot approach either strip wall. The `c/log` sharpening and the quadratic (exceptional-zero)
-  case are sharper instruments on the same machine.
-* **THE GATE (no void — the step lemma):** there is no "off the circle" anywhere in the
-  production: every phasor is unit (`phasorFlow_norm`), the source is drift-free, and off-line
-  eviction is UNCONDITIONAL on the helix (`helix_eviction`). The former "void" framing is
-  retired — it named an exterior region as if it awaited tenants, when the kernel says the
-  geometry never had an exterior. What remains is ONE analytic statement, chart-independent by
-  `arcChart_census_invariant` (coordinates can neither create nor evict a zero-configuration —
-  gaps are world-facts or nothing): **no slab hosts a balanced pair**. The first-slip normal
-  form is kernel (`exists_first_slip`, `slip_balanced_pair`): a hypothetical failure has a
-  LEAST slab, equal-height straddle partners, reciprocal norms, one strictly exterior;
-  ledger-neutral (`sum_log_w_norm_eq_zero`), corridor-confined (`zero_corridor`); and
-  `grh_iff_exteriorVoid` is the kernel bridge from the pair's exclusion to `GRH χ`. The
-  exclusion must be ARITHMETIC (Euler/FTA multiplicativity — symmetry alone is provably
-  insufficient): the pair demands two amplitude profiles from a one-sided `√n`-locked supply
-  (`radial_refl_mismatch`). Proving that refusal — the step lemma of `ladder_induction` — is
-  the remaining work.
-
 **The complete chain (`hilbertPolyaChainComplete`, steps 1–10).** The original six end at the
 abstract reality principle. Steps 7–10 (the purchase model, `HelixProduction` Part 20) supply the
 working form: every accumulation yields a REAL, strictly ordered ladder of purchase heights with
 the budget met exactly (7), the staircase `⌊E/π⌋` reads it rung-for-rung (8), the regularized
 resolvent over any such ladder cannot resonate off the real axis (9), and every nontrivial zero
 is a PAID spectral event — simple pole, residue = multiplicity ≥ 1 (10). All ten unconditional,
-kernel-clean.
+kernel-clean. `grandTransportChain` adds the pointwise transport beams of `HelixProduction`
+Parts 21–23; `weldArcs` bundles the standing-wave weld arcs; the Form B bricks at the end of
+this file put the prime-side and zero-side traces in one identity on the half-plane
+(`flowDualTraceMeeting`) and continue the prime trace into the strip
+(`primeTraceContinuationIntoStrip`) — both σ-free.
 
-**Honest remainder — the dictionary, stated as arithmetic.** The chain does not contain the
-instantiation that a given `L`'s traversal accumulation matches its vanishing set rung-for-rung;
-in census form this is `boxCountChar = nodeCountChar` per window. Numerics
-(`numerics/purchase_model.py`): the ladder predicts the zeros of `ζ` and `χ₃` from ONE
-calibration constant each at ~15% of a mean gap with exact interlacing over the tested ranges —
-the count never slips; the heights breathe by the fluctuation. The remaining mathematics is that
-the staircase never slips anywhere.
+Supporting machinery, all kernel-clean, lives in: `HelixStandingWave` (the universal standing
+wave, the counters `nodeCountChar`/`boxCountChar`, the window theorems), `HelixProduction`
+(purchase model, census split, register product/trace), `HelixZeroFreeStep` (the unconditional
+corridor), `DirichletLHadamard`* (the Hadamard factorization and partial fraction).
+
+**The honest boundary.** Nothing in this file or the repo proves the census equality
+`boxCountChar = nodeCountChar` on every window; that equality is the program's open statement.
+Conditional closures from it are kernel-proven where the counters live: window certificates give
+`GRH χ` per character (`HelixStandingWave.grh_of_window_certificates_char`) and, for `ζ`,
+Mathlib's `RiemannHypothesis` (`HelixStandingWave.RH_of_certificates`). Every theorem in this
+file is unconditional.
 -/
 
 open Complex Filter Topology HelixFlow HelixFlowGenerator HelixFlowVonMangoldt HelixDualOperator
@@ -131,15 +83,18 @@ theorem hilbertPolyaChain {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
    fun _ hρ => EnergyBalance.resonates_at_zeros χ hρ,
    fun _ ha _ hz => ha.im_eq_zero_of_mem_spectrum hz⟩
 
-/-- **The weld arcs (the finish campaign), bundled — all UNCONDITIONAL.** The three-way weld
-    (flip ⟺ octave ⟺ rendezvous) as landed so far, every hypothesis situational:
+/-- **The weld arcs, bundled — all UNCONDITIONAL.** The three-way weld
+    (flip ⟺ octave ⟺ rendezvous) at the ζ/χ₃ instance, every hypothesis situational:
     1. a sign flip of the standing wave yields an on-line `ζ`-zero strictly between (classical hook);
     2. at ANY vanishing — location-free, no line — the two fibres MEET (admission = rendezvous);
     3. a transversal node is a sign flip in every window (node = flip);
     4. the wave's real derivative is the holomorphic derivative on the line (the ℂ→ℝ bridge).
-    **Still open, honestly (the remaining arcs):** rendezvous = node at the fold (wave reality at the
-    meeting point); the census `N(T)` welding flip-count to admission-count (multiplicity-safe — no
-    simplicity assumed); the χ₃-instance wiring; final conductor-parametrized packaging. -/
+    The conductor-general forms are kernel-proven in `HelixStandingWave`: the χ₃ instance with
+    derived side conditions (`fibres_meet_at_any_vanishing'`), node ⟺ line-zero for every
+    primitive character (`standingWaveChar_node_iff`, `standingWaveCharIm_node_iff`,
+    `standingWaveCharGen_node_iff`), the alternation census engine
+    (`online_zeros_of_alternation_char`, `alternation_le_nodeCountChar`), and the window
+    packaging (`grh_in_window_of_counters_agree_char`, `grh_of_window_certificates_char`). -/
 theorem weldArcs :
     -- 1. classical hook: flip ⟹ counted on-line zero
     (∀ a b : ℝ, a < b → HelixStandingWave.standingWave a * HelixStandingWave.standingWave b < 0 →
@@ -176,9 +131,8 @@ theorem weldArcs :
     Every component is kernel-clean with standard axioms. What this chain does NOT contain —
     stated plainly, as arithmetic and not as a hypothesis — is the dictionary instantiation: that
     a given `L`'s traversal accumulation matches its vanishing set rung-for-rung (the census
-    equality `boxCountChar = nodeCountChar` per window). The numerics (purchase_model.py)
-    validate that dictionary at ~15% of a mean gap with exact interlacing over the tested ranges
-    of `ζ` and `χ₃`, from one calibration constant each. -/
+    equality `boxCountChar = nodeCountChar` per window). Numerics (`numerics/`): the ladder's
+    rungs interlace the zeros exactly over all tested channels; the count never slipped. -/
 theorem hilbertPolyaChainComplete {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
     (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) :
     -- 1–6: the original chain
@@ -226,9 +180,8 @@ can never pay phase into any window), its dip carries the strictly positive floo
 iff the zero is ON the line (the uniformity dichotomy), a nonempty pole sum cannot
 vanish identically (no silent cancellation for a ghost set), and the two-term/Möbius
 mechanism forces zeros of `1 + c` onto the unit locus of the fold. Unconditional;
-kernel axioms only. The single statement this chain still awaits is the global quantum
-symmetry — count = phase/π, the staircase never slips — equivalently
-`offLineCountChar = 0` for every window: the one number left to kill. -/
+kernel axioms only. What it does not contain is the census equality
+`boxCountChar = nodeCountChar` per window — the program's open statement. -/
 theorem grandTransportChain {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
     (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) :
     -- the ten-step chain
@@ -283,120 +236,6 @@ theorem grandTransportChain {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
     fun ρ => HelixProduction.pair_signature_touches_iff_online ρ,
     fun F w ρ₀ h0 hw => HelixProduction.finite_pole_sum_ne_zero h0 hw,
     fun c hc s hz => HelixProduction.mobius_two_term_zero_on_line hc hz⟩
-
-/-! ## The conditional capstone: GRH from the Production Law
-
-Per the program's design (Sam, 2026-06-12): the mechanism is established and measured;
-the final theorem states GRH **conditional on the Production Law** — the program's one
-open statement — inviting the community to certify the law itself. This is the
-Ribet-style artifact: the reduction is unconditional and machine-checked; the
-hypothesis is the program's own central object. -/
-
-/-- **The Production Law** for a channel `χ` — equivalently, **dimensional FTA**: in
-every window, the strip census equals the node census — every zero event in the box is
-a produced node of the standing wave. The name records its content: that the exactness
-unique factorization gives PER INTEGER (`fta_round_trip`, proven) survives aggregation
-through the superposition and the projection tower (the inheritance span — open). This
-hypothesis must never borrow FTA's proof-status: it is the aggregate closure, and that
-one span is the entire open content of GRH.
-
-This is the Pólya program's entire open content, stated as the per-window counting law
-it is. Honest status: certifying it for all windows is equivalent to `GRH χ` (via the
-kernel census split below) — it is not a tractability claim but the program's
-production statement in its native, finitely-checkable form. Each window instance is a
-finite computation (Turing's method); the measured record (this repository,
-`numerics/results/`): exact equality in every window tested — ≈1,830 zeros across nine
-channels through conductor 1009, zero spurious events, zero missed, no off-line +2 step
-in 1,000 consecutive zeros, and the central-uniformity curvature predicted
-parameter-free by this law to 2×10⁻⁵. Everything else about a hypothetical violation is
-already unconditional theorem: it pays no phase, touches no bottom, cancels into no
-sum, and projects nowhere (`grandTransportChain`). -/
-def ProductionLaw {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) : Prop :=
-  ∀ (hχ : χ ≠ 1) (a b : ℝ),
-    HelixStandingWave.boxCountChar hχ a b = HelixStandingWave.nodeCountChar hχ a b
-
-/-- **GRH, conditional on the Production Law.** If every windowed box census equals the
-node census, then every nontrivial zero of `L(s, χ)` lies on the critical line. The
-derivation is unconditional kernel mathematics: the census split
-(`boxCountChar = nodeCountChar + offLineCountChar`), the completed-L bridge, and a
-covering window around any putative off-line zero. -/
-theorem GRH_of_productionLaw {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
-    (hχ : χ ≠ 1) (hP : ProductionLaw χ) : GRHSpectral.GRH χ := by
-  intro ρ hρ
-  by_contra hre
-  have hsplit := HelixProduction.boxCountChar_eq_nodeCountChar_add_offLineCountChar
-    hχ (ρ.im - 1) (ρ.im + 1)
-  have hzero : HelixProduction.offLineCountChar hχ (ρ.im - 1) (ρ.im + 1) = 0 := by
-    have := hP hχ (ρ.im - 1) (ρ.im + 1)
-    omega
-  have hmem : ρ ∈ (HelixStandingWave.stripBox_zeros_finite_char hχ
-      (ρ.im - 1) (ρ.im + 1)).toFinset.filter (fun s => s.re ≠ 1 / 2) := by
-    rw [Finset.mem_filter, Set.Finite.mem_toFinset]
-    refine ⟨⟨⟨?_, ?_⟩, DirichletLHadamard.completedLFunction_eq_zero_of_mem hρ⟩, hre⟩
-    · exact Set.mem_Icc.mpr ⟨le_of_lt hρ.1, le_of_lt hρ.2.1⟩
-    · exact Set.mem_Icc.mpr ⟨by linarith, by linarith⟩
-  have hpos : 0 < HelixProduction.offLineCountChar hχ (ρ.im - 1) (ρ.im + 1) :=
-    Finset.card_pos.mpr ⟨ρ, hmem⟩
-  omega
-
-/-! ## The discharge socket: "conditional" is a kernel word, not a confidence word
-
-*"If the proof statement's negation needs to falsify everything we hold as
-unconditional, is it still a conditional proof?"* — answered as theorems. If
-`¬ProductionLaw` provably falsified any PROVEN statement `T`, the capstone would not
-stay conditional: contraposition would discharge it on the spot (`GRH_of_collision`).
-So "conditional" names exactly the current absence, in this kernel, of one exhibited
-collision between `¬ProductionLaw` and an established truth. The negation falsifies
-everything we HOLD as unconditional — governance, inheritance, rule-ness — but, as of
-today, nothing we have PROVEN unconditional (the pointwise-innocence theorems are
-ours: `grandTransportChain`). The hypothesis is precisely that excess of held over
-proven, compressed to one sentence; the theorems below are the standing instruction
-for how it retires. -/
-
-/-- **Conditionality is the absence of an exhibited collision** (pure logic): a
-proposition is dischargeable exactly when its negation falsifies some truth. A
-conditional proof whose hypothesis' negation falsified an established theorem would
-not remain conditional — this two-line contraposition discharges it. -/
-theorem dischargeable_iff_collision (P : Prop) :
-    P ↔ ∃ T : Prop, T ∧ (¬P → ¬T) :=
-  ⟨fun hP => ⟨P, hP, fun hn => absurd hP hn⟩,
-   fun ⟨_, hT, collide⟩ => not_not.mp fun hn => collide hn hT⟩
-
-/-- **The discharge socket**: one established truth `T` that `¬ProductionLaw χ`
-falsifies discharges the law mechanically. -/
-theorem productionLaw_of_collision {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
-    {T : Prop} (hT : T) (collide : ¬ ProductionLaw χ → ¬ T) : ProductionLaw χ :=
-  not_not.mp fun hn => collide hn hT
-
-/-- **The finishing move, in the kernel**: exhibit ONE proven `T` with
-`¬ProductionLaw χ → ¬T` and GRH follows — the conditional capstone flips
-unconditional by contraposition alone. (Interface on the SAME single socket
-`GRH_of_productionLaw`: not a new reduction, and it borrows no proof-status.
-Equivalently: deriving the Production Law from the proven corpus and exhibiting a
-collision are the same act, and "conditional" is the kernel's name for that act
-not yet having been performed.) -/
-theorem GRH_of_collision {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
-    (hχ : χ ≠ 1) {T : Prop} (hT : T)
-    (collide : ¬ ProductionLaw χ → ¬ T) : GRHSpectral.GRH χ :=
-  GRH_of_productionLaw hχ (productionLaw_of_collision hT collide)
-
-/-- **GRH by Hilbert–Pólya — the program's named capstone.** The resultant
-trace identity, in production form, with no analytic continuation anywhere:
-the fiber is ALWAYS a standing wave (`HelixStandingWave.completedΛ_eq_standingWave`
-— the phasors pair by Möbius inversion into a real wave that stands instead of
-rotating), it ascends the helix and flips sign exactly at the zeros
-(`completedΛ_zero_iff_standingWave_node` + transversality), and each threshold
-crossing is a PAID harmonic creation (`hilbertPolyaChainComplete` steps 7–10:
-ladder at `E = nπ`, staircase `⌊E/π⌋ = n`, off-axis resonance ban, payment =
-simple pole with residue = multiplicity). The geometry and the quantum cost
-law place the zeros at predictable helix locations — no zero location is
-assumed in advance. `ProductionLaw χ` states that this mechanism is the WHOLE
-census (every window's strip count = node count); composed with the kernel
-census split it delivers GRH. The ten-step chain is unconditional; the
-production law is the program's single socket. -/
-theorem GRH_by_Hilbert_Poyla {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
-    (hχ : χ ≠ 1) (hP : ProductionLaw χ) : GRHSpectral.GRH χ :=
-  GRH_of_productionLaw hχ hP
 
 /-! ## Form B — the prime-side trace continued into the strip: the meeting bricks
 
@@ -627,9 +466,6 @@ theorem primeTraceContinuationIntoStrip {N : ℕ} [NeZero N] (χ : DirichletChar
 #print axioms hilbertPolyaChainComplete
 #print axioms weldArcs
 #print axioms grandTransportChain
-#print axioms dischargeable_iff_collision
-#print axioms productionLaw_of_collision
-#print axioms GRH_of_collision
 #print axioms completedLFunction_logDeriv_gauge_split
 #print axioms flowDualTraceMeeting
 #print axioms primeTraceContinuationIntoStrip

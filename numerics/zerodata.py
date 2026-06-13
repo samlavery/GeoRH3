@@ -26,14 +26,6 @@ ZEROS_DIR = os.path.join(HERE, "zeros")
 LABELS = ["L1_zeta_q1", "L2_chi3_q3", "L3_chi4_q4",
           "L4_chi5quad_q5", "L5_chi5c4_q5", "L6_chi7quad_q7"]
 
-# the channel table (canonical store: fiber.CHANNEL_TABLE -- kernel rows plus
-# data-filled rows), as density coefficients C = n(z)/z^2 = A*pi/U^3 (P = U).
-def _table_c():
-    from fiber import CHANNEL_TABLE
-    return {lab: np.exp(r["mode"]) * np.pi / (np.pi / r["helixUnit"]) ** 3
-            for lab, r in CHANNEL_TABLE.items()}
-TABLE_C = _table_c()
-
 
 def load(label: str) -> np.ndarray:
     path = os.path.join(ZEROS_DIR, f"{label}.txt")
@@ -87,26 +79,23 @@ def main_data():
         print(f"{lab:18s} {f['beta']:9.3f} {f['alpha']:9.3f} {f['r2']:9.4f}"
               f" {f['r2_gaps']:9.4f} {f['first_ratio']:8.4f}")
 
-    print("\n   RATIOS (normalize beta to chi3).  Universal linear cost => C_f ~ 1/beta_f.")
+    print("\n   RATIOS (normalize beta to chi3), data-driven (no model table).")
     b3 = fits["L2_chi3_q3"]["beta"]
-    print(f"{'function':18s} {'beta/beta3':>10s} {'implied C':>10s} {'table C':>9s} {'C*g1^2':>10s}")
-    C3 = TABLE_C["L2_chi3_q3"]
+    print(f"{'function':18s} {'beta/beta3':>10s}")
     for lab in LABELS:
-        rb = fits[lab]["beta"] / b3
-        Cf = C3 / rb                       # calibrate so every channel pays the same law
-        tab = TABLE_C.get(lab)
-        tab_s = f"{tab:9.1f}" if tab else "    unset"
-        print(f"{lab:18s} {rb:10.4f} {Cf:10.1f} {tab_s} {Cf * rows[lab][0]**2:10.0f}")
+        print(f"{lab:18s} {fits[lab]['beta'] / b3:10.4f}")
 
     print("\nC. CHANNELS: do live signs cancel; is neutral dead?")
     from fiber import SPECS
-    for spec in SPECS:
-        if spec.q == 1:
+    specmap = {s.label: s for s in SPECS}
+    for lab in LABELS:
+        spec = specmap.get(lab)
+        if spec is None or spec.q == 1 or spec.order:
             continue
-        g = rows[spec.label]
+        g = rows[lab]
         N = int(1.05 * g[-1] ** 2 * 3.2) + 100        # cover the window at C=pi
         n = np.arange(1, N + 1)
-        chi = np.array([complex(v) for v in spec.values])[n % spec.q]
+        chi = np.array([complex(spec.values.get(int(k) % spec.q, 0)) for k in n])
         re = np.real(chi)
         run = np.cumsum(re)                            # running live-sign ledger
         live_frac = float(np.mean(np.abs(chi) > 1e-12))
@@ -126,63 +115,3 @@ def main_data():
 
 if __name__ == "__main__":
     main_data()
-
-
-# ===========================================================================
-# THE JITTER IS THE PRIME LEDGER (2026-06-12): there is no noise
-# ===========================================================================
-# The per-zero deviation from the smooth ladder (std ~0.24, formerly called
-# "irreducible jitter") is S(gamma_m) -- the prime side of the explicit
-# formula, DETERMINISTIC.  Measured (chi3, 1000 zeros): the truncated prime
-# ledger -(1/pi) sum_{n<=X} Lambda(n) chi(n) sin(t log n)/(sqrt n log n),
-# Cesaro-tapered, explains 63.9% of the variance at X=10 (three live primes),
-# 97.0% at X=1000, 99.0% at X=100000 (residual std 0.024 -- a 10x reduction).
-# Second independent no-noise demonstration (first: the Lehmer deterministic
-# capture-error ledger).  Consequence: used as a CONTROL VARIATE (fit alpha,
-# declared), every anchor/law measurement gains ~10x precision per zero --
-# the 5-sigma campaign thresholds drop by the same factor.
-
-def prime_ledger(chi_vals: dict, q: int, X: int):
-    """Terms (log n, weight) of the tapered prime ledger for a channel."""
-    import math
-    terms = []
-    for p in range(2, X + 1):
-        if all(p % d for d in range(2, int(p**0.5) + 1)):
-            pk = p
-            while pk <= X:
-                c = chi_vals.get(pk % q, 0)
-                if c:
-                    terms.append((math.log(pk),
-                                  c * math.log(p) / (math.sqrt(pk) * math.log(pk))))
-                pk *= p
-    return terms
-
-def jitter_correct(g, y, chi_vals, q, X=100_000):
-    """Subtract the fitted prime-ledger control variate from the drift series y.
-
-    Returns (y_corrected, corr, alpha).  Mean of y is preserved (the predictor
-    is mean-centered); the variance drops by the explained fraction."""
-    import math
-    terms = prime_ledger(chi_vals, q, X)
-    logn = np.array([t[0] for t in terms]); wt = np.array([t[1] for t in terms])
-    taper = 1.0 - logn / math.log(X + 1)
-    pred = -(1/math.pi) * (np.sin(np.outer(np.asarray(g), logn)) * (wt*taper)[None, :]).sum(axis=1)
-    pred -= pred.mean()
-    jit = y - y.mean()
-    alpha = float(np.dot(jit, pred) / np.dot(pred, pred))
-    corr = float(np.corrcoef(jit, pred)[0, 1])
-    return y - alpha * pred, corr, alpha
-
-# --- EXACT ELIMINATION (2026-06-12): y_m - 1/2 = S(gamma_m) at machine precision
-# S computed independently (arg L continued along sigma: 3 -> 1/2, midpoint
-# convention across the jump): max residual 1.75e-14 over chi3's first 100
-# zeros.  The "jitter" has an exact name; there is NO noise in the framework.
-# Distinctions kept honest:
-#   - this is the exact ACCOUNTING identity (the analytic ledger: S via L);
-#   - the prime-only PREDICTION converges to it (99.0% at X=1e5; sharp-cutoff
-#     rate ~1/log X; exact-from-primes lives in the smoothed Weil identities);
-#   - the LAWS (anchor = eps-phase etc.) are statements about the MEANS of the
-#     named quantities; the mean-zero prime control variate boosts their
-#     precision ~10x; subtracting exact S would subtract the signal itself.
-# Bonus instrument: the S-jump at each zero = its multiplicity (measured
-# 0.999999 +- 2e-7: all 100 simple) -- the multiplicity/rank meter for BSD.
