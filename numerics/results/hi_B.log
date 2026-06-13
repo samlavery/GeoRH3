@@ -1,0 +1,97 @@
+=== L5_chi5c4_q5 (Dirichlet L of the order-4 character mod 5 with chi(2) = i () ===
+L5_chi5c4_q5: branch +1, reality residual 6.75e-30
+L5_chi5c4_q5: 25 zeros, t ~ 54.48544239
+L5_chi5c4_q5: 50 zeros, t ~ 93.81857517
+L5_chi5c4_q5: 75 zeros, t ~ 128.3585784
+L5_chi5c4_q5: 100 zeros, t ~ 161.6911699
+L5_chi5c4_q5: 125 zeros, t ~ 194.1865789
+L5_chi5c4_q5: 150 zeros, t ~ 224.3129486
+L5_chi5c4_q5: 175 zeros, t ~ 253.9517895
+L5_chi5c4_q5: 200 zeros, t ~ 283.4881429
+L5_chi5c4_q5: 225 zeros, t ~ 312.3588795
+L5_chi5c4_q5: 250 zeros, t ~ 340.8184441
+L5_chi5c4_q5: 275 zeros, t ~ 368.1812024
+L5_chi5c4_q5: 300 zeros, t ~ 396.1088072
+L5_chi5c4_q5: 325 zeros, t ~ 423.1689302
+L5_chi5c4_q5: 350 zeros, t ~ 449.7945263
+L5_chi5c4_q5: 375 zeros, t ~ 476.3464994
+L5_chi5c4_q5: 400 zeros, t ~ 503.2213864
+L5_chi5c4_q5: 425 zeros, t ~ 529.0220093
+L5_chi5c4_q5: 450 zeros, t ~ 554.6500967
+L5_chi5c4_q5: 475 zeros, t ~ 580.3825465
+L5_chi5c4_q5: 500 zeros, t ~ 606.3216817
+L5_chi5c4_q5: vs old reference (first 100): max|diff| = 5.048e-13
+L5_chi5c4_q5: done in 538.3s -> /Users/samuellavery/proof/three/numerics/zeros_500x50/L5_chi5c4_q5.txt
+=== L6_chi7quad_q7 (Dirichlet L of the odd quadratic character mod 7 (Legendre s) ===
+L6_chi7quad_q7: branch +1, reality residual 3.81e-30
+L6_chi7quad_q7: 25 zeros, t ~ 50.98309943
+L6_chi7quad_q7: 50 zeros, t ~ 86.47845308
+L6_chi7quad_q7: 75 zeros, t ~ 120.2000354
+L6_chi7quad_q7: 100 zeros, t ~ 151.1210205
+L6_chi7quad_q7: 125 zeros, t ~ 181.6879323
+L6_chi7quad_q7: 150 zeros, t ~ 210.9913262
+L6_chi7quad_q7: 175 zeros, t ~ 239.3483097
+L6_chi7quad_q7: 200 zeros, t ~ 266.9384163
+L6_chi7quad_q7: 225 zeros, t ~ 294.0660309
+L6_chi7quad_q7: 250 zeros, t ~ 321.0057117
+L6_chi7quad_q7: 275 zeros, t ~ 347.7367121
+L6_chi7quad_q7: 300 zeros, t ~ 373.9277524
+L6_chi7quad_q7: 325 zeros, t ~ 399.8070196
+L6_chi7quad_q7: 350 zeros, t ~ 425.0549181
+L6_chi7quad_q7: 375 zeros, t ~ 450.4524341
+L6_chi7quad_q7: 400 zeros, t ~ 475.6727484
+L6_chi7quad_q7: 425 zeros, t ~ 501.1483818
+L6_chi7quad_q7: 450 zeros, t ~ 525.628942
+L6_chi7quad_q7: 475 zeros, t ~ 550.017016
+L6_chi7quad_q7: 500 zeros, t ~ 574.4123588
+L6_chi7quad_q7: vs old reference (first 100): max|diff| = 4.878e-13
+L6_chi7quad_q7: done in 753.2s -> /Users/samuellavery/proof/three/numerics/zeros_500x50/L6_chi7quad_q7.txt
+=== L7_chi8quad_q8 (even quadratic character mod 8 (Kronecker symbol (2|n))) ===
+L7_chi8quad_q8: branch +1, reality residual 2.42e-30
+L7_chi8quad_q8: 25 zeros, t ~ 49.72903299
+L7_chi8quad_q8: 50 zeros, t ~ 85.29893481
+L7_chi8quad_q8: 75 zeros, t ~ 117.2542546
+L7_chi8quad_q8: 100 zeros, t ~ 147.6107105
+L7_chi8quad_q8: 125 zeros, t ~ 177.0184117
+L7_chi8quad_q8: 150 zeros, t ~ 205.7167009
+L7_chi8quad_q8: 175 zeros, t ~ 233.7820992
+L7_chi8quad_q8: 200 zeros, t ~ 261.2131429
+L7_chi8quad_q8: 225 zeros, t ~ 287.8366427
+L7_chi8quad_q8: 250 zeros, t ~ 314.1439669
+L7_chi8quad_q8: 275 zeros, t ~ 340.2913586
+L7_chi8quad_q8: 300 zeros, t ~ 366.1763648
+L7_chi8quad_q8: 325 zeros, t ~ 391.2574811
+L7_chi8quad_q8: 350 zeros, t ~ 416.6450413
+L7_chi8quad_q8: 375 zeros, t ~ 441.2808135
+L7_chi8quad_q8: 400 zeros, t ~ 466.1903001
+L7_chi8quad_q8: 425 zeros, t ~ 490.867786
+L7_chi8quad_q8: 450 zeros, t ~ 514.9455192
+L7_chi8quad_q8: 475 zeros, t ~ 539.0339771
+L7_chi8quad_q8: 500 zeros, t ~ 563.0430091
+L7_chi8quad_q8: vs old reference (first 100): max|diff| = 4.955e-13
+L7_chi8quad_q8: done in 475.5s -> /Users/samuellavery/proof/three/numerics/zeros_500x50/L7_chi8quad_q8.txt
+=== L8_chi7c3_q7 (order-3 even character mod 7 with chi(3) = e^{2 pi i/3}) ===
+L8_chi7c3_q7: branch +1, reality residual 2.9e-30
+L8_chi7c3_q7: 25 zeros, t ~ 50.62524764
+L8_chi7c3_q7: 50 zeros, t ~ 86.46830827
+L8_chi7c3_q7: 75 zeros, t ~ 120.0598325
+L8_chi7c3_q7: 100 zeros, t ~ 152.0740518
+L8_chi7c3_q7: 125 zeros, t ~ 181.6744427
+L8_chi7c3_q7: 150 zeros, t ~ 210.7808201
+L8_chi7c3_q7: 175 zeros, t ~ 238.9405987
+L8_chi7c3_q7: 200 zeros, t ~ 266.7248887
+L8_chi7c3_q7: 225 zeros, t ~ 294.2537587
+L8_chi7c3_q7: 250 zeros, t ~ 320.8979625
+L8_chi7c3_q7: 275 zeros, t ~ 347.9122462
+L8_chi7c3_q7: 300 zeros, t ~ 374.1864938
+L8_chi7c3_q7: 325 zeros, t ~ 399.9802451
+L8_chi7c3_q7: 350 zeros, t ~ 425.8429993
+L8_chi7c3_q7: 375 zeros, t ~ 450.9353207
+L8_chi7c3_q7: 400 zeros, t ~ 475.9000864
+L8_chi7c3_q7: 425 zeros, t ~ 500.9747848
+L8_chi7c3_q7: 450 zeros, t ~ 525.5585781
+L8_chi7c3_q7: 475 zeros, t ~ 550.2713705
+L8_chi7c3_q7: 500 zeros, t ~ 574.5035356
+L8_chi7c3_q7: vs old reference (first 100): max|diff| = 5.031e-13
+L8_chi7c3_q7: done in 735.2s -> /Users/samuellavery/proof/three/numerics/zeros_500x50/L8_chi7c3_q7.txt
+total runtime: 2502.1s

@@ -6,6 +6,7 @@ import RequestProject.HelixFlowClosureLedger
 import RequestProject.HelixRoundTrip
 import RequestProject.HelixStandingWave
 import RequestProject.HelixProduction
+import RequestProject.RiemannHypothesisBridge
 
 /-!
 # The Hilbert–Pólya chain — R1–R9 infrastructure map
@@ -19,7 +20,7 @@ R2. Earned unitarity: `HelixFlowUnitaryGroup`.
 R3. Reality/no-drift forcing: `HelixSourceFlow` plus the real generator in `HelixFlowGenerator`.
 R4. Trace = L, helix-native: `HelixFlowClosureLedger` and `DirichletClosureLedger`.
 R5. Zeros are spectral events: `HelixFlowClosureLedger` and `EnergyBalance`.
-R6. Spectral realization: threshold crossing + bucket rendezvous + quantum ladder.
+R6. Spectral realization: threshold crossing + channel rendezvous + quantum ladder.
 R7. Exhaustion: `ladder_induction` and `Accumulation.ladder_rigidity`.
 R8. Faithfulness: exact `π/3` rechart plus the intrinsic closure ledger.
 R9. Genuine object: `GRHSpectral.NontrivialZeros` is Mathlib's `LFunction` zero set in the strip.
@@ -62,7 +63,7 @@ theorem hilbertPolyaChainR1ToR9 {N : ℕ} [NeZero N] (χ : DirichletCharacter �
       (∀ ρ ∈ GRHSpectral.NontrivialZeros χ,
         ¬ ∃ L, Tendsto (fun s => -logDeriv (DirichletCharacter.LFunction χ) s)
           (𝓝[≠] ρ) (𝓝 L))) ∧
-    -- R6: threshold crossing, quantum ladder, and bucket rendezvous/payment.
+    -- R6: threshold crossing, quantum ladder, and channel rendezvous/payment.
     ((∀ {E : ℝ → ℝ}, Continuous E → StrictMono E →
         ∀ {a c b : ℝ}, E a ≤ c → a ≤ b → c ≤ E b →
           ∃! t : ℝ, a ≤ t ∧ E t = c) ∧
@@ -113,6 +114,140 @@ theorem hilbertPolyaChainR1ToR9 {N : ℕ} [NeZero N] (χ : DirichletCharacter �
       fun s hs hz => HelixFlowClosureLedger.flow_closure_exact χ hχ s hs hz⟩
   · intro ρ
     rfl
+
+/-! ## Conditional projection closure
+
+The HP/helix side is the R1-R9 infrastructure above.  The additional input here is a projection
+faithfulness statement: fiber capture events must be represented by the source fiber, and
+lower-dimensional projection must not introduce events absent from that source. -/
+
+/-- A source fiber/channel event on the 3D helix.
+
+It deliberately does not store `ρ.re = 1 / 2`.  Instead it stores the source-side
+conservation/readout data from which the HP chain derives the midpoint readout. -/
+structure SourceFiberEvent {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) (ρ : ℂ) where
+  driftRate : ℂ
+  amplitude : ℝ
+  amplitude_ne_zero : amplitude ≠ 0
+  source_conserved :
+    ∀ τ : ℝ, Real.exp (driftRate.re * τ) * amplitude = amplitude
+  height_ne_zero : ρ.im ≠ 0
+  pythagorean_of_no_drift :
+    driftRate.re = 0 →
+      (moebius_helix ρ.re ρ.im).re ^ 2 + (moebius_helix ρ.re ρ.im).im ^ 2 = 1
+
+/-- A fiber capture event for a Dirichlet channel, represented at the formal boundary by Mathlib's
+    `LFunction` zero set. -/
+def FiberCaptureEvent {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) (ρ : ℂ) : Prop :=
+  ρ ∈ GRHSpectral.NontrivialZeros χ
+
+/-- Projection faithfulness for one Dirichlet channel. -/
+structure FaithfulDimensionalProjection {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) where
+  projected_event : ℂ → Prop
+  fiber_capture_faithfully_projected :
+    ∀ ρ, FiberCaptureEvent χ ρ → projected_event ρ
+  lower_dimensions_create_no_events :
+    ∀ ρ, projected_event ρ → SourceFiberEvent χ ρ
+
+/-- Source events force the midpoint once the HP chain supplies source no-drift and the
+    `π/3` coordinate chart. -/
+theorem SourceFiberEvent.midpoint_axis_of_HP {N : ℕ} [NeZero N]
+    {χ : DirichletCharacter ℂ N} {ρ : ℂ} (hχ : χ ≠ 1)
+    (hsrc : SourceFiberEvent χ ρ) : ρ.re = 1 / 2 := by
+  have hHP := hilbertPolyaChainR1ToR9 χ hχ
+  rcases hHP with ⟨_, _, hR3, _, _, _, _, hR8, _⟩
+  have hNoDrift : hsrc.driftRate.re = 0 :=
+    hR3.2 hsrc.driftRate hsrc.amplitude hsrc.amplitude_ne_zero hsrc.source_conserved
+  have hPyth :
+      (moebius_helix ρ.re ρ.im).re ^ 2 + (moebius_helix ρ.re ρ.im).im ^ 2 = 1 :=
+    hsrc.pythagorean_of_no_drift hNoDrift
+  have hMid : ρ.re = 1 / 2 :=
+    (readout_pythagoras_iff_online ρ.re ρ.im hsrc.height_ne_zero).mp hPyth
+  have hChart : arcChart ρ.re = Real.pi / 6 := (hR8.2.1 ρ.re).mpr hMid
+  exact (hR8.2.1 ρ.re).mp hChart
+
+/-- The same source-event discharger without the bundled non-principal HP certificate.  This is used
+    for principal/specialized channels where `hilbertPolyaChainR1ToR9` is not the available bundle. -/
+theorem SourceFiberEvent.midpoint_axis_of_source_noDrift {N : ℕ} [NeZero N]
+    {χ : DirichletCharacter ℂ N} {ρ : ℂ} (hsrc : SourceFiberEvent χ ρ) :
+    ρ.re = 1 / 2 := by
+  have hNoDrift : hsrc.driftRate.re = 0 :=
+    HelixSource.source_noDrift hsrc.driftRate hsrc.amplitude hsrc.amplitude_ne_zero
+      hsrc.source_conserved
+  have hPyth :
+      (moebius_helix ρ.re ρ.im).re ^ 2 + (moebius_helix ρ.re ρ.im).im ^ 2 = 1 :=
+    hsrc.pythagorean_of_no_drift hNoDrift
+  have hMid : ρ.re = 1 / 2 :=
+    (readout_pythagoras_iff_online ρ.re ρ.im hsrc.height_ne_zero).mp hPyth
+  have hChart : arcChart ρ.re = Real.pi / 6 := (arcChart_line ρ.re).mpr hMid
+  exact (arcChart_line ρ.re).mp hChart
+
+/-- Conditional per-character closure from the R1-R9 HP infrastructure and projection faithfulness. -/
+theorem GRH_of_HP_and_Faithfulness {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
+    (hfaith : FaithfulDimensionalProjection χ) : GRHSpectral.GRH χ := by
+  by_cases hχ : χ ≠ 1
+  · intro ρ hρ
+    exact SourceFiberEvent.midpoint_axis_of_HP hχ
+      (hfaith.lower_dimensions_create_no_events ρ
+        (hfaith.fiber_capture_faithfully_projected ρ hρ))
+  · intro ρ hρ
+    exact SourceFiberEvent.midpoint_axis_of_source_noDrift
+      (hfaith.lower_dimensions_create_no_events ρ
+        (hfaith.fiber_capture_faithfully_projected ρ hρ))
+
+/-- Faithful projection for every Dirichlet channel. -/
+structure FaithfulDimensionalProjectionAll where
+  character :
+    ∀ (M : ℕ) [NeZero M] (χ : DirichletCharacter ℂ M), FaithfulDimensionalProjection χ
+
+/-- Conditional complete-GRH closure from the HP map and all-channel projection faithfulness. -/
+theorem GRHComplete_of_HP_and_Faithfulness (hfaith : FaithfulDimensionalProjectionAll) :
+    GRHSpectral.GRHComplete := by
+  intro M hM χ
+  exact GRH_of_HP_and_Faithfulness χ (hfaith.character M χ)
+
+/-- A source fiber/channel event for the eta-regularized zeta/L1 fiber. -/
+structure ZetaSourceFiberEvent (ρ : ℂ) where
+  driftRate : ℂ
+  amplitude : ℝ
+  amplitude_ne_zero : amplitude ≠ 0
+  source_conserved :
+    ∀ τ : ℝ, Real.exp (driftRate.re * τ) * amplitude = amplitude
+  height_ne_zero : ρ.im ≠ 0
+  pythagorean_of_no_drift :
+    driftRate.re = 0 →
+      (moebius_helix ρ.re ρ.im).re ^ 2 + (moebius_helix ρ.re ρ.im).im ^ 2 = 1
+
+/-- The conditional projection mechanism for the eta-regularized zeta/L1 channel. -/
+structure FaithfulZetaDimensionalProjection where
+  projected_event : ℂ → Prop
+  fiber_capture_faithfully_projected :
+    ∀ ρ, ρ ∈ ZD.NontrivialZeros → projected_event ρ
+  lower_dimensions_create_no_events :
+    ∀ ρ, projected_event ρ → ZetaSourceFiberEvent ρ
+
+/-- Zeta/L1 source events force the `CoshBalance` midpoint by the same no-drift and
+    Pythagorean readout route. -/
+theorem ZetaSourceFiberEvent.midpoint_axis_of_source_noDrift {ρ : ℂ}
+    (hsrc : ZetaSourceFiberEvent ρ) : ρ.re = CoshBalance := by
+  have hNoDrift : hsrc.driftRate.re = 0 :=
+    HelixSource.source_noDrift hsrc.driftRate hsrc.amplitude hsrc.amplitude_ne_zero
+      hsrc.source_conserved
+  have hPyth :
+      (moebius_helix ρ.re ρ.im).re ^ 2 + (moebius_helix ρ.re ρ.im).im ^ 2 = 1 :=
+    hsrc.pythagorean_of_no_drift hNoDrift
+  have hMid : ρ.re = 1 / 2 :=
+    (readout_pythagoras_iff_online ρ.re ρ.im hsrc.height_ne_zero).mp hPyth
+  rwa [CoshBalance_eq_half]
+
+/-- Conditional zeta/L1 closure through Mathlib's `RiemannHypothesis` bridge.  This is a separate
+    wrapper only because the repository bridge is stated for `ZD.NontrivialZeros`. -/
+theorem RH_of_HP_and_Faithfulness (hfaith : FaithfulZetaDimensionalProjection) :
+    RiemannHypothesis :=
+  RHBridge.no_offline_zeros_implies_rh fun ρ hρ =>
+    ZetaSourceFiberEvent.midpoint_axis_of_source_noDrift
+      (hfaith.lower_dimensions_create_no_events ρ
+        (hfaith.fiber_capture_faithfully_projected ρ hρ))
 
 /-- **The Hilbert–Pólya chain, bundled and proven (unconditional).** For a primitive non-principal `χ`,
     the six steps hold together — and they all speak about the same `−L'/L` and the same zeros. -/

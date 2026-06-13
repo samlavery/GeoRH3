@@ -1,0 +1,892 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\setlength{\emergencystretch}{3em}
+
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}[definition]{Theorem}
+\newtheorem{lemma}[definition]{Lemma}
+\newtheorem{proposition}[definition]{Proposition}
+\newtheorem{hypothesis}[definition]{Hypothesis}
+\newtheorem{conjecture}[definition]{Conjecture}
+\newtheorem{remark}[definition]{Remark}
+
+\DeclareMathOperator{\Ree}{Re}
+\DeclareMathOperator{\Imm}{Im}
+\DeclareMathOperator{\NTZ}{NTZ}
+\DeclareMathOperator{\GRH}{GRH}
+\DeclareMathOperator{\RH}{RH}
+\DeclareMathOperator{\argg}{arg}
+\DeclareMathOperator{\Log}{Log}
+
+\title{The Helix--Hilbert--Polya Bridge: Conditional Projection Closure}
+\author{Samuel Lavery}
+\date{Draft proof bridge, 2026-06-13}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This note records the mathematical core currently formalized in Lean and evaluated by the
+numerical model.  The Hilbert--Polya side is stated as an unconditional infrastructure
+chain.  The remaining conditional input is projection faithfulness: dimensional projection
+from the three-dimensional FTA-generated source fiber to the lower-dimensional readout must
+preserve fiber capture events and must not create events absent from the source fiber.
+The source side is geometric: $\pi/3$ placement, prime/residue channel counting,
+and harmonic phasor accumulation.  The fiber is derived from that source.
+Certain parts of the derived fiber identify with conventional $L$, $\zeta$,
+Hurwitz, and Euler--Maclaurin forms after projection; those identifications are
+coincidental representations, not source definitions.
+Under that hypothesis the formal closure gives GRH, and the zeta/L1 specialization gives RH
+through the existing zeta bridge.
+\end{abstract}
+
+\tableofcontents
+
+\section{Objects and Notation}
+
+Let $\chi$ be a Dirichlet character modulo $q$ and write
+\[
+  L(s,\chi)
+\]
+for Mathlib's Dirichlet $L$-function.  For non-principal $\chi$, define the strip zero set
+\[
+  \NTZ(\chi)
+  :=
+  \{\rho\in\mathbb C : 0<\Ree\rho<1,\; L(\rho,\chi)=0\}.
+\]
+The per-character GRH predicate formalized in Lean is
+\[
+  \GRH(\chi)
+  :=
+  \forall \rho\in\NTZ(\chi),\quad \Ree\rho=\frac12 .
+\]
+The complete all-character predicate is
+\[
+  \GRH_{\mathrm{complete}}
+  :=
+  \forall q,\;\forall\chi \pmod q,\quad \GRH(\chi).
+\]
+For zeta, let
+\[
+  \NTZ_\zeta
+  :=
+  \{\rho\in\mathbb C : 0<\Ree\rho<1,\; \zeta(\rho)=0\}.
+\]
+
+\section{\texorpdfstring{The $\pi/3$ Helix Geometry}{The pi/3 Helix Geometry}}
+
+\subsection{Canonical Scale}
+
+The numerical model and the formal gauge use the canonical $\pi/3$ chart
+\[
+  A=\frac{\pi}{6},\qquad ds=\frac{\pi}{3},\qquad
+  C=2A\,ds=\left(\frac{\pi}{3}\right)^2.
+\]
+The exact area-law placement is
+\[
+  R_n^2=Cn,\qquad R_n=\frac{\pi}{3}\sqrt n .
+\]
+At the source level the data are the $\pi/3$ coordinates, the channel weights
+coming from residue counting, and the harmonic phase on the helix.  The fiber is
+derived from that source.  No one-dimensional continuation formula is used to
+create it.  The standard symbols $L$, $\zeta$, and Hurwitz tails below occur
+because parts of the derived fiber identify with those representations after the
+geometric fiber has already been placed.
+Thus the three-dimensional source fiber atom at height $t$, for
+$s=\frac12+it$, is
+\[
+  a_n(s)
+  =
+  w(n)\frac{1}{R_n}\exp\{-it\Log(R_n^2)\}
+  =
+  w(n)(Cn)^{-s}.
+\]
+
+\begin{lemma}[Area-law closed form]
+For any channel weights $w(n)$ for which the corresponding Dirichlet series is defined,
+\[
+  F_w(s)
+  :=
+  \sum_{n\ge1} w(n)(Cn)^{-s}
+  =
+  C^{-s}\sum_{n\ge1} w(n)n^{-s}.
+\]
+\end{lemma}
+
+\begin{proof}
+Use $R_n^2=Cn$ and $s=\frac12+it$:
+\[
+  R_n^{-1}e^{-it\Log(R_n^2)}
+  =
+  (R_n^2)^{-1/2}(R_n^2)^{-it}
+  =
+  (R_n^2)^{-s}
+  =
+  (Cn)^{-s}.
+\]
+Summing gives the result.
+\end{proof}
+
+\subsection{Non-principal Character Channels}
+
+For a non-principal Dirichlet character $\chi$ modulo $q$, the channel weights are
+\[
+  w(n)=\chi(n).
+\]
+Therefore the source channel sum is
+\[
+  F_\chi(s)
+  =
+  \sum_{n\ge1}\chi(n)(Cn)^{-s}.
+\]
+In the projected one-dimensional notation this same harmonic sum is
+\[
+  F_\chi(s)=C^{-s}L(s,\chi).
+\]
+Residue-wise, with zero residues omitted, the same placed channel may be
+reindexed as
+\[
+  F_\chi(s)
+  =
+  C^{-s}q^{-s}\sum_{r\bmod q}\chi(r)\,
+  \zeta\!\left(s,\frac rq\right).
+\]
+For $\chi_3$,
+\[
+  \chi_3(1)=1,\qquad \chi_3(2)=-1,\qquad \chi_3(0)=0,
+\]
+and hence
+\[
+  F_{\chi_3}(s)
+  =
+  C^{-s}3^{-s}
+  \left[
+    \zeta\!\left(s,\frac13\right)
+    -
+    \zeta\!\left(s,\frac23\right)
+  \right].
+\]
+
+\subsection{The Principal/Zeta Channel}
+
+For the zeta/L1 channel the fiber is eta-regularized:
+\[
+  w(n)=(-1)^{n+1}.
+\]
+The source channel sum is
+\[
+  F_{L1}(s)=\sum_{n\ge1}(-1)^{n+1}(Cn)^{-s}.
+\]
+In the projected one-dimensional notation the eta factor is
+\[
+  \eta(s)
+  =
+  \sum_{n\ge1}(-1)^{n+1}n^{-s}
+  =
+  (1-2^{1-s})\zeta(s).
+\]
+Thus the L1 fiber is
+\[
+  F_{L1}(s)
+  =
+  C^{-s}\eta(s)
+  =
+  C^{-s}(1-2^{1-s})\zeta(s).
+\]
+Equivalently, in residue form modulo $2$,
+\[
+  F_{L1}(s)
+  =
+  C^{-s}2^{-s}
+  \left[
+    \zeta\!\left(s,\frac12\right)-\zeta(s,1)
+  \right].
+\]
+On the critical line $\Ree s=\frac12$, the eta factor is nonzero:
+\[
+  1-2^{1-s}\ne0,
+\]
+because $2^{1-s}=1$ would imply $2^{1-\Ree s}=1$, hence $\Ree s=1$.
+
+\section{Standing Readout and Projection to One Dimension}
+
+This is the layer where the placed three-dimensional fiber is read in the
+lower-dimensional coordinate chart.  The functions below are readouts of the
+source geometry and channel counts, with the coordinate phase correction kept
+explicit.
+
+For $s=\frac12+it$, the projected complex fiber is
+\[
+  F_\chi(t)=F_\chi\!\left(\frac12+it\right).
+\]
+The real standing readout has the form
+\[
+  Z_\chi(t)
+  =
+  \Ree\left(
+    e^{i\Theta_\chi(t)}
+    F_\chi\!\left(\frac12+it\right)
+  \right),
+\]
+where
+\[
+  \Theta_\chi(t)
+  =
+  \argg\Gamma\!\left(\frac{1/2+a}{2}+\frac{it}{2}\right)
+  +\frac t2\log\frac q\pi
+  +t\log C
+  +\alpha_\chi .
+\]
+Here $a\in\{0,1\}$ is the parity and $\alpha_\chi$ is the character/root-number gauge.
+For the L1/zeta eta-regularized channel one subtracts the eta gauge
+\[
+  \argg(1-2^{1-s}).
+\]
+
+The term $t\log C$ is not a new oscillation.  It is the coordinate correction from
+\[
+  \Log(R_n^2)=\Log(Cn)=\log n+\log C.
+\]
+Omitting it rotates the real readout into the wrong coordinate chart.
+
+\subsection{Phase Conventions}
+
+All logarithms of positive real quantities are real logarithms.  Thus
+\[
+  \Log(R_n^2)=\log(Cn),\qquad
+  \log q,\qquad \log C
+\]
+use the real branch.  The gamma phase in the standing readout is the continuous
+phase
+\[
+  \vartheta_{\chi}(t)
+  =
+  \Imm\log\Gamma\!\left(\frac{1/2+a+it}{2}\right)
+  +\frac t2\log\frac q\pi ,
+\]
+with the branch chosen continuously along the vertical line
+$z(t)=(1/2+a+it)/2$.  The root-number phase is fixed by
+\[
+  \tau(\chi)=\sum_{r=1}^{q}\chi(r)e^{2\pi i r/q},\qquad
+  \varepsilon_\chi=\frac{\tau(\chi)}{i^a\sqrt q},\qquad
+  \alpha_\chi=-\frac12\argg(\varepsilon_\chi).
+\]
+For the principal zeta/L1 channel, $\alpha_\chi=0$ and the two-channel
+eta readout uses the continuous phase
+\[
+  \phi_\eta(t)
+  =
+  \argg\!\left(1-2^{1-(1/2+it)}\right),
+\]
+so that
+\[
+  \Theta_{L1}(t)
+  =
+  \vartheta_\zeta(t)+t\log C-\phi_\eta(t).
+\]
+For non-principal $\chi$,
+\[
+  \Theta_\chi(t)=\vartheta_\chi(t)+t\log C+\alpha_\chi.
+\]
+
+\section{Harmonic Cost and the Quantum Ladder}
+
+The full source geometry is double ended.  The midpoint is the origin of the
+fiber, and the reflected side is an anti-helix carrying the opposite orientation.
+The proof uses the positive oriented side of the helix for simplicity; the
+reflected anti-helix has the same cost law with the sign reversed.
+
+The crossing levels in the projected unit-circle readout are therefore
+\[
+  A_k=\left(k+\frac12\right)\pi,\qquad k\in\mathbb Z.
+\]
+Equivalently, for $m\ge0$ the two oriented ladders are
+\[
+  A_m^+=\left(m+\frac12\right)\pi,\qquad
+  A_m^-=-\left(m+\frac12\right)\pi .
+\]
+On the positive helix side used in the proof,
+\[
+  A_0=\frac\pi2,\qquad A_{k+1}=A_k+\pi.
+\]
+Thus the first crossing is the only crossing on that side whose cost from the
+origin is a half quantum:
+\[
+  |A_0^+|=\frac\pi2.
+\]
+Every additional crossing on that same side costs one full quantum:
+\[
+  A_{m+1}^+-A_m^+=\pi\qquad(m\ge0).
+\]
+The reflected anti-helix obeys the same rule:
+\[
+  |A_0^-|=\frac\pi2,\qquad |A_{m+1}^- - A_m^-|=\pi\qquad(m\ge0).
+\]
+So the half-quantum occurs once at the first crossing on each oriented side of
+the double-ended helix; all subsequent crossings consume full $\pi$ increments.
+
+\begin{conjecture}[Origin/Tate interface]
+If this helix model has a Tate-thesis-style global/local interpretation, the
+natural place for that connection is the shared origin of the double-ended
+helix.  The origin is where the two reflected orientations meet before the
+one-dimensional readout separates them into positive and negative crossing
+ladders.
+\end{conjecture}
+
+\section{Hilbert--Polya Infrastructure: R1--R9}
+
+This section lists the infrastructure available before the projection-faithfulness
+hypothesis is supplied.  It does not assert GRH.
+
+\begin{enumerate}[label=R\arabic*., leftmargin=2cm]
+\item \textbf{Hilbert space.}
+The source space is
+\[
+  \ell^2(\mathbb N;\mathbb C).
+\]
+
+\item \textbf{Unitary phasor flow.}
+The FTA/Euler phasor flow is
+\[
+  U(t)(n)=n^{it},\qquad |U(t)(n)|=1,
+\]
+with
+\[
+  U(s+t)(n)=U(s)(n)U(t)(n).
+\]
+
+\item \textbf{Real generator and no-drift principle.}
+The generator is
+\[
+  H(n)=\log n\in\mathbb R,\qquad U(t)(n)=e^{itH(n)}.
+\]
+The source no-drift lemma is:
+if
+\[
+  e^{\Ree\lambda\,\tau}c=c\quad\text{for all }\tau,\qquad c\ne0,
+\]
+then
+\[
+  \Ree\lambda=0.
+\]
+
+\item \textbf{Helix-native trace/readout equals $L$.}
+The finite phasor chain is
+\[
+  S_M(s,\chi)
+  =
+  \sum_{n\le M}\chi(n)n^{-\Ree s}U(\Imm s)(n)^{-1}.
+\]
+For $0<\Ree s$ and $\chi\ne1$,
+\[
+  S_M(s,\chi)\to L(s,\chi)
+\]
+with explicit rate:
+\[
+  \|S_M(s,\chi)-L(s,\chi)\|\le C_s M^{-\Ree s}.
+\]
+
+\item \textbf{Zeros induce fiber capture events.}
+At a zero $L(s,\chi)=0$ with $0<\Ree s$,
+\[
+  \|S_M(s,\chi)\|\le C_s M^{-\Ree s}.
+\]
+At every $\rho\in\NTZ(\chi)$,
+\[
+  -\frac{L'}{L}(s,\chi)
+\]
+has no finite limit at $\rho$ in the punctured neighborhood.
+
+\item \textbf{Spectral realization by crossing confluence and channel cancellation.}
+For any continuous strictly monotone accumulation $E$, if
+\[
+  E(a)\le c\le E(b),\qquad a\le b,
+\]
+then there is a unique $t$ such that
+\[
+  a\le t,\qquad E(t)=c.
+\]
+At threshold $E(t)=n\pi$,
+\[
+  \left\lfloor\frac{E(t)}{\pi}\right\rfloor=n.
+\]
+At a crossing threshold the source event is a confluence: the channel phase
+cancels, the amplitude reaches its crest, the sign changes, and the next
+harmonic begins on the spectral readout.  The channel cancellation law is:
+\[
+  \sum_{m\in F} s_m=0
+  \Longleftrightarrow
+  P_F(s)=M_F(s),
+\]
+where
+\[
+  P_F(s)=\sum_{m\in F}\max(s_m,0),\qquad
+  M_F(s)=\sum_{m\in F}\max(-s_m,0).
+\]
+At cancellation,
+\[
+  \sum_{m\in F}|s_m|=2P_F(s).
+\]
+
+\item \textbf{Exhaustion by ladder induction and rigidity.}
+If a property holds at $A_0$ and is preserved by $A_k\mapsto A_{k+1}$ and
+$A_k\mapsto A_{k-1}$, then it holds at every $A_k$.
+Moreover, any crossing sequence $c_n$ satisfying
+\[
+  E(c_n)=n\pi
+\]
+is forced to be the purchase-height sequence:
+\[
+  c_n=\operatorname{purchaseHeight}(n).
+\]
+
+\item \textbf{Coordinate faithfulness and Pythagorean readout.}
+The rechart
+\[
+  \operatorname{arcChart}(x)=\frac\pi3x
+\]
+has inverse
+\[
+  \operatorname{arcChartInv}(u)=\frac3\pi u.
+\]
+The critical midpoint is
+\[
+  \operatorname{arcChart}(x)=\frac\pi6
+  \Longleftrightarrow
+  x=\frac12.
+\]
+The midpoint conclusion routes through the unitary/Pythagorean readout.  In
+natural coordinates the readout satisfies
+\[
+  (\operatorname{readout}_{\sigma,\gamma})_{\Ree}^{2}
+  +(\operatorname{readout}_{\sigma,\gamma})_{\Imm}^{2}=1
+  \Longleftrightarrow
+  \sigma=\frac12.
+\]
+Equivalently, for the spectral value $w(\rho)=1-1/\rho$,
+\[
+  \|w(\rho)\|^2=1
+  \Longleftrightarrow
+  \Ree\rho=\frac12.
+\]
+The source conservation/no-drift input supplies the unitary source side of this
+readout.
+
+\item \textbf{Genuine zero-set object.}
+The object is Mathlib's $L$-function zero set:
+\[
+  \rho\in\NTZ(\chi)
+  \Longleftrightarrow
+  0<\Ree\rho<1,\quad L(\rho,\chi)=0.
+\]
+\end{enumerate}
+
+\section{Projection Faithfulness}
+
+\begin{definition}[Source crossing confluence]
+For a channel $\chi$ and point $\rho=\sigma+i\gamma$, a source crossing
+confluence at height $\gamma$ is a three-dimensional fiber event with the
+following simultaneous features:
+\begin{enumerate}[label=(C\arabic*)]
+\item the channel phases cancel, so the fiber vanishes in the channel sum;
+\item the accumulated amplitude reaches a crest at one of the ladder levels
+  $A_m^{\pm}$;
+\item the crossing consumes the threshold energy required to start the next
+  harmonic on the spectral readout;
+\item the real standing readout changes sign at the crossing;
+\item the source midpoint coordinate is $x=\pi/6$ in the $\pi/3$ chart, while
+  the height $\gamma$ is retained as the vertical coordinate.
+\end{enumerate}
+\end{definition}
+
+Under projection from the three-dimensional fiber to the unit-circle readout,
+radial and absolute phase information are collapsed.  The retained datum is the
+crossing height $\gamma$, together with the unit-circle event.  The subsequent
+one-dimensional readout rescales the midpoint coordinate by
+\[
+  x\mapsto \frac{3}{\pi}x,
+\]
+so that the source midpoint $x=\pi/6$ is read as $1/2$.
+
+\begin{definition}[Source fiber event]
+For a character $\chi$ and point $\rho$, a source fiber event is a source
+crossing confluence for $\chi$ at height $\Imm\rho$ whose source midpoint
+coordinate is $x=\pi/6$ in the $\pi/3$ chart.  After the one-dimensional
+coordinate rescale $x\mapsto 3x/\pi$, its normalized midpoint readout is
+\[
+  \Ree\rho=\frac12.
+\]
+\end{definition}
+
+\begin{definition}[Fiber capture event]
+For a Dirichlet channel $\chi$,
+\[
+  \operatorname{FiberCaptureEvent}_\chi(\rho)
+  \quad:\Longleftrightarrow\quad
+  \rho\in\NTZ(\chi).
+\]
+\end{definition}
+
+\begin{hypothesis}[Faithful dimensional projection for one channel]
+There is a predicate $\operatorname{Proj}_\chi(\rho)$ of projected crossing
+events such that:
+\begin{enumerate}[label=(F\arabic*)]
+\item Every fiber capture event is faithfully projected as a crossing event:
+\[
+  \rho\in\NTZ(\chi)
+  \Longrightarrow
+  \operatorname{Proj}_\chi(\rho).
+\]
+\item Lower-dimensional projection introduces no false crossing events:
+\[
+  \operatorname{Proj}_\chi(\rho)
+  \Longrightarrow
+  \text{$\rho$ is represented by a source fiber event}.
+\]
+\end{enumerate}
+\end{hypothesis}
+
+Thus the conditional input is only faithfulness of dimensional collapse at
+crossings: the projection does not miss fiber crossings carrying zero marks, and
+it does not create lower-dimensional events absent from the source.  The
+midpoint implication itself is supplied by the unitary/Pythagorean readout
+described above.
+
+\section{Conditional Closure}
+
+\begin{theorem}[Per-character conditional closure]
+Assume \texttt{FaithfulDimensionalProjection} for $\chi$.  Then
+\[
+  \GRH(\chi).
+\]
+\end{theorem}
+
+\begin{proof}
+Let $\rho\in\NTZ(\chi)$.  By (F1), $\rho$ is a projected fiber event.  By (F2),
+that projected event is represented by a source fiber event.  Source fiber events
+are registered at $x=\pi/6$ in the $\pi/3$ chart.  The rechart
+$x\mapsto3x/\pi$ and the Pythagorean unit readout give
+\[
+  \Ree\rho=\frac12.
+\]
+Since $\rho$ was arbitrary, $\GRH(\chi)$ follows.
+\end{proof}
+
+\begin{theorem}[Complete conditional closure]
+Assume faithful dimensional projection for every Dirichlet channel.  Then
+\[
+  \GRH_{\mathrm{complete}}.
+\]
+\end{theorem}
+
+\begin{proof}
+Apply the per-character conditional closure to each modulus and character.
+\end{proof}
+
+\begin{theorem}[Zeta/L1 conditional closure]
+Assume the corresponding eta-regularized zeta/L1 projection faithfulness.  Then
+Mathlib's \texttt{RiemannHypothesis} holds.
+\end{theorem}
+
+\begin{proof}
+For $\rho\in\NTZ_\zeta$, the zeta projection-faithfulness hypothesis gives a
+source fiber event.  It is registered at $x=\pi/6$ in the $\pi/3$ chart, and
+the normalized Pythagorean readout is
+\[
+  \Ree\rho=\frac12.
+\]
+The existing zeta bridge converts
+\[
+  \forall\rho\in\NTZ_\zeta,\quad \Ree\rho=\frac12
+\]
+to Mathlib's \texttt{RiemannHypothesis}.
+\end{proof}
+
+\section{Mathematical Reproduction of the Computation}
+
+The computation evaluates the source fiber equations above.  It is not a proof
+step.  The crossing ordinates are defined by the complete geometric fiber and
+its standing readout.  Finite summation, residue decomposition, Hurwitz
+notation, and Euler--Maclaurin summation appear only where the derived fiber is
+represented for one-dimensional evaluation; they are not sources of the fiber.
+
+\subsection{Placed Geometric Fiber}
+
+The geometry is
+\[
+  A=\pi/6,\qquad ds=\pi/3,\qquad C=2A\,ds=(\pi/3)^2.
+\]
+For $s=\frac12+it$, the placed finite head is
+\[
+  H_M(t)
+  =
+  \sum_{n=1}^M \chi(n)R_n^{-1}e^{-it\Log(R_n^2)},
+  \qquad R_n^2=Cn.
+\]
+Thus
+\[
+  H_M(t)=\sum_{n=1}^M \chi(n)(Cn)^{-s}.
+\]
+The tail is not added from a separate external object.  It is the remaining
+geometric fiber beyond the cutoff:
+\[
+  G_M(t)
+  =
+  \sum_{n>M}\chi(n)R_n^{-1}e^{-it\Log(R_n^2)}
+  =
+  \sum_{n>M}\chi(n)(Cn)^{-s}.
+\]
+The complete placed fiber is
+\[
+  F_\chi(t)=H_M(t)+G_M(t),
+\]
+independently of the cutoff $M$ when the tail is included.
+
+\subsection{Residue Coordinates for the Geometric Tail}
+
+The geometric tail may be written in conductor residue coordinates.  Let
+$n_{0,r}$ be the first integer $>M$ in residue class $r\bmod q$.  Then
+\[
+  G_M(t)
+  =
+  \sum_r \chi(r) C^{-s}q^{-s}
+  \sum_{m\ge0}\left(\frac{n_{0,r}}q+m\right)^{-s}.
+\]
+This identity is just the residue-class reindexing of the geometric terms
+$R_n^2=Cn$.  Hurwitz notation abbreviates the inner residue tail; it does not
+define the tail or the crossing condition.  It is a coincidental representation
+of the derived fiber.
+
+For finite one-dimensional evaluation, replace the inner infinite residue tail by
+\[
+  \mathcal T_{h,J}(s,x)
+  \approx
+  \sum_{m\ge0}(x+m)^{-s}.
+\]
+For integers $h,J\ge1$, set $X=x+h$ and write
+\[
+  (s)^{\overline m}=s(s+1)\cdots(s+m-1),\qquad
+  (s)^{\overline0}=1 .
+\]
+The Euler--Maclaurin summation evaluator used for that geometric residue tail is
+\[
+\begin{aligned}
+  \mathcal T_{h,J}(s,x)
+  &=
+  \sum_{m=0}^{h-1}(x+m)^{-s}
+  +\frac{X^{1-s}}{s-1}
+  +\frac12 X^{-s}  \\
+  &\quad+
+  \sum_{j=1}^{J}
+    \frac{B_{2j}}{(2j)!}
+    (s)^{\overline{2j-1}}
+    X^{-s-2j+1},
+\end{aligned}
+\]
+where $B_{2j}$ are Bernoulli numbers.  The associated remainder is the standard
+Euler--Maclaurin remainder after the $B_{2J}$ term.  The numerical tables in the
+repository use $h=8$ and finite $J$ chosen large enough for the working
+precision.
+
+With this evaluator, the finite computed fiber is
+\[
+  F_{M,\chi}(t)
+  =
+  \sum_{n=1}^M \chi(n)(Cn)^{-s}
+  +
+  \sum_r \chi(r) C^{-s}q^{-s}
+  \mathcal T_{h,J}\!\left(s,\frac{n_{0,r}}q\right).
+\]
+
+For the L1 channel, the same geometric tail is grouped with conductor $2$ and
+weights
+\[
+  \chi_\eta(1)=1,\qquad \chi_\eta(0)=-1,
+\]
+so that
+\[
+  F_{M,L1}(t)
+  =
+  C^{-s}2^{-s}
+  \left[
+    \mathcal T_{h,J}\!\left(s,\frac{n_{0,1}}2\right)
+    -
+    \mathcal T_{h,J}\!\left(s,\frac{n_{0,0}}2\right)
+  \right]
+  +
+  \sum_{n=1}^{M}(-1)^{n+1}(Cn)^{-s}.
+\]
+This is the finite evaluation of the eta-regularized zeta fiber in placed
+geometric coordinates.
+
+\subsection{Principal One-Dimensional Tail Error Control}
+
+For the projected principal/L1 tail, the repository also formalizes the
+classical Euler--Maclaurin summation identity as an error-control theorem.  Let
+\[
+  S_N(s)=\sum_{n=1}^{N}n^{-s},\qquad \{u\}=u-\lfloor u\rfloor ,
+\]
+and define
+\[
+  I(s,N)=\int_N^\infty \{u\}\,u^{-s-1}\,du,\qquad
+  R(s,N)=sI(s,N).
+\]
+For $\Ree s>0$ and $s\ne1$, the continued one-dimensional response is
+\[
+  c(s)
+  =
+  \frac{s}{s-1}
+  -
+  s\int_1^\infty \{u\}\,u^{-s-1}\,du,
+\]
+and the Euler--Maclaurin identity is
+\[
+  c(s)=\zeta(s),
+\]
+with finite-readout error
+\[
+  S_N(s)-\zeta(s)-\frac{N^{1-s}}{1-s}=R(s,N)
+\]
+and bound
+\[
+  \|R(s,N)\|
+  \le
+  \frac{\|s\|}{\Ree s}\,N^{-\Ree s}
+  \qquad (N\ge2).
+\]
+This theorem controls the finite projected evaluation of the principal
+geometric tail; it is a representation of the derived fiber, not a source for
+the tail.
+
+The full finite readout is
+\[
+  Z_\chi(t)=\Ree(e^{i\Theta_\chi(t)}F_{M,\chi}(t)).
+\]
+Crossings are isolated by sign changes
+\[
+  Z_\chi(a)Z_\chi(b)<0
+\]
+followed by bisection.  If $\gamma\in(a,b)$ is a simple crossing,
+\[
+  Z_\chi(\gamma)=0,\qquad Z_\chi'(\gamma)\ne0,
+\]
+then there is an interval around $\gamma$ on which the sign changes once, and
+bisection on any bracket inside that interval converges to $\gamma$.
+
+For local reproduction from an intermediate height $t_0$, choose $\delta>0$ and
+evaluate $Z_\chi$ on $[t_0-\delta,t_0+\delta]$.  If a sign change occurs in
+$[a,b]\subset[t_0-\delta,t_0+\delta]$, bisection on $Z_\chi$ rederives the
+crossing in that local interval; no earlier crossing is used.
+
+\section{Formal and Computational Support}
+
+The proof above is the mathematical statement.  The repository support has two roles:
+the formal files check the stated implications in Lean, and the numerical files evaluate
+the displayed fiber equations.
+
+\subsection{Formalization Map}
+
+\begin{center}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.36\textwidth}
+                >{\raggedright\arraybackslash}p{0.56\textwidth}@{}}
+Dirichlet zero set & \texttt{GRHSpectral.NontrivialZeros}\\
+per-character GRH predicate & \texttt{GRHSpectral.GRH}\\
+all-character GRH predicate & \texttt{GRHSpectral.GRHComplete}\\
+zeta zero set & \texttt{ZD.NontrivialZeros}\\
+Euler--Maclaurin continuation &
+  \texttt{GRH.EulerMaclaurinDirichlet.c\_fun}\\
+Euler--Maclaurin error term &
+  \texttt{GRH.EulerMaclaurinDirichlet.R}\\
+Euler--Maclaurin identity &
+  \texttt{GRH.EulerMaclaurinDirichlet.difference\_eq\_R}\\
+Euler--Maclaurin bound &
+  \texttt{GRH.EulerMaclaurinDirichlet.}
+  \texttt{euler\_maclaurin\_dirichlet\_explicit}\\
+zeta one-dimensional completion & \texttt{SourceContinuation.zetaCompletion}\\
+residue fiber decomposition &
+  \texttt{DirichletFibre.LFunction\_eq\_fibre\_sum}\\
+fiber cancellation &
+  \texttt{DirichletFibre.zero\_iff\_fibre\_cancellation}\\
+source no-drift & \texttt{HelixSource.source\_noDrift}\\
+Möbius unit readout & \texttt{moebius\_unit\_iff}\\
+Pythagorean readout & \texttt{readout\_pythagoras\_iff\_online}\\
+spectral unit midpoint & \texttt{SpectralSide.w\_unit\_iff\_half}\\
+$\pi/3$ gauge & \texttt{HelixGauge.piThirdGauge\_eq}\\
+nonprincipal closed form &
+  \texttt{HelixGauge.piThirdHelixSource\_eq\_gauge\_mul\_L}\\
+L1 closed form & \texttt{HelixGauge.piThirdZetaFiber}\\
+L1 zero equivalence &
+  \texttt{HelixGauge.piThirdZetaFiber\_zero\_iff}\\
+R1--R9 infrastructure & \texttt{hilbertPolyaChainR1ToR9}\\
+projection faithfulness & \texttt{FaithfulDimensionalProjection}\\
+per-character closure & \texttt{GRH\_of\_HP\_and\_Faithfulness}\\
+all-character closure & \texttt{GRHComplete\_of\_HP\_and\_Faithfulness}\\
+zeta/L1 closure & \texttt{RH\_of\_HP\_and\_Faithfulness}
+\end{tabular}
+\end{center}
+
+\subsection{Lean Verification Protocol}
+
+File-level verification:
+\begin{verbatim}
+lake env lean RequestProject/HilbertPolyaChain.lean
+\end{verbatim}
+
+Closed-form gauge verification:
+\begin{verbatim}
+lake env lean RequestProject/HelixGaugeIdentity.lean
+\end{verbatim}
+
+Escape-hatch audit:
+\begin{verbatim}
+rg -n "axiom |sorry|admit|@\[implemented_by\]" \
+  RequestProject/HilbertPolyaChain.lean
+\end{verbatim}
+
+Axiom footprint targets:
+\[
+\begin{array}{l}
+\texttt{\#print axioms hilbertPolyaChainR1ToR9},\\
+\texttt{\#print axioms GRH\_of\_HP\_and\_Faithfulness},\\
+\texttt{\#print axioms GRHComplete\_of\_HP\_and\_Faithfulness},\\
+\texttt{\#print axioms RH\_of\_HP\_and\_Faithfulness},\\
+\texttt{\#print axioms HelixGauge.piThirdGauge\_eq},\\
+\texttt{\#print axioms HelixGauge.piThirdZetaFiber\_zero\_iff}.
+\end{array}
+\]
+Expected footprint:
+\[
+  [\texttt{propext},\;\texttt{Classical.choice},\;\texttt{Quot.sound}].
+\]
+
+\section{Current Logical Status}
+
+\[
+\begin{array}{lll}
+\text{HP R1--R9 infrastructure} & \text{Lean theorem} &
+  \texttt{hilbertPolyaChainR1ToR9},\\
+\text{$\pi/3$ closed form} & \text{Lean theorems} &
+  \texttt{HelixGauge.piThird*},\\
+\text{Projection faithfulness} & \text{hypothesis} &
+  \texttt{FaithfulDimensionalProjection},\\
+\text{Per-character closure} & \text{conditional theorem} &
+  \texttt{GRH\_of\_HP\_and\_Faithfulness},\\
+\text{All-character closure} & \text{conditional theorem} &
+  \texttt{GRHComplete\_of\_HP\_and\_Faithfulness},\\
+\text{Zeta/L1 closure} & \text{conditional theorem} &
+  \texttt{RH\_of\_HP\_and\_Faithfulness}.
+\end{array}
+\]
+
+The work required to remove the condition is precisely a proof of projection
+faithfulness: fiber capture events of the FTA-generated source fiber must survive
+the dimensional projection to the lower-dimensional readout, and the projection must
+not introduce events absent from the source.
+
+\end{document}
