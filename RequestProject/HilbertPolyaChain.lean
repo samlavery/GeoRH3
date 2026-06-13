@@ -2,56 +2,117 @@ import RequestProject.ArchimedeanGamma
 import RequestProject.HelixDualOperator
 import RequestProject.HelixFlowGenerator
 import RequestProject.HelixFlowResolvent
+import RequestProject.HelixFlowClosureLedger
+import RequestProject.HelixRoundTrip
 import RequestProject.HelixStandingWave
 import RequestProject.HelixProduction
 
 /-!
-# The Hilbert–Pólya chain — TEN steps, one bundle, all proven
+# The Hilbert–Pólya chain — R1–R9 infrastructure map
 
-Everything below is about the **same two objects**: the log-derivative `−L'/L` and the nontrivial
-zeros. The prime phasor flow's trace and the dual operator's resolvent trace are *the same* `−L'/L`;
-the zeros are *the same* set, read as that function's singularities / the dual operator's spectrum.
+This file records the chain infrastructure only.  It does not turn the chain into a final
+zero-location conclusion.  The explicit `hilbertPolyaChainR1ToR9` theorem below is the audit map:
+each component points to the module that carries that step.
 
-```
-1. helix Hilbert space            ℓ²(ℕ) = lp (ℕ → ℂ) 2                       — CompleteSpace
-2. FTA/Euler phasor dynamics      U(t)(n) = n^{it} ∈ Circle, U(s+t)=U(s)U(t) — unitary flow
-   = a unitary flow
-3. its self-adjoint generator     U(t) = e^{itH},  H(n) = log n ∈ ℝ          — phasorFlow_eq_exp, gen_real
-4. the trace readout / spectral   −L'/L  =  the flow's von Mangoldt trace     — flowVonMangoldtTrace_eq…
-   determinant is −L'/L                  =  Σ_ρ mult_ρ·(1/(s−ρ)+1/ρ)         — dualResolventTrace_eq…
-5. zeros are spectral events      every nontrivial zero is a pole of −L'/L    — resonates_at_zeros
-6. a self-adjoint spectrum        IsSelfAdjoint a ⟹ spectrum ⊆ ℝ             — im_eq_zero_of_mem_spectrum
-   is real
-```
+R1. Hilbert space: `lp (fun _ : ℕ => ℂ) 2`.
+R2. Earned unitarity: `HelixFlowUnitaryGroup`.
+R3. Reality/no-drift forcing: `HelixSourceFlow` plus the real generator in `HelixFlowGenerator`.
+R4. Trace = L, helix-native: `HelixFlowClosureLedger` and `DirichletClosureLedger`.
+R5. Zeros are spectral events: `HelixFlowClosureLedger` and `EnergyBalance`.
+R6. Spectral realization: threshold crossing + bucket rendezvous + quantum ladder.
+R7. Exhaustion: `ladder_induction` and `Accumulation.ladder_rigidity`.
+R8. Faithfulness: exact `π/3` rechart plus the intrinsic closure ledger.
+R9. Genuine object: `GRHSpectral.NontrivialZeros` is Mathlib's `LFunction` zero set in the strip.
 
-`hilbertPolyaChain` bundles all six, **unconditionally** (primitive non-principal `χ`), kernel-clean.
-
-**The complete chain (`hilbertPolyaChainComplete`, steps 1–10).** The original six end at the
-abstract reality principle. Steps 7–10 (the purchase model, `HelixProduction` Part 20) supply the
-working form: every accumulation yields a REAL, strictly ordered ladder of purchase heights with
-the budget met exactly (7), the staircase `⌊E/π⌋` reads it rung-for-rung (8), the regularized
-resolvent over any such ladder cannot resonate off the real axis (9), and every nontrivial zero
-is a PAID spectral event — simple pole, residue = multiplicity ≥ 1 (10). All ten unconditional,
-kernel-clean. `grandTransportChain` adds the pointwise transport beams of `HelixProduction`
-Parts 21–23; `weldArcs` bundles the standing-wave weld arcs; the Form B bricks at the end of
-this file put the prime-side and zero-side traces in one identity on the half-plane
-(`flowDualTraceMeeting`) and continue the prime trace into the strip
-(`primeTraceContinuationIntoStrip`) — both σ-free.
-
-Supporting machinery, all kernel-clean, lives in: `HelixStandingWave` (the universal standing
-wave, the counters `nodeCountChar`/`boxCountChar`, the window theorems), `HelixProduction`
-(purchase model, census split, register product/trace), `HelixZeroFreeStep` (the unconditional
-corridor), `DirichletLHadamard`* (the Hadamard factorization and partial fraction).
-
-**The honest boundary.** Nothing in this file or the repo proves the census equality
-`boxCountChar = nodeCountChar` on every window; that equality is the program's open statement.
-Conditional closures from it are kernel-proven where the counters live: window certificates give
-`GRH χ` per character (`HelixStandingWave.grh_of_window_certificates_char`) and, for `ζ`,
-Mathlib's `RiemannHypothesis` (`HelixStandingWave.RH_of_certificates`). Every theorem in this
-file is unconditional.
+Older bundled theorems in this file are kept for downstream compatibility; the R1–R9 theorem is the
+preferred chain index.
 -/
 
 open Complex Filter Topology HelixFlow HelixFlowGenerator HelixFlowVonMangoldt HelixDualOperator
+
+/-- **R1–R9 chain map, no final zero-location conclusion.**  This theorem bundles the currently
+    preferred modules for each step without asserting the last inheritance step. -/
+theorem hilbertPolyaChainR1ToR9 {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
+    (hχ : χ ≠ 1) :
+    -- R1: Hilbert space.
+    CompleteSpace (lp (fun _ : ℕ => ℂ) 2) ∧
+    -- R2: earned unitary one-parameter flow.
+    ((HelixFlow.flowHom (Multiplicative.ofAdd 0) = 1) ∧
+      (∀ s t : ℝ, HelixFlow.flowHom (Multiplicative.ofAdd (s + t))
+        = HelixFlow.flowHom (Multiplicative.ofAdd s) * HelixFlow.flowHom (Multiplicative.ofAdd t)) ∧
+      (∀ t : ℝ, ∀ n : ℕ, ‖(phasorFlow t n : ℂ)‖ = 1) ∧
+      (∀ n : ℕ, Continuous (fun t : ℝ => (phasorFlow t n : ℂ)))) ∧
+    -- R3: real generator and sigma-free no-drift forcing.
+    ((∀ (t : ℝ) (n : ℕ),
+        (phasorFlow t n : ℂ) = Complex.exp (Complex.I * ((t : ℂ) * (gen n : ℂ))) ∧
+          (gen n : ℂ).im = 0) ∧
+      (∀ (lam : ℂ) (c : ℝ), c ≠ 0 →
+        (∀ τ : ℝ, Real.exp (lam.re * τ) * c = c) → lam.re = 0)) ∧
+    -- R4: helix-native trace/chain readout reaches `L` on `0 < Re s`.
+    ((∀ s : ℂ, 0 < s.re →
+        ∃ C : ℝ, 0 < C ∧ ∀ M : ℕ, 1 ≤ M →
+          ‖HelixFlowClosureLedger.flowPartialSum χ s M
+              - DirichletCharacter.LFunction χ s‖ ≤ C * (M : ℝ) ^ (-s.re)) ∧
+      (∀ s : ℂ, 0 < s.re →
+        DirichletClosureLedger.cChar χ s = DirichletCharacter.LFunction χ s)) ∧
+    -- R5: at a genuine zero, the phasor chain cancels and the log-derivative has a pole.
+    ((∀ s : ℂ, 0 < s.re → DirichletCharacter.LFunction χ s = 0 →
+        ∃ C : ℝ, 0 < C ∧ ∀ M : ℕ, 1 ≤ M →
+          ‖HelixFlowClosureLedger.flowPartialSum χ s M‖ ≤ C * (M : ℝ) ^ (-s.re)) ∧
+      (∀ ρ ∈ GRHSpectral.NontrivialZeros χ,
+        ¬ ∃ L, Tendsto (fun s => -logDeriv (DirichletCharacter.LFunction χ) s)
+          (𝓝[≠] ρ) (𝓝 L))) ∧
+    -- R6: threshold crossing, quantum ladder, and bucket rendezvous/payment.
+    ((∀ {E : ℝ → ℝ}, Continuous E → StrictMono E →
+        ∀ {a c b : ℝ}, E a ≤ c → a ≤ b → c ≤ E b →
+          ∃! t : ℝ, a ≤ t ∧ E t = c) ∧
+      (∀ {E : ℝ → ℝ} {t : ℝ} {n : ℤ},
+        E t = n * Real.pi → HelixProduction.harmonicCount E t = n) ∧
+      (∀ k : ℤ, quantumLevelZ (k + 1) = quantumLevelZ k + Real.pi) ∧
+      (quantumLevelZ 0 = Real.pi / 2) ∧
+      (∀ F : Finset ℕ, ∀ s : ℕ → ℝ,
+        (∑ n ∈ F, s n = 0 ↔ plusBucket F s = minusBucket F s) ∧
+        (∑ n ∈ F, s n = 0 → ∑ n ∈ F, |s n| = 2 * plusBucket F s))) ∧
+    -- R7: ladder exhaustion by induction and rigidity of any conversion-law crossing sequence.
+    ((∀ (P : ℝ → Prop), P (quantumLevelZ 0) →
+        (∀ k : ℤ, P (quantumLevelZ k) → P (quantumLevelZ (k + 1))) →
+        (∀ k : ℤ, P (quantumLevelZ k) → P (quantumLevelZ (k - 1))) →
+        ∀ k : ℤ, P (quantumLevelZ k)) ∧
+      (∀ A : HelixProduction.Accumulation, ∀ c : ℕ → ℝ,
+        (∀ n, 0 ≤ c n) → (∀ n, A.E (c n) = n * Real.pi) →
+          ∀ n, c n = A.purchaseHeight n)) ∧
+    -- R8: faithful `π/3` coordinate chart plus intrinsic zero ledger.
+    ((Function.LeftInverse arcChartInv arcChart ∧ Function.RightInverse arcChartInv arcChart) ∧
+      (∀ x : ℝ, arcChart x = Real.pi / 6 ↔ x = 1 / 2) ∧
+      (∀ s : ℂ, 0 < s.re → DirichletCharacter.LFunction χ s = 0 →
+        ∃ C : ℝ, 0 < C ∧ ∀ M : ℕ, 1 ≤ M →
+          ‖HelixFlowClosureLedger.flowPartialSum χ s M * (M : ℂ) ^ s
+              - (DirichletClosureLedger.Asum χ M - DirichletCharacter.LFunction χ 0)‖
+            ≤ C * (M : ℝ) ^ (-(1 : ℝ)))) ∧
+    -- R9: genuine object, by definition.
+    (∀ ρ : ℂ,
+      ρ ∈ GRHSpectral.NontrivialZeros χ ↔
+        0 < ρ.re ∧ ρ.re < 1 ∧ DirichletCharacter.LFunction χ ρ = 0) := by
+  refine ⟨inferInstance, HelixFlow.isUnitaryOneParameterFlow, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact ⟨fun t n => ⟨phasorFlow_eq_exp t n, gen_real n⟩, HelixSource.source_noDrift⟩
+  · exact ⟨fun s hs => HelixFlowClosureLedger.flow_rate_bound χ hχ s hs,
+      fun s hs => DirichletClosureLedger.cChar_eq_LFunction χ hχ s hs⟩
+  · exact ⟨fun s hs hz => HelixFlowClosureLedger.flow_chain_vanishes_at_zero χ hχ s hs hz,
+      fun ρ hρ => EnergyBalance.resonates_at_zeros χ hρ⟩
+  · refine ⟨?_, ?_, quantumLevelZ_step, ?_, ?_⟩
+    · intro E hcont hmono a c b hac hab hcb
+      exact HelixProduction.existsUnique_threshold hcont hmono hac hab hcb
+    · intro E t n h
+      exact HelixProduction.harmonicCount_at_threshold h
+    · exact (quantumLevelZ_midpoint_straddle).2.1
+    · intro F s
+      exact ⟨vanishing_iff_rendezvous F s, fun h => price_at_rendezvous F s h⟩
+  · exact ⟨ladder_induction,
+      fun A c hc0 hcE n => HelixProduction.Accumulation.ladder_rigidity A c hc0 hcE n⟩
+  · exact ⟨arcChart_complete, arcChart_line,
+      fun s hs hz => HelixFlowClosureLedger.flow_closure_exact χ hχ s hs hz⟩
+  · intro ρ
+    rfl
 
 /-- **The Hilbert–Pólya chain, bundled and proven (unconditional).** For a primitive non-principal `χ`,
     the six steps hold together — and they all speak about the same `−L'/L` and the same zeros. -/

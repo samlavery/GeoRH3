@@ -275,7 +275,7 @@ class HelixFiber:
     """Finite 3D fiber in the canonical pi/3 coordinates, then projected to S^1."""
 
     def __init__(self, spec: CharSpec, n_integers: int = 4_000_000, area_exact: bool = True,
-                 use_tail: bool = True, tail_order: int = 8):
+                 use_tail: bool = True, tail_order: int = 24):
         import helix3d
         self.spec = spec
         self.use_tail = use_tail
@@ -298,7 +298,7 @@ class HelixFiber:
             "label": self.spec.label,
             "n_integers": int(self.helix.params.n_integers),
             "Cgeom": 2.0 * self.helix.params.A * self.helix.params.ds,
-            "tail": "Euler-Maclaurin residue tail" if self.use_tail else "finite head only",
+            "tail": "geometric Euler-Maclaurin tail from M+1" if self.use_tail else "finite head only",
             "crossing_costs": "pi/2, then pi per crossing",
             "circle_projection": "3D (x,y,z) -> (x+iy)/R",
             "fiber_phase": "exp(-i*t*log(R^2))",
@@ -345,8 +345,8 @@ class HelixFiber:
 
             F_r(s) = chi(r) * C^(-s) * q^(-s) * zeta(s, r/q).
 
-        The finite model uses the actual placed R_n in the first line; the closed form is the
-        residue-class readout of the projected area law.
+        The model generates with the placed head plus a geometric Euler-Maclaurin tail from the
+        last placed integer. The formulas below are the residue bookkeeping for that area-law tail.
         """
         C = 2.0 * self.helix.params.A * self.helix.params.ds
         q = self.spec.q
@@ -508,6 +508,16 @@ class HelixFiber:
                 unit_circle=complex(math.cos(level), math.sin(level)),
             ))
         return events
+
+    def local_crossing(self, t0: float, delta: float = 0.5, samples: int = 200) -> float:
+        """Refine the crossing near a supplied height, without using earlier crossings."""
+        grid = np.linspace(t0 - delta, t0 + delta, samples + 1)
+        vals = self.standing_wave_grid(grid)
+        idx = np.nonzero(vals[:-1] * vals[1:] <= 0)[0]
+        if len(idx) == 0:
+            raise ValueError(f"no sign flip found in [{t0 - delta}, {t0 + delta}]")
+        j = int(idx[np.argmin(np.abs(grid[idx] - t0))])
+        return self._refine_sign_flip(float(grid[j]), float(grid[j + 1]))
 
 
 def find_zeros_geometric(spec: CharSpec, count: int = 20, M: int = 4_000_000, step: float = 0.01):

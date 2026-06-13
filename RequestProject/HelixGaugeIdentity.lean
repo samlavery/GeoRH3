@@ -292,4 +292,146 @@ theorem online_of_gaugeBaselineIdentity (C : ℝ) (hC : 0 < C) (hC1 : C ≠ 1) {
     rw [mul_comm] at h; exact mul_left_cancel₀ hn0.ne' h
   exact online_of_gauge_eq_baseline C hC hC1 ρ h'
 
+/-! ## The ζ (L1) fiber via eta-regularization, linked to the resolvent trace
+
+The principal/ζ channel has a pole at `s = 1`, so the literal placed-naturals fiber diverges. The
+helix-native regularization is the **alternating** weighting `w(n) = (-1)^{n+1}` (the ± buckets
+mod 2), whose value is the Dirichlet eta `η(s) = (1 - 2^{1-s})·ζ(s)` — entire, since the
+`(1-2^{1-s})` factor cancels ζ's pole. The gauged fiber is `C^{-s}·(1-2^{1-s})·ζ(s)`. Off
+`Re = 1` both the gauge and the eta factor are nonzero, so the fiber's zeros are exactly the
+ζ-zeros, and each is a pole of the Pólya resolvent trace `−ζ'/ζ` (no finite limit) — the ζ
+instance of `helix_resonates_at_zeros`. Witness for non-degeneracy: `ζ(2) ≠ 0`. -/
+
+/-- The eta factor `1 - 2^{1-s}`; its simple zero at `s = 1` cancels ζ's pole. -/
+noncomputable def etaFactor (s : ℂ) : ℂ := 1 - (2 : ℂ) ^ (1 - s)
+
+/-- **The eta factor is nonzero off `Re = 1`**: `‖2^{1-s}‖ = 2^{1-Re s} = 1` forces `Re s = 1`. -/
+theorem etaFactor_ne_zero_of_re_ne_one {s : ℂ} (hs : s.re ≠ 1) : etaFactor s ≠ 0 := by
+  intro h
+  have h1 : (2 : ℂ) ^ (1 - s) = 1 := by rw [etaFactor, sub_eq_zero] at h; exact h.symm
+  have hnorm : ‖(2 : ℂ) ^ (1 - s)‖ = 1 := by rw [h1, norm_one]
+  rw [show (2 : ℂ) = ((2 : ℝ) : ℂ) by norm_num,
+      Complex.norm_cpow_eq_rpow_re_of_pos (by norm_num : (0:ℝ) < 2),
+      Complex.sub_re, Complex.one_re] at hnorm
+  have hlog := congrArg Real.log hnorm
+  rw [Real.log_rpow (by norm_num : (0:ℝ) < 2), Real.log_one] at hlog
+  rcases mul_eq_zero.mp hlog with hz | hz
+  · exact hs (by linarith)
+  · exact (Real.log_pos (by norm_num : (1:ℝ) < 2)).ne' hz
+
+/-- **The ζ-fiber closed form** (eta-regularized): gauge × eta factor × ζ. -/
+noncomputable def zetaFiber (C : ℝ) (s : ℂ) : ℂ :=
+  (C : ℂ) ^ (-s) * etaFactor s * riemannZeta s
+
+/-- **The closed form's zeros are exactly the ζ-zeros, off `Re = 1`.** The gauge and the eta factor
+    are both nonzero there, so a vanishing of the fiber is a vanishing of ζ. -/
+theorem zetaFiber_zero_iff (C : ℝ) (hC : 0 < C) {s : ℂ} (hs : s.re ≠ 1) :
+    zetaFiber C s = 0 ↔ riemannZeta s = 0 := by
+  rw [zetaFiber, mul_eq_zero, mul_eq_zero]
+  constructor
+  · rintro ((h | h) | h)
+    · exact absurd h (gauge_ne_zero C hC s)
+    · exact absurd h (etaFactor_ne_zero_of_re_ne_one hs)
+    · exact h
+  · exact fun h => Or.inr h
+
+/-- ζ is analytic away from `s = 1`. -/
+theorem riemannZeta_analyticOnNhd_compl_one : AnalyticOnNhd ℂ riemannZeta ({1}ᶜ) := by
+  apply DifferentiableOn.analyticOnNhd ?_ isOpen_compl_singleton
+  intro w hw
+  exact (differentiableAt_riemannZeta (Set.mem_compl_singleton_iff.mp hw)).differentiableWithinAt
+
+/-- **ζ is not locally zero** at any `ρ ≠ 1`: identity theorem on the preconnected `{1}ᶜ`, with the
+    trivial witness `ζ(2) ≠ 0`. -/
+theorem riemannZeta_not_eventuallyEq_zero {ρ : ℂ} (hρ1 : ρ ≠ 1) :
+    ¬ riemannZeta =ᶠ[nhds ρ] 0 := by
+  intro hev
+  have hpre : IsPreconnected ({1}ᶜ : Set ℂ) :=
+    (isPathConnected_compl_singleton_of_one_lt_rank
+      (by rw [Complex.rank_real_complex]; exact_mod_cast Nat.one_lt_two) (1 : ℂ)).isConnected.isPreconnected
+  have hEq := riemannZeta_analyticOnNhd_compl_one.eqOn_zero_of_preconnected_of_eventuallyEq_zero
+    hpre (Set.mem_compl_singleton_iff.mpr hρ1) hev
+  exact riemannZeta_ne_zero_of_one_lt_re (s := 2) (by norm_num)
+    (hEq (Set.mem_compl_singleton_iff.mpr (by norm_num : (2:ℂ) ≠ 1)))
+
+/-- **The fiber's zeros are poles of the resolvent trace** — the Pólya spectral event. At a ζ-zero
+    `ρ ≠ 1`, equivalently a fiber zero off `Re = 1`, the resolvent trace `−ζ'/ζ` has no finite
+    limit. The ζ instance of `helix_resonates_at_zeros`. -/
+theorem zetaFiber_zero_resolventTrace_pole (C : ℝ) (hC : 0 < C) {ρ : ℂ}
+    (hρre : ρ.re ≠ 1) (hz : zetaFiber C ρ = 0) :
+    ¬ ∃ L, Tendsto (fun s => -logDeriv riemannZeta s) (nhdsWithin ρ {ρ}ᶜ) (nhds L) := by
+  have hρ1 : ρ ≠ 1 := fun h => hρre (by rw [h]; simp)
+  exact HelixSource.logDeriv_not_tendsto
+    (riemannZeta_analyticOnNhd_compl_one ρ (Set.mem_compl_singleton_iff.mpr hρ1))
+    ((zetaFiber_zero_iff C hC hρre).mp hz) (riemannZeta_not_eventuallyEq_zero hρ1)
+
+/-! ## Concrete `π/3` gauge used by the 3D fiber numerics -/
+
+/-- The canonical radial growth `A = π/6`. -/
+noncomputable def piThirdA : ℝ := Real.pi / 6
+
+/-- The canonical arc spacing `ds = π/3`. -/
+noncomputable def piThirdDs : ℝ := Real.pi / 3
+
+/-- The concrete area gauge `C = 2*A*ds` for the `π/3` helix. -/
+noncomputable def piThirdGauge : ℝ := 2 * piThirdA * piThirdDs
+
+/-- The concrete area gauge is `(π/3)^2`. -/
+theorem piThirdGauge_eq : piThirdGauge = (Real.pi / 3) ^ 2 := by
+  unfold piThirdGauge piThirdA piThirdDs
+  ring
+
+theorem piThirdGauge_pos : 0 < piThirdGauge := by
+  rw [piThirdGauge_eq]
+  positivity
+
+/-- The concrete area-law radius square: `R_n^2 = C*n`. -/
+noncomputable def piThirdRadiusSq (n : ℕ) : ℝ := piThirdGauge * (n : ℝ)
+
+/-- In the `π/3` chart, `R_n^2 = (π/3)^2*n`. -/
+theorem piThirdRadiusSq_eq (n : ℕ) :
+    piThirdRadiusSq n = (Real.pi / 3) ^ 2 * (n : ℝ) := by
+  rw [piThirdRadiusSq, piThirdGauge_eq]
+
+/-- The concrete `π/3` helix source. -/
+noncomputable def piThirdHelixSource (χ : DirichletCharacter ℂ N) (s : ℂ) : ℂ :=
+  HelixSource χ piThirdGauge s
+
+theorem piThirdHelixSource_eq_gauge_mul_L (χ : DirichletCharacter ℂ N) {s : ℂ}
+    (hs : 1 < s.re) :
+    piThirdHelixSource χ s =
+      (piThirdGauge : ℂ) ^ (-s) * DirichletCharacter.LFunction χ s :=
+  helixSource_eq_gauge_mul_L χ piThirdGauge piThirdGauge_pos hs
+
+/-- The concrete `π/3` continued trace. -/
+noncomputable def piThirdHelixTraceCont (χ : DirichletCharacter ℂ N) (s : ℂ) : ℂ :=
+  HelixTraceCont χ piThirdGauge s
+
+theorem piThirdHelixTraceCont_eq (χ : DirichletCharacter ℂ N) (s : ℂ) :
+    piThirdHelixTraceCont χ s =
+      (piThirdGauge : ℂ) ^ (-s) * (-logDeriv (DirichletCharacter.LFunction χ) s) := by
+  rfl
+
+theorem piThirdHelixTraceCont_residue_tendsto (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1)
+    {ρ : ℂ} (hρ : DirichletCharacter.LFunction χ ρ = 0) :
+    ∃ n : ℕ, 1 ≤ n ∧ Tendsto (fun s => (s - ρ) * piThirdHelixTraceCont χ s)
+        (𝓝[≠] ρ) (𝓝 ((piThirdGauge : ℂ) ^ (-ρ) * (-(n : ℂ)))) :=
+  helixTraceCont_residue_tendsto χ hχ piThirdGauge piThirdGauge_pos hρ
+
+/-- The concrete `π/3` L1/ζ fiber: `C^{-s} * (1 - 2^(1-s)) * ζ(s)`. -/
+noncomputable def piThirdZetaFiber (s : ℂ) : ℂ := zetaFiber piThirdGauge s
+
+theorem piThirdZetaFiber_eq (s : ℂ) :
+    piThirdZetaFiber s = (piThirdGauge : ℂ) ^ (-s) * etaFactor s * riemannZeta s := by
+  rfl
+
+theorem piThirdZetaFiber_zero_iff {s : ℂ} (hs : s.re ≠ 1) :
+    piThirdZetaFiber s = 0 ↔ riemannZeta s = 0 :=
+  zetaFiber_zero_iff piThirdGauge piThirdGauge_pos hs
+
+theorem piThirdZetaFiber_zero_resolventTrace_pole {ρ : ℂ}
+    (hρre : ρ.re ≠ 1) (hz : piThirdZetaFiber ρ = 0) :
+    ¬ ∃ L, Tendsto (fun s => -logDeriv riemannZeta s) (nhdsWithin ρ {ρ}ᶜ) (nhds L) :=
+  zetaFiber_zero_resolventTrace_pole piThirdGauge piThirdGauge_pos hρre hz
+
 end HelixGauge
