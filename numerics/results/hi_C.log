@@ -19,3 +19,7 @@ L9_chi1009quad_q1009: 400 zeros, t ~ 260.1640444
 L9_chi1009quad_q1009: 425 zeros, t ~ 275.4324163
 L9_chi1009quad_q1009: 450 zeros, t ~ 289.7869102
 L9_chi1009quad_q1009: 475 zeros, t ~ 304.3356045
+L9_chi1009quad_q1009: 500 zeros, t ~ 318.907977
+L9_chi1009quad_q1009: vs old reference (first 25): max|diff| = 4.877e-13
+L9_chi1009quad_q1009: done in 60842.6s -> /Users/samuellavery/proof/three/numerics/zeros_500x50/L9_chi1009quad_q1009.txt
+total runtime: 60842.6s

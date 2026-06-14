@@ -1,4 +1,5 @@
 import Mathlib
+import RequestProject.ZetaZeroDefs
 import RequestProject.SpectralSide
 
 /-!
@@ -920,21 +921,6 @@ theorem helixCoords_complete :
   · obtain ⟨t, ht⟩ := helixCoords_surjective p.1 p.2.1 p.2.2 hp
     exact ⟨t, Set.mem_univ t, by rw [ht]⟩
 
-/-- The natural-units rechart of the strip coordinate: `σ` in units of the
-channel arc (`π/3` per unit). -/
-noncomputable def arcChart (x : ℝ) : ℝ := π / 3 * x
-
-/-- The explicit inverse of the rechart. -/
-noncomputable def arcChartInv (u : ℝ) : ℝ := 3 / π * u
-
-/-- **Completeness of the rechart**: an explicit two-sided inverse — the unit
-change loses nothing and creates nothing. -/
-theorem arcChart_complete :
-    Function.LeftInverse arcChartInv arcChart ∧
-      Function.RightInverse arcChartInv arcChart := by
-  have hπ : (π : ℝ) ≠ 0 := Real.pi_ne_zero
-  constructor <;> intro v <;> simp only [arcChart, arcChartInv] <;> field_simp
-
 /-- The rechart preserves window membership exactly (strict monotonicity):
 the window structure of the census is carried without distortion. -/
 theorem arcChart_mem_Icc_iff (x a b : ℝ) :
@@ -954,15 +940,6 @@ theorem arcChart_census_invariant (Z : Finset ℂ) (a b : ℝ) :
   ext ρ
   have h3 : (0 : ℝ) < π / 3 := by positivity
   simp only [Finset.mem_filter, arcChart, mul_le_mul_iff_right₀ h3]
-
-/-- The critical line in natural units, uniquely: `σ` recharts to the natural
-point `π/6` (half the channel arc) exactly when `σ = 1/2`. By completeness of
-the rechart, nothing else lands there. -/
-theorem arcChart_line (x : ℝ) : arcChart x = π / 6 ↔ x = 1 / 2 := by
-  have h3 : (π / 3 : ℝ) ≠ 0 := by positivity
-  simp only [arcChart]
-  rw [show (π / 6 : ℝ) = π / 3 * (1 / 2) by ring]
-  exact mul_right_inj' h3
 
 end HelixCompleteness
 

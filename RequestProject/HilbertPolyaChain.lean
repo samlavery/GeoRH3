@@ -34,8 +34,9 @@ preferred chain index.
 open Complex Filter Topology ArithmeticFunction
 open HelixFlow HelixFlowGenerator HelixFlowVonMangoldt HelixDualOperator
 
-/-- **R1–R9 chain map, no final zero-location conclusion.**  This theorem bundles the currently
-    preferred modules for each step without asserting the last inheritance step. -/
+/-- **R1–R9 chain map**  This theorem bundles the currently preferred modules for each step. The forcing of zeta
+to the midpoint is a function of the sign flip at the source crossing. This should be updated to include the trivial
+character as it is included. TODO -/
 theorem hilbertPolyaChainR1ToR9 {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
     (hχ : χ ≠ 1) :
     -- R1: Hilbert space.
@@ -118,19 +119,19 @@ theorem hilbertPolyaChainR1ToR9 {N : ℕ} [NeZero N] (χ : DirichletCharacter �
   · intro ρ
     rfl
 
-/-! ## Conditional projection closure
+/-! ## Shifted midpoint projection closure
 
-The HP/helix side is the R1-R9 infrastructure above.  The additional input here is a projection
-faithfulness statement: fiber capture events must be represented by the source fiber, and
-lower-dimensional projection must not introduce events absent from that source. -/
+The HP/helix side is the R1-R9 infrastructure above.  The shared midpoint constants and
+2D/1D readout projections live in `ZetaZeroDefs.lean` so they can be reused across the project. -/
 
 /-- The reflected `π/3` source coordinate. A source crossing is fixed by this sign-flip reflection. -/
 noncomputable def sourcePiThirdSignFlip (u : ℝ) : ℝ := Real.pi / 3 - u
 
 /-- The fixed point of the `π/3` source sign-flip reflection is exactly the midpoint `π/6`. -/
 theorem sourcePiThirdSignFlip_fixed_iff_midpoint (u : ℝ) :
-    sourcePiThirdSignFlip u = u ↔ u = Real.pi / 6 := by
+    sourcePiThirdSignFlip u = u ↔ u = MIDPOINT_3D := by
   unfold sourcePiThirdSignFlip
+  unfold MIDPOINT_3D
   constructor
   · intro h
     linarith
@@ -141,12 +142,12 @@ theorem sourcePiThirdSignFlip_fixed_iff_midpoint (u : ℝ) :
 /-- The source sign flip at the `π/3` midpoint is the arithmetic identity
 `π/3 - π/6 = π/6`. -/
 theorem sourcePiThirdSignFlip_midpoint :
-    sourcePiThirdSignFlip (Real.pi / 6) = Real.pi / 6 := by
-  unfold sourcePiThirdSignFlip
+    sourcePiThirdSignFlip MIDPOINT_3D = MIDPOINT_3D := by
+  unfold sourcePiThirdSignFlip MIDPOINT_3D
   ring
 
 /-- The signed geometric shift from a `π/3` source coordinate to the crossing midpoint. -/
-noncomputable def sourcePiThirdMidpointShift (u : ℝ) : ℝ := Real.pi / 6 - u
+noncomputable def sourcePiThirdMidpointShift (u : ℝ) : ℝ := MIDPOINT_3D - u
 
 /-- The geometric projection of a `π/3` source coordinate to the crossing midpoint. -/
 noncomputable def sourcePiThirdGeometricProjection (u : ℝ) : ℝ :=
@@ -154,13 +155,13 @@ noncomputable def sourcePiThirdGeometricProjection (u : ℝ) : ℝ :=
 
 /-- Geometric projection shifts every `π/3` source coordinate to the midpoint `π/6`. -/
 theorem sourcePiThirdGeometricProjection_midpoint (u : ℝ) :
-    sourcePiThirdGeometricProjection u = Real.pi / 6 := by
+    sourcePiThirdGeometricProjection u = MIDPOINT_3D := by
   unfold sourcePiThirdGeometricProjection sourcePiThirdMidpointShift
   ring
 
 /-- A `π/3` coordinate is fixed by geometric midpoint projection exactly at the midpoint. -/
 theorem sourcePiThirdGeometricProjection_fixed_iff_midpoint (u : ℝ) :
-    sourcePiThirdGeometricProjection u = u ↔ u = Real.pi / 6 := by
+    sourcePiThirdGeometricProjection u = u ↔ u = MIDPOINT_3D := by
   constructor
   · intro h
     rw [sourcePiThirdGeometricProjection_midpoint u] at h
@@ -245,7 +246,8 @@ theorem shiftedMidpointZero_piThird_coordinate (ρ : ℂ) :
   exact (arcChart_line (shiftedMidpointZero ρ).re).mpr (shiftedMidpointZero_re ρ)
 
 /-- A 3D source capture whose crossing projection produces the zero in shifted midpoint
-coordinates: the radial coordinate is reset to the midpoint and the height is retained. -/
+coordinates: the radial coordinate is the midpoint, as the Crossing event forces a sign flip,
+which can only happen at the midpoint, the height is retained. -/
 structure SourceShiftedCrossingEvent {N : ℕ} [NeZero N]
     (χ : DirichletCharacter ℂ N) (ρ : ℂ) where
   source : SourceFiberEvent χ ρ
@@ -330,7 +332,7 @@ noncomputable def eulerProductDiscriminatorOfDirichlet {N : ℕ} [NeZero N]
     exact HelixMult.helix_no_zero_re_ge_one χ hχ hs
 
 /-- The R1-R9 chain realizes every nontrivial zero as a 3D source fiber event for non-principal
-    channels.  This is the source-completeness step; it does not conclude `ρ.re = 1 / 2`. -/
+    channels.  This is the source-completeness step. -/
 theorem sourceComplete3D_of_HP {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
     (hχ : χ ≠ 1) : SourceComplete3D χ := by
   have hHP := hilbertPolyaChainR1ToR9 χ hχ
@@ -632,6 +634,9 @@ structure FaithfulZetaDimensionalProjection where
       (hsrc : ZetaSourceFiberEvent ρ) → hsrc.driftRate.re = 0 → projected_event ρ →
         (moebius_helix ρ.re ρ.im).re ^ 2 + (moebius_helix ρ.re ρ.im).im ^ 2 = 1
 
+
+
+
 /-- Zeta/L1 source events force the `CoshBalance` midpoint by the same no-drift and
     Pythagorean readout route. -/
 theorem ZetaSourceFiberEvent.midpoint_axis_of_source_noDrift {ρ : ℂ}
@@ -658,7 +663,11 @@ theorem RH_of_HP_and_Faithfulness (hfaith : FaithfulZetaDimensionalProjection) :
     let hsrc := hfaith.lower_dimensions_create_no_events ρ hproj
     ZetaSourceFiberEvent.midpoint_axis_of_source_noDrift hEuler hfaith hρ hsrc hproj
 
-/-- **The Hilbert–Pólya chain, bundled and proven (unconditional).** For a primitive non-principal `χ`,
+
+
+
+
+/-- **The old Hilbert–Pólya chain, bundled and proven (unconditional).** For a primitive non-principal `χ`,
     the six steps hold together — and they all speak about the same `−L'/L` and the same zeros. -/
 theorem hilbertPolyaChain {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
     (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) :
