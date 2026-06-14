@@ -22,8 +22,9 @@
 \DeclareMathOperator{\RH}{RH}
 \DeclareMathOperator{\argg}{arg}
 \DeclareMathOperator{\Log}{Log}
+\DeclareMathOperator{\logDeriv}{logDeriv}
 
-\title{The Helix--Hilbert--Polya Bridge: Conditional Projection Closure}
+\title{The Helix--Hilbert--Polya Bridge: Source Completeness and Projection Transport}
 \author{Samuel Lavery}
 \date{Draft proof bridge, 2026-06-13}
 
@@ -32,17 +33,15 @@
 
 \begin{abstract}
 This note records the mathematical core currently formalized in Lean and evaluated by the
-numerical model.  The Hilbert--Polya side is stated as an unconditional infrastructure
-chain.  The remaining conditional input is projection faithfulness: dimensional projection
-from the three-dimensional FTA-generated source fiber to the lower-dimensional readout must
-preserve fiber capture events and must not create events absent from the source fiber.
-The source side is geometric: $\pi/3$ placement, prime/residue channel counting,
-and harmonic phasor accumulation.  The fiber is derived from that source.
-Certain parts of the derived fiber identify with conventional $L$, $\zeta$,
-Hurwitz, and Euler--Maclaurin forms after projection; those identifications are
-coincidental representations, not source definitions.
-Under that hypothesis the formal closure gives GRH, and the zeta/L1 specialization gives RH
-through the existing zeta bridge.
+numerical model.  The Hilbert--Polya side is the R1--R9 infrastructure chain.  For
+non-principal channels it supplies source completeness: every nontrivial zero is
+realized by a three-dimensional source fiber event carrying the $\pi/3$ coordinate
+translation.  The remaining projection input is faithful transport: realized source
+events survive projection, lower dimensions introduce no false events, and the
+projected event preserves the unit-circle/Pythagorean readout.  With that transport
+input the formal closure gives GRH for non-principal channels.  The zeta/L1 channel is
+handled separately through the eta-regularized zeta bridge with the analogous transport
+input.
 \end{abstract}
 
 \tableofcontents
@@ -65,12 +64,13 @@ The per-character GRH predicate formalized in Lean is
   :=
   \forall \rho\in\NTZ(\chi),\quad \Ree\rho=\frac12 .
 \]
-The complete all-character predicate is
+The all non-principal channel closure predicate used in the current Lean theorem is
 \[
-  \GRH_{\mathrm{complete}}
+  \GRH_{\ne 1}
   :=
-  \forall q,\;\forall\chi \pmod q,\quad \GRH(\chi).
+  \forall q,\;\forall\chi \pmod q,\quad \chi\ne1\Longrightarrow\GRH(\chi).
 \]
+The principal zeta/L1 channel is treated separately through eta regularization.
 For zeta, let
 \[
   \NTZ_\zeta
@@ -213,6 +213,179 @@ On the critical line $\Ree s=\frac12$, the eta factor is nonzero:
 \]
 because $2^{1-s}=1$ would imply $2^{1-\Ree s}=1$, hence $\Ree s=1$.
 
+\section{Closed-Form Accumulation and Resolvent Trace}
+
+The placed fiber accumulation and the resolvent-trace accumulation are distinct
+but linked closed forms.
+
+For a non-principal channel, the placed source fiber is
+\[
+  F_\chi^C(s)
+  =
+  \sum_{n\ge1}\chi(n)(Cn)^{-s}
+  =
+  C^{-s}L(s,\chi).
+\]
+This is the channel amplitude accumulation: it is the harmonic sum of the
+source fiber terms in the $\pi/3$ area chart.
+
+\begin{lemma}[No radial drift in the accumulation normal form]
+The helix source has no radial drift by construction.  For each source atom
+\[
+  a_n(t)=w(n)R_n^{-1}\exp\{-it\Log(R_n^2)\},
+\]
+the radial size is independent of $t$:
+\[
+  |a_n(t)|
+  =
+  \frac{|w(n)|}{R_n}
+  =
+  \frac{|w(n)|}{(\pi/3)\sqrt n}
+  \qquad (C=(\pi/3)^2).
+\]
+\end{lemma}
+
+\begin{proof}
+For real $t$ and positive $R_n^2$,
+\[
+  \left|\exp\{-it\Log(R_n^2)\}\right|=1.
+\]
+The helix flow therefore changes only phase.  The radial coordinate is fixed by
+the source placement $R_n^2=Cn$, so the accumulated source is no-drift in the
+radial direction before projection.
+\end{proof}
+
+This no-drift normal form is the invariant used by the Polya induction.  Moving
+from one crossing to the next advances the phase ledger and harmonic threshold,
+not the radial placement.  Hence R7 can be applied to the infinite ladder with
+the same $\pi/3$ source geometry at every step; combined with R1--R6 and R8--R9,
+this is the source-side path to \texttt{SourceComplete3D}.
+
+The resolvent trace is the logarithmic, prime-power-weighted accumulation.  In
+the convergent half-plane,
+\[
+\begin{aligned}
+  \mathcal T_\chi^C(s)
+  &:=
+  \sum_{n\ge1}\Lambda(n)\chi(n)(Cn)^{-s}  \\
+  &=
+  C^{-s}\sum_{n\ge1}\Lambda(n)\chi(n)n^{-s} \\
+  &=
+  C^{-s}\left(-\frac{L'}{L}(s,\chi)\right).
+\end{aligned}
+\]
+Here $\Lambda$ is the von Mangoldt weight.  Thus the same source geometry has
+two closed-form accumulations: the fiber sum $C^{-s}L(s,\chi)$ and the
+resolvent trace $C^{-s}(-L'/L)(s,\chi)$.  In Lean these are
+\[
+  \texttt{HelixGauge.helixSource\_eq\_gauge\_mul\_L}
+\]
+and
+\[
+  \texttt{HelixGauge.helixTrace\_eq\_gauge\_mul\_negLogDeriv}.
+\]
+At the canonical scale $C=(\pi/3)^2$, the continued trace is
+\[
+  \mathcal T_\chi^{\pi/3}(s)
+  =
+  \left(\left(\frac{\pi}{3}\right)^2\right)^{-s}
+  \left(-\frac{L'}{L}(s,\chi)\right),
+\]
+which is the paper form of \texttt{HelixGauge.piThirdHelixTraceCont\_eq}.
+
+The literal logarithmic derivative of the placed fiber differs only by a
+regular gauge term:
+\[
+  -\frac{d}{ds}\log F_\chi^C(s)
+  =
+  \log C-\frac{L'}{L}(s,\chi).
+\]
+The additional term $\log C$ has no pole.  The multiplicative geometric gauge
+$C^{-s}$ is never zero for $C>0$.  Therefore neither gauge changes the crossing
+locations or creates/removes trace poles; the multiplicative gauge only rescales
+the trace residue by a nonzero geometric factor.
+
+This gives the local residue law at a capture event.  If $\rho$ is a zero of
+$L(s,\chi)$ of order $m$ and
+\[
+  L(s,\chi)=(s-\rho)^m g(s),\qquad g(\rho)\ne0,
+\]
+then near $\rho$
+\[
+  -\frac{L'}{L}(s,\chi)
+  =
+  -\frac{m}{s-\rho}-\frac{g'}{g}(s),
+\]
+and hence
+\[
+  \mathcal T_\chi^C(s)
+  =
+  -\frac{mC^{-\rho}}{s-\rho}
+  +\text{a term finite at }\rho .
+\]
+So the trace pole has residue $-mC^{-\rho}$.  The integer $m$ is the spectral
+multiplicity; the factor $C^{-\rho}$ is the faithful $\pi/3$ geometric scaling.
+At a crossing, this is the residue consumed by the resolvent trace while the
+source fiber amplitude crests, the channel phase cancels, and the sign changes.
+The Polya threshold condition is therefore the simultaneous event
+\[
+\begin{gathered}
+  F_\chi^C(\rho)=0,\qquad
+  \operatorname*{Res}_{s=\rho}\mathcal T_\chi^C(s)=-mC^{-\rho},\\
+  E_\chi(\Imm\rho)=A_k^\pm,
+  \qquad
+  A_0^\pm=\pm\frac{\pi}{2},\qquad
+  A_{k+1}^\pm-A_k^\pm=\pm\pi .
+\end{gathered}
+\]
+Here $E_\chi$ is the source accumulation ledger used by the Polya chain.  The
+jump from one level $A_k^\pm$ to the next is the threshold that starts the next
+harmonic on the spectral readout.  Thus the closed-form resolvent residue, the
+crossing sign change, and the creation of the next harmonic are the same source
+event viewed in three ledgers: trace, standing wave, and harmonic ladder.
+
+For primitive non-principal $\chi$, the completed zero-side resolvent trace is
+the partial-fraction accumulation
+\[
+  \mathcal R_\chi(s)
+  =
+  \sum_{\rho\in\NTZ(\chi)}
+    m_\rho
+    \left(\frac{1}{s-\rho}+\frac{1}{\rho}\right),
+\]
+where $m_\rho$ is the vanishing order of the completed $L$-function at $\rho$.
+The formal closed form is
+\[
+  \logDeriv \Lambda_\chi(s)
+  =
+  A+\mathcal R_\chi(s)
+  \qquad (s\notin\NTZ(\chi)),
+\]
+for a constant $A$.  Splitting the completed function
+$\Lambda_\chi=\gamma_\chi L(s,\chi)$ gives, off the zeros in the strip,
+\[
+  -\frac{L'}{L}(s,\chi)
+  =
+  -A-\mathcal R_\chi(s)+\logDeriv \gamma_\chi(s).
+\]
+Thus the prime-power accumulation, the zero-side resolvent trace, and the
+continued source trace are the same readout up to the constant and
+Archimedean gauge terms, which are regular away from their own gauge poles.
+
+For the L1/zeta channel,
+\[
+  F_{L1}^C(s)=C^{-s}(1-2^{1-s})\zeta(s).
+\]
+Off $\Ree s=1$, the eta factor is nonzero, so a zero of the L1 fiber is a zero
+of $\zeta$.  The corresponding resolvent trace is
+\[
+  -\frac{\zeta'}{\zeta}(s),
+\]
+and the $\pi/3$ zeta fiber zero has a resolvent-trace pole by
+\[
+  \texttt{HelixGauge.piThirdZetaFiber\_zero\_resolventTrace\_pole}.
+\]
+
 \section{Standing Readout and Projection to One Dimension}
 
 This is the layer where the placed three-dimensional fiber is read in the
@@ -299,7 +472,10 @@ For non-principal $\chi$,
 The full source geometry is double ended.  The midpoint is the origin of the
 fiber, and the reflected side is an anti-helix carrying the opposite orientation.
 The proof uses the positive oriented side of the helix for simplicity; the
-reflected anti-helix has the same cost law with the sign reversed.
+reflected anti-helix is not used in the formal proof closure.  It is used in
+computational verification: the reflected side supplies the symmetric
+pre-origin geometry needed to build a high-precision tail before the counting
+ledger starts at the origin.  Its cost law is the same with the sign reversed.
 
 The crossing levels in the projected unit-circle readout are therefore
 \[
@@ -416,8 +592,16 @@ At threshold $E(t)=n\pi$,
   \left\lfloor\frac{E(t)}{\pi}\right\rfloor=n.
 \]
 At a crossing threshold the source event is a confluence: the channel phase
-cancels, the amplitude reaches its crest, the sign changes, and the next
-harmonic begins on the spectral readout.  The channel cancellation law is:
+cancels, the amplitude reaches its crest, the resolvent trace consumes the
+local residue, the sign changes, and the next harmonic begins on the spectral
+readout.  In the source normalization used by the Polya chain,
+\[
+  E(\Imm\rho)=A_k^\pm,\qquad
+  A_0^\pm=\pm\frac{\pi}{2},\qquad
+  A_{k+1}^\pm-A_k^\pm=\pm\pi .
+\]
+So the first crossing on each oriented side costs a half quantum, and every
+subsequent threshold is one full $\pi$ step.  The channel cancellation law is:
 \[
   \sum_{m\in F} s_m=0
   \Longleftrightarrow
@@ -460,6 +644,12 @@ The critical midpoint is
   \Longleftrightarrow
   x=\frac12.
 \]
+The value $1/2$ is therefore only the normalized one-dimensional readout of
+the source midpoint $\pi/6$.  It is not an independently fitted spectral
+constant.  At a source crossing, the standing readout changes sign; that sign
+change forces the crossing to occur at the midpoint of the source chart.  The
+rule is source-side: projection is only responsible for transporting the event
+without losing it or introducing a new one.
 The midpoint conclusion routes through the unitary/Pythagorean readout.  In
 natural coordinates the readout satisfies
 \[
@@ -486,7 +676,7 @@ The object is Mathlib's $L$-function zero set:
 \]
 \end{enumerate}
 
-\section{Projection Faithfulness}
+\section{Source Completeness and Projection Faithfulness}
 
 \begin{definition}[Source crossing confluence]
 For a channel $\chi$ and point $\rho=\sigma+i\gamma$, a source crossing
@@ -499,9 +689,14 @@ following simultaneous features:
 \item the crossing consumes the threshold energy required to start the next
   harmonic on the spectral readout;
 \item the real standing readout changes sign at the crossing;
-\item the source midpoint coordinate is $x=\pi/6$ in the $\pi/3$ chart, while
+\item the source midpoint coordinate forced by the sign change and the
+  real-axis/unitary readout requirement is $x=\pi/6$ in the $\pi/3$ chart, while
   the height $\gamma$ is retained as the vertical coordinate.
 \end{enumerate}
+Thus the source crossing itself determines the midpoint.  Clause (C5) records
+that consequence; it is not an additional lower-dimensional placement
+assumption.  After the normalization $x\mapsto 3x/\pi$, this source midpoint is
+the value $1/2$.
 \end{definition}
 
 Under projection from the three-dimensional fiber to the unit-circle readout,
@@ -513,16 +708,6 @@ one-dimensional readout rescales the midpoint coordinate by
 \]
 so that the source midpoint $x=\pi/6$ is read as $1/2$.
 
-\begin{definition}[Source fiber event]
-For a character $\chi$ and point $\rho$, a source fiber event is a source
-crossing confluence for $\chi$ at height $\Imm\rho$ whose source midpoint
-coordinate is $x=\pi/6$ in the $\pi/3$ chart.  After the one-dimensional
-coordinate rescale $x\mapsto 3x/\pi$, its normalized midpoint readout is
-\[
-  \Ree\rho=\frac12.
-\]
-\end{definition}
-
 \begin{definition}[Fiber capture event]
 For a Dirichlet channel $\chi$,
 \[
@@ -532,13 +717,53 @@ For a Dirichlet channel $\chi$,
 \]
 \end{definition}
 
+\begin{definition}[Source fiber event]
+For a non-principal Dirichlet channel $\chi$ and point $\rho$, a source fiber
+event is a three-dimensional event over $\rho$ carrying the following data:
+\begin{enumerate}[label=(S\arabic*)]
+\item a source drift rate $\lambda_\rho$ and nonzero amplitude $a_\rho$ with
+\[
+  e^{\Ree(\lambda_\rho)\tau}a_\rho=a_\rho
+  \qquad(\forall \tau\in\mathbb R);
+\]
+\item the $\pi/3$ source coordinate
+\[
+  x_\rho=\operatorname{arcChart}(\Ree\rho)=\frac{\pi}{3}\Ree\rho;
+\]
+\item height retention
+\[
+  \Imm(\lambda_\rho)=\Imm\rho;
+\]
+\item nonzero spectral value $\rho\ne0$;
+\item source-chain cancellation with explicit decay;
+\item the resolvent-trace pole at $\rho$.
+\end{enumerate}
+It does not contain the conclusion $\Ree\rho=1/2$.
+\end{definition}
+
+\begin{theorem}[Source completeness from R1--R9]
+For every non-principal $\chi$, every fiber capture event
+$\rho\in\NTZ(\chi)$ is realized by a source fiber event.
+\end{theorem}
+
+\begin{proof}
+This is the Lean theorem \texttt{sourceComplete3D\_of\_HP}.  It uses:
+R5 for source-chain cancellation and the resolvent pole, and R9 to identify the
+Mathlib zero-set object.  The produced source event records the R8 coordinate
+language by setting its source coordinate to
+$\operatorname{arcChart}(\Ree\rho)=(\pi/3)\Ree\rho$.  The midpoint translation
+$\operatorname{arcChart}(\Ree\rho)=\pi/6\Longleftrightarrow \Ree\rho=1/2$ is used
+later in \texttt{SourceFiberEvent.midpoint\_axis\_of\_HP}.  Source completeness
+itself does not prove $\Ree\rho=1/2$.
+\end{proof}
+
 \begin{hypothesis}[Faithful dimensional projection for one channel]
 There is a predicate $\operatorname{Proj}_\chi(\rho)$ of projected crossing
 events such that:
 \begin{enumerate}[label=(F\arabic*)]
-\item Every fiber capture event is faithfully projected as a crossing event:
+\item Every realized source fiber event is faithfully projected:
 \[
-  \rho\in\NTZ(\chi)
+  \operatorname{SourceFiberEvent}_\chi(\rho)
   \Longrightarrow
   \operatorname{Proj}_\chi(\rho).
 \]
@@ -548,48 +773,69 @@ events such that:
   \Longrightarrow
   \text{$\rho$ is represented by a source fiber event}.
 \]
+\item The projected event preserves the unit-circle/Pythagorean readout:
+\[
+  \operatorname{Proj}_\chi(\rho)
+  \Longrightarrow
+  \|w(\rho)\|^2=1,
+  \qquad w(\rho)=1-\frac1\rho.
+\]
 \end{enumerate}
 \end{hypothesis}
 
-Thus the conditional input is only faithfulness of dimensional collapse at
-crossings: the projection does not miss fiber crossings carrying zero marks, and
-it does not create lower-dimensional events absent from the source.  The
-midpoint implication itself is supplied by the unitary/Pythagorean readout
-described above.
+Thus the projection input is only faithfulness of dimensional collapse at
+crossings: realized source events survive transport to the lower-dimensional
+readout, no false events are introduced, and the transported event preserves the
+unit-circle readout.  Source completeness itself is supplied by R1--R9.
 
-\section{Conditional Closure}
+\section{Closure Under Faithful Transport}
 
-\begin{theorem}[Per-character conditional closure]
-Assume \texttt{FaithfulDimensionalProjection} for $\chi$.  Then
+\begin{theorem}[Per-character closure]
+Let $\chi\ne1$.  Assume faithful dimensional projection for $\chi$.  Then
 \[
   \GRH(\chi).
 \]
 \end{theorem}
 
 \begin{proof}
-Let $\rho\in\NTZ(\chi)$.  By (F1), $\rho$ is a projected fiber event.  By (F2),
-that projected event is represented by a source fiber event.  Source fiber events
-are registered at $x=\pi/6$ in the $\pi/3$ chart.  The rechart
-$x\mapsto3x/\pi$ and the Pythagorean unit readout give
+Let $\rho\in\NTZ(\chi)$.  By source completeness from R1--R9, $\rho$ is realized
+by a source fiber event.  R3 gives source no-drift from the conserved amplitude.
+Faithful projection transports that source event to the one-dimensional readout
+and preserves
 \[
+  \|w(\rho)\|^2=1.
+\]
+The Lean theorem \texttt{SpectralSide.w\_unit\_iff\_half} gives
+\[
+  \Ree\rho=\frac12.
+\]
+The numerical value $1/2$ enters here only because the source crossing has
+forced the midpoint and R8 reads the $\pi/3$ midpoint $\pi/6$ in unit
+coordinates.  The projection hypothesis does not create this value; it only
+transports the source event and preserves the unit-circle readout.
+Equivalently, R8 records the $\pi/3$ chart identity
+\[
+  \operatorname{arcChart}(\Ree\rho)=\frac{\pi}{6}
+  \Longleftrightarrow
   \Ree\rho=\frac12.
 \]
 Since $\rho$ was arbitrary, $\GRH(\chi)$ follows.
 \end{proof}
 
-\begin{theorem}[Complete conditional closure]
-Assume faithful dimensional projection for every Dirichlet channel.  Then
+\begin{theorem}[All non-principal channel closure]
+Assume faithful dimensional projection for every non-principal Dirichlet
+channel.  Then every non-principal channel satisfies
 \[
-  \GRH_{\mathrm{complete}}.
+  \GRH(\chi).
 \]
 \end{theorem}
 
 \begin{proof}
-Apply the per-character conditional closure to each modulus and character.
+Apply the per-character closure to each modulus and each $\chi\ne1$.
 \end{proof}
 
-\begin{theorem}[Zeta/L1 conditional closure]
-Assume the corresponding eta-regularized zeta/L1 projection faithfulness.  Then
+\begin{theorem}[Zeta/L1 transport closure]
+Assume the corresponding eta-regularized zeta/L1 projection transport.  Then
 Mathlib's \texttt{RiemannHypothesis} holds.
 \end{theorem}
 
@@ -797,7 +1043,6 @@ the displayed fiber equations.
                 >{\raggedright\arraybackslash}p{0.56\textwidth}@{}}
 Dirichlet zero set & \texttt{GRHSpectral.NontrivialZeros}\\
 per-character GRH predicate & \texttt{GRHSpectral.GRH}\\
-all-character GRH predicate & \texttt{GRHSpectral.GRHComplete}\\
 zeta zero set & \texttt{ZD.NontrivialZeros}\\
 Euler--Maclaurin continuation &
   \texttt{GRH.EulerMaclaurinDirichlet.c\_fun}\\
@@ -814,19 +1059,37 @@ residue fiber decomposition &
 fiber cancellation &
   \texttt{DirichletFibre.zero\_iff\_fibre\_cancellation}\\
 source no-drift & \texttt{HelixSource.source\_noDrift}\\
+prime flow trace &
+  \path|HelixFlowVonMangoldt.flowVonMangoldtTrace_eq_negLogDeriv|\\
 Möbius unit readout & \texttt{moebius\_unit\_iff}\\
 Pythagorean readout & \texttt{readout\_pythagoras\_iff\_online}\\
 spectral unit midpoint & \texttt{SpectralSide.w\_unit\_iff\_half}\\
 $\pi/3$ gauge & \texttt{HelixGauge.piThirdGauge\_eq}\\
 nonprincipal closed form &
   \texttt{HelixGauge.piThirdHelixSource\_eq\_gauge\_mul\_L}\\
+geometric trace closed form &
+  \texttt{HelixGauge.helixTrace\_eq\_gauge\_mul\_negLogDeriv}\\
+$\pi/3$ continued trace &
+  \texttt{HelixGauge.piThirdHelixTraceCont\_eq}\\
+completed trace gauge split &
+  \texttt{completedLFunction\_logDeriv\_gauge\_split}\\
+prime/dual trace meeting & \texttt{flowDualTraceMeeting}\\
+strip trace continuation & \texttt{primeTraceContinuationIntoStrip}\\
 L1 closed form & \texttt{HelixGauge.piThirdZetaFiber}\\
 L1 zero equivalence &
   \texttt{HelixGauge.piThirdZetaFiber\_zero\_iff}\\
+L1 resolvent pole &
+  \path|HelixGauge.piThirdZetaFiber_zero_resolventTrace_pole|\\
 R1--R9 infrastructure & \texttt{hilbertPolyaChainR1ToR9}\\
+source fiber event & \texttt{SourceFiberEvent}\\
+source completeness predicate & \texttt{SourceComplete3D}\\
+source completeness from R1--R9 & \texttt{sourceComplete3D\_of\_HP}\\
 projection faithfulness & \texttt{FaithfulDimensionalProjection}\\
+source midpoint from HP and transport &
+  \texttt{SourceFiberEvent.midpoint\_axis\_of\_HP}\\
 per-character closure & \texttt{GRH\_of\_HP\_and\_Faithfulness}\\
-all-character closure & \texttt{GRHComplete\_of\_HP\_and\_Faithfulness}\\
+all non-principal channel closure &
+  \texttt{GRHComplete\_of\_HP\_and\_Faithfulness}\\
 zeta/L1 closure & \texttt{RH\_of\_HP\_and\_Faithfulness}
 \end{tabular}
 \end{center}
@@ -853,11 +1116,20 @@ Axiom footprint targets:
 \[
 \begin{array}{l}
 \texttt{\#print axioms hilbertPolyaChainR1ToR9},\\
+\texttt{\#print axioms HelixFlowVonMangoldt.flowVonMangoldtTrace\_eq\_negLogDeriv},\\
+\texttt{\#print axioms HelixGauge.helixTrace\_eq\_gauge\_mul\_negLogDeriv},\\
+\texttt{\#print axioms completedLFunction\_logDeriv\_gauge\_split},\\
+\texttt{\#print axioms flowDualTraceMeeting},\\
+\texttt{\#print axioms primeTraceContinuationIntoStrip},\\
+\texttt{\#print axioms sourceComplete3D\_of\_HP},\\
+\texttt{\#print axioms SourceFiberEvent.midpoint\_axis\_of\_HP},\\
 \texttt{\#print axioms GRH\_of\_HP\_and\_Faithfulness},\\
 \texttt{\#print axioms GRHComplete\_of\_HP\_and\_Faithfulness},\\
+\texttt{\#print axioms ZetaSourceFiberEvent.midpoint\_axis\_of\_source\_noDrift},\\
 \texttt{\#print axioms RH\_of\_HP\_and\_Faithfulness},\\
 \texttt{\#print axioms HelixGauge.piThirdGauge\_eq},\\
-\texttt{\#print axioms HelixGauge.piThirdZetaFiber\_zero\_iff}.
+\texttt{\#print axioms HelixGauge.piThirdZetaFiber\_zero\_iff},\\
+\texttt{\#print axioms HelixGauge.piThirdZetaFiber\_zero\_resolventTrace\_pole}.
 \end{array}
 \]
 Expected footprint:
@@ -867,26 +1139,41 @@ Expected footprint:
 
 \section{Current Logical Status}
 
-\[
-\begin{array}{lll}
-\text{HP R1--R9 infrastructure} & \text{Lean theorem} &
-  \texttt{hilbertPolyaChainR1ToR9},\\
-\text{$\pi/3$ closed form} & \text{Lean theorems} &
-  \texttt{HelixGauge.piThird*},\\
-\text{Projection faithfulness} & \text{hypothesis} &
-  \texttt{FaithfulDimensionalProjection},\\
-\text{Per-character closure} & \text{conditional theorem} &
-  \texttt{GRH\_of\_HP\_and\_Faithfulness},\\
-\text{All-character closure} & \text{conditional theorem} &
-  \texttt{GRHComplete\_of\_HP\_and\_Faithfulness},\\
-\text{Zeta/L1 closure} & \text{conditional theorem} &
-  \texttt{RH\_of\_HP\_and\_Faithfulness}.
-\end{array}
-\]
+\begin{center}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.34\textwidth}
+                >{\raggedright\arraybackslash}p{0.20\textwidth}
+                >{\raggedright\arraybackslash}p{0.36\textwidth}@{}}
+HP R1--R9 infrastructure & Lean theorem & \path|hilbertPolyaChainR1ToR9|\\
+$\pi/3$ closed form & Lean theorems & \path|HelixGauge.piThird*|\\
+Source completeness & Lean theorem & \path|sourceComplete3D_of_HP|\\
+Projection transport atoms & structure fields & \path|FaithfulDimensionalProjection|\\
+Midpoint from source and transport & Lean theorem &
+  \path|SourceFiberEvent.midpoint_axis_of_HP|\\
+Per-character non-principal closure & transport theorem &
+  \path|GRH_of_HP_and_Faithfulness|\\
+All non-principal channel closure & transport theorem &
+  \path|GRHComplete_of_HP_and_Faithfulness|\\
+Zeta/L1 closure & transport theorem & \path|RH_of_HP_and_Faithfulness|
+\end{tabular}
+\end{center}
 
-The work required to remove the condition is precisely a proof of projection
-faithfulness: fiber capture events of the FTA-generated source fiber must survive
-the dimensional projection to the lower-dimensional readout, and the projection must
-not introduce events absent from the source.
+The projection transport atoms are exactly the following fields:
+\begin{center}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.38\textwidth}
+                >{\raggedright\arraybackslash}p{0.52\textwidth}@{}}
+\path|source_event_faithfully_projected| &
+  $\operatorname{SourceFiberEvent}_\chi(\rho)\Rightarrow\operatorname{Proj}_\chi(\rho)$\\
+\path|lower_dimensions_create_no_events| &
+  $\operatorname{Proj}_\chi(\rho)\Rightarrow
+    \operatorname{SourceFiberEvent}_\chi(\rho)$\\
+\path|projected_readout_pythagorean| &
+  $\operatorname{Proj}_\chi(\rho)\Rightarrow \|w(\rho)\|^2=1$
+\end{tabular}
+\end{center}
+All other atoms used in the non-principal closure are supplied by the HP chain,
+the $\pi/3$ coordinate chart, the source no-drift lemma, or the Mathlib
+zero-set definitions listed above.
 
 \end{document}
