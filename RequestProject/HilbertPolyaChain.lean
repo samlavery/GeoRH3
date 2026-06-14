@@ -6,6 +6,8 @@ import RequestProject.HelixFlowClosureLedger
 import RequestProject.HelixRoundTrip
 import RequestProject.HelixStandingWave
 import RequestProject.HelixProduction
+import RequestProject.HelixMultiplicative
+import RequestProject.HelixWindBridge
 import RequestProject.RiemannHypothesisBridge
 
 /-!
@@ -29,7 +31,8 @@ Older bundled theorems in this file are kept for downstream compatibility; the R
 preferred chain index.
 -/
 
-open Complex Filter Topology HelixFlow HelixFlowGenerator HelixFlowVonMangoldt HelixDualOperator
+open Complex Filter Topology ArithmeticFunction
+open HelixFlow HelixFlowGenerator HelixFlowVonMangoldt HelixDualOperator
 
 /-- **R1–R9 chain map, no final zero-location conclusion.**  This theorem bundles the currently
     preferred modules for each step without asserting the last inheritance step. -/
@@ -121,6 +124,56 @@ The HP/helix side is the R1-R9 infrastructure above.  The additional input here 
 faithfulness statement: fiber capture events must be represented by the source fiber, and
 lower-dimensional projection must not introduce events absent from that source. -/
 
+/-- The reflected `π/3` source coordinate. A source crossing is fixed by this sign-flip reflection. -/
+noncomputable def sourcePiThirdSignFlip (u : ℝ) : ℝ := Real.pi / 3 - u
+
+/-- The fixed point of the `π/3` source sign-flip reflection is exactly the midpoint `π/6`. -/
+theorem sourcePiThirdSignFlip_fixed_iff_midpoint (u : ℝ) :
+    sourcePiThirdSignFlip u = u ↔ u = Real.pi / 6 := by
+  unfold sourcePiThirdSignFlip
+  constructor
+  · intro h
+    linarith
+  · intro h
+    rw [h]
+    ring
+
+/-- The source sign flip at the `π/3` midpoint is the arithmetic identity
+`π/3 - π/6 = π/6`. -/
+theorem sourcePiThirdSignFlip_midpoint :
+    sourcePiThirdSignFlip (Real.pi / 6) = Real.pi / 6 := by
+  unfold sourcePiThirdSignFlip
+  ring
+
+/-- The signed geometric shift from a `π/3` source coordinate to the crossing midpoint. -/
+noncomputable def sourcePiThirdMidpointShift (u : ℝ) : ℝ := Real.pi / 6 - u
+
+/-- The geometric projection of a `π/3` source coordinate to the crossing midpoint. -/
+noncomputable def sourcePiThirdGeometricProjection (u : ℝ) : ℝ :=
+  u + sourcePiThirdMidpointShift u
+
+/-- Geometric projection shifts every `π/3` source coordinate to the midpoint `π/6`. -/
+theorem sourcePiThirdGeometricProjection_midpoint (u : ℝ) :
+    sourcePiThirdGeometricProjection u = Real.pi / 6 := by
+  unfold sourcePiThirdGeometricProjection sourcePiThirdMidpointShift
+  ring
+
+/-- A `π/3` coordinate is fixed by geometric midpoint projection exactly at the midpoint. -/
+theorem sourcePiThirdGeometricProjection_fixed_iff_midpoint (u : ℝ) :
+    sourcePiThirdGeometricProjection u = u ↔ u = Real.pi / 6 := by
+  constructor
+  · intro h
+    rw [sourcePiThirdGeometricProjection_midpoint u] at h
+    exact h.symm
+  · intro h
+    rw [h, sourcePiThirdGeometricProjection_midpoint]
+
+/-- The geometrically projected crossing coordinate is fixed by the source sign flip. -/
+theorem sourcePiThirdGeometricProjection_signFlip (u : ℝ) :
+    sourcePiThirdSignFlip (sourcePiThirdGeometricProjection u) =
+      sourcePiThirdGeometricProjection u := by
+  rw [sourcePiThirdGeometricProjection_midpoint, sourcePiThirdSignFlip_midpoint]
+
 /-- A source fiber/channel event on the 3D helix.
 
 It deliberately does not store `ρ.re = 1 / 2`.  Instead it stores the source-side
@@ -142,6 +195,75 @@ structure SourceFiberEvent {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) 
     ¬ ∃ L, Tendsto (fun s => -logDeriv (DirichletCharacter.LFunction χ) s)
       (𝓝[≠] ρ) (𝓝 L)
 
+/-- A source event registered at the `π/3` midpoint carries the source sign flip. -/
+theorem SourceFiberEvent.source_sign_flip_of_midpoint {N : ℕ} [NeZero N]
+    {χ : DirichletCharacter ℂ N} {ρ : ℂ} (hsrc : SourceFiberEvent χ ρ)
+    (hmid : hsrc.source_coordinate = Real.pi / 6) :
+    sourcePiThirdSignFlip hsrc.source_coordinate = hsrc.source_coordinate := by
+  rw [hmid]
+  exact sourcePiThirdSignFlip_midpoint
+
+/-- The geometric projection of a source event's `π/3` coordinate lands at the midpoint. -/
+theorem SourceFiberEvent.geometricProjection_midpoint {N : ℕ} [NeZero N]
+    {χ : DirichletCharacter ℂ N} {ρ : ℂ} (hsrc : SourceFiberEvent χ ρ) :
+    sourcePiThirdGeometricProjection hsrc.source_coordinate = Real.pi / 6 :=
+  sourcePiThirdGeometricProjection_midpoint hsrc.source_coordinate
+
+/-- The projected source-event coordinate is fixed by the source sign flip. -/
+theorem SourceFiberEvent.geometricProjection_signFlip {N : ℕ} [NeZero N]
+    {χ : DirichletCharacter ℂ N} {ρ : ℂ} (hsrc : SourceFiberEvent χ ρ) :
+    sourcePiThirdSignFlip (sourcePiThirdGeometricProjection hsrc.source_coordinate) =
+      sourcePiThirdGeometricProjection hsrc.source_coordinate :=
+  sourcePiThirdGeometricProjection_signFlip hsrc.source_coordinate
+
+/-- If the source coordinate is the geometrically projected midpoint coordinate, then the
+`π/3` chart transports that midpoint to the unit half-line readout. -/
+theorem SourceFiberEvent.midpoint_axis_of_geometricProjection_fixed {N : ℕ} [NeZero N]
+    {χ : DirichletCharacter ℂ N} {ρ : ℂ} (hsrc : SourceFiberEvent χ ρ)
+    (hfixed : sourcePiThirdGeometricProjection hsrc.source_coordinate = hsrc.source_coordinate) :
+    ρ.re = 1 / 2 := by
+  have hcoord : hsrc.source_coordinate = Real.pi / 6 := by
+    rw [← hfixed]
+    exact sourcePiThirdGeometricProjection_midpoint hsrc.source_coordinate
+  have hchart : arcChart ρ.re = Real.pi / 6 := by
+    rw [← hsrc.piThird_coordinate, hcoord]
+  exact (arcChart_line ρ.re).mp hchart
+
+/-- The shifted-coordinate zero produced by the crossing projection: midpoint real coordinate,
+retained height. -/
+noncomputable def shiftedMidpointZero (ρ : ℂ) : ℂ := (⟨(1 / 2 : ℝ), ρ.im⟩ : ℂ)
+
+/-- The shifted-coordinate zero is on the midpoint axis by construction. -/
+theorem shiftedMidpointZero_re (ρ : ℂ) : (shiftedMidpointZero ρ).re = 1 / 2 := rfl
+
+/-- The shifted-coordinate zero retains the source height. -/
+theorem shiftedMidpointZero_im (ρ : ℂ) : (shiftedMidpointZero ρ).im = ρ.im := rfl
+
+/-- In the `π/3` chart, the shifted-coordinate zero has source coordinate `π/6`. -/
+theorem shiftedMidpointZero_piThird_coordinate (ρ : ℂ) :
+    arcChart (shiftedMidpointZero ρ).re = Real.pi / 6 := by
+  exact (arcChart_line (shiftedMidpointZero ρ).re).mpr (shiftedMidpointZero_re ρ)
+
+/-- A 3D source capture whose crossing projection produces the zero in shifted midpoint
+coordinates: the radial coordinate is reset to the midpoint and the height is retained. -/
+structure SourceShiftedCrossingEvent {N : ℕ} [NeZero N]
+    (χ : DirichletCharacter ℂ N) (ρ : ℂ) where
+  source : SourceFiberEvent χ ρ
+  projected_coordinate : ℝ
+  projected_coordinate_eq :
+    projected_coordinate = sourcePiThirdGeometricProjection source.source_coordinate
+  projected_midpoint : projected_coordinate = Real.pi / 6
+  readout : ℂ
+  readout_eq : readout = shiftedMidpointZero ρ
+  readout_midpoint : readout.re = 1 / 2
+  height_retained : readout.im = ρ.im
+
+/-- The shifted crossing readout is the midpoint zero with the original height. -/
+theorem SourceShiftedCrossingEvent.readout_eq_midpoint_height {N : ℕ} [NeZero N]
+    {χ : DirichletCharacter ℂ N} {ρ : ℂ} (hcross : SourceShiftedCrossingEvent χ ρ) :
+    hcross.readout = (⟨(1 / 2 : ℝ), ρ.im⟩ : ℂ) :=
+  hcross.readout_eq
+
 /-- A fiber capture event for a Dirichlet channel, represented at the formal boundary by Mathlib's
     `LFunction` zero set. -/
 def FiberCaptureEvent {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) (ρ : ℂ) : Prop :=
@@ -150,6 +272,62 @@ def FiberCaptureEvent {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) (ρ :
 /-- Source completeness in the 3D model: every nontrivial zero is realized as a source fiber event. -/
 def SourceComplete3D {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) : Prop :=
   ∀ ρ, FiberCaptureEvent χ ρ → Nonempty (SourceFiberEvent χ ρ)
+
+/-- The helix flow is its own continuation into the strip.
+
+For a non-principal Dirichlet channel, the same finite phasor chain
+`flowPartialSum χ s M` reaches `L(χ,s)` throughout `0 < Re s`; at a zero the same chain cancels to
+zero; and the rescaled chain exposes the height-free source ledger.  This is the continuation used by
+the source model, not a new one-dimensional series in the strip. -/
+theorem helixOwnContinuationIntoStrip {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
+    (hχ : χ ≠ 1) :
+    (∀ s : ℂ, 0 < s.re →
+      ∃ C : ℝ, 0 < C ∧ ∀ M : ℕ, 1 ≤ M →
+        ‖HelixFlowClosureLedger.flowPartialSum χ s M
+            - DirichletCharacter.LFunction χ s‖ ≤ C * (M : ℝ) ^ (-s.re)) ∧
+    (∀ s : ℂ, 0 < s.re → DirichletCharacter.LFunction χ s = 0 →
+      ∃ C : ℝ, 0 < C ∧ ∀ M : ℕ, 1 ≤ M →
+        ‖HelixFlowClosureLedger.flowPartialSum χ s M‖ ≤ C * (M : ℝ) ^ (-s.re)) ∧
+    (∀ s : ℂ, 0 < s.re → DirichletCharacter.LFunction χ s = 0 →
+      ∃ C : ℝ, 0 < C ∧ ∀ M : ℕ, 1 ≤ M →
+        ‖HelixFlowClosureLedger.flowPartialSum χ s M * (M : ℂ) ^ s
+            - (DirichletClosureLedger.Asum χ M - DirichletCharacter.LFunction χ 0)‖
+          ≤ C * (M : ℝ) ^ (-(1 : ℝ))) := by
+  exact ⟨fun s hs => HelixFlowClosureLedger.flow_rate_bound χ hχ s hs,
+    fun s hs hz => HelixFlowClosureLedger.flow_chain_vanishes_at_zero χ hχ s hs hz,
+    fun s hs hz => HelixFlowClosureLedger.flow_closure_exact χ hχ s hs hz⟩
+
+/-- Euler-product discriminator for a Dirichlet channel.
+
+This is the part that a functional-equation-only model does not supply: the source fiber is the
+Euler-product Dirichlet fiber, its winded prime-power trace is the shifted logarithmic derivative, and
+the product gives the right-edge nonvanishing theorem. -/
+structure EulerProductDiscriminator {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) where
+  source_eq_eulerProduct :
+    ∀ (C : ℝ), 0 < C → ∀ {s : ℂ}, 1 < s.re →
+      HelixGauge.HelixSource χ C s
+        = (C : ℂ) ^ (-s) *
+          ∏' p : Nat.Primes, (1 - χ ↑↑p * (↑↑p : ℂ) ^ (-s))⁻¹
+  winded_prime_trace_shift :
+    ∀ (γ : ℝ) {s : ℂ}, 1 < s.re →
+      LSeries (fun n => (χ ↑n * (ArithmeticFunction.vonMangoldt n : ℂ)) *
+          ((HelixLogFree.wind (fun p => γ * Real.log p) n : Circle) : ℂ)) s
+        = -logDeriv (DirichletCharacter.LFunction χ) (s - (γ : ℂ) * Complex.I)
+  edge_nonvanishing :
+    ∀ {s : ℂ}, 1 ≤ s.re → DirichletCharacter.LFunction χ s ≠ 0
+
+/-- Dirichlet channels carry the Euler-product discriminator unconditionally. -/
+noncomputable def eulerProductDiscriminatorOfDirichlet {N : ℕ} [NeZero N]
+    (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1) : EulerProductDiscriminator χ where
+  source_eq_eulerProduct := by
+    intro C hC s hs
+    exact HelixMult.helixSource_eq_eulerProduct χ C hC hs
+  winded_prime_trace_shift := by
+    intro γ s hs
+    exact HelixWindBridge.windedVonMangoldt_eq_neg_logDeriv_shift χ γ hs
+  edge_nonvanishing := by
+    intro s hs
+    exact HelixMult.helix_no_zero_re_ge_one χ hχ hs
 
 /-- The R1-R9 chain realizes every nontrivial zero as a 3D source fiber event for non-principal
     channels.  This is the source-completeness step; it does not conclude `ρ.re = 1 / 2`. -/
@@ -174,32 +352,142 @@ theorem sourceComplete3D_of_HP {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ
     simp
   · simp
 
+/-- The 2D unit-circle value of a source crossing at lifted `π/3` coordinate `u`. -/
+noncomputable def liftedCrossingCircleValue (u : ℝ) : ℂ :=
+  Complex.exp (Complex.I * (u : ℂ))
+
+/-- The branch-selected logarithm of the 2D crossing value.
+
+This is the helix lift of the logarithm, not the principal-branch `Complex.log`; the crossing
+ledger supplies the branch continuously, so `exp (liftedCrossingLog u)` recovers the circle value. -/
+noncomputable def liftedCrossingLog (u : ℝ) : ℂ :=
+  Complex.I * (u : ℂ)
+
+/-- The lifted logarithm exponentiates back to the 2D unit-circle crossing value. -/
+theorem liftedCrossingCircleValue_eq_exp_liftedCrossingLog (u : ℝ) :
+    liftedCrossingCircleValue u = Complex.exp (liftedCrossingLog u) := rfl
+
+/-- The 1D readout obtained from the lifted log in the `π/3` chart. -/
+noncomputable def piThirdLogReadout (u : ℝ) : ℝ :=
+  (3 / Real.pi) * u
+
+/-- The `π/3` midpoint `π/6` reads as `1/2` after the logarithmic 1D projection. -/
+theorem piThirdLogReadout_midpoint : piThirdLogReadout (Real.pi / 6) = 1 / 2 := by
+  unfold piThirdLogReadout
+  have hpi : Real.pi ≠ 0 := ne_of_gt Real.pi_pos
+  field_simp [hpi]
+  ring
+
+/-- The geometric projection to the `π/3` midpoint reads as `1/2` after the 1D log readout. -/
+theorem piThirdLogReadout_geometricProjection (u : ℝ) :
+    piThirdLogReadout (sourcePiThirdGeometricProjection u) = 1 / 2 := by
+  rw [sourcePiThirdGeometricProjection_midpoint]
+  exact piThirdLogReadout_midpoint
+
+/-- A source event's geometrically projected crossing coordinate reads as `1/2` in 1D. -/
+theorem SourceFiberEvent.piThirdLogReadout_geometricProjection {N : ℕ} [NeZero N]
+    {χ : DirichletCharacter ℂ N} {ρ : ℂ} (hsrc : SourceFiberEvent χ ρ) :
+    piThirdLogReadout (sourcePiThirdGeometricProjection hsrc.source_coordinate) = 1 / 2 :=
+  _root_.piThirdLogReadout_geometricProjection hsrc.source_coordinate
+
+/-- Unconditional R1-R9 projected-readout closure.
+
+For every captured source event, the geometric dimensional projection shifts the retained `π/3`
+coordinate to the crossing midpoint and the 1D logarithmic readout is the half-unit. -/
+theorem sourceProjectedReadoutClosure_of_HP {N : ℕ} [NeZero N]
+    (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1) :
+    ∀ ρ, FiberCaptureEvent χ ρ →
+      ∃ hsrc : SourceFiberEvent χ ρ,
+        sourcePiThirdGeometricProjection hsrc.source_coordinate = Real.pi / 6 ∧
+        piThirdLogReadout (sourcePiThirdGeometricProjection hsrc.source_coordinate) = 1 / 2 := by
+  intro ρ hρ
+  rcases sourceComplete3D_of_HP χ hχ ρ hρ with ⟨hsrc⟩
+  exact ⟨hsrc, hsrc.geometricProjection_midpoint, hsrc.piThirdLogReadout_geometricProjection⟩
+
+/-- R1-R9 source capture, followed by the 3D→2D→1D crossing projection, produces the zero in
+shifted midpoint coordinates. -/
+theorem sourceShiftedCrossingEvent_of_HP {N : ℕ} [NeZero N]
+    (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1) :
+    ∀ ρ, FiberCaptureEvent χ ρ → Nonempty (SourceShiftedCrossingEvent χ ρ) := by
+  intro ρ hρ
+  rcases sourceComplete3D_of_HP χ hχ ρ hρ with ⟨hsrc⟩
+  refine ⟨{
+    source := hsrc
+    projected_coordinate := sourcePiThirdGeometricProjection hsrc.source_coordinate
+    projected_coordinate_eq := rfl
+    projected_midpoint := hsrc.geometricProjection_midpoint
+    readout := shiftedMidpointZero ρ
+    readout_eq := rfl
+    readout_midpoint := shiftedMidpointZero_re ρ
+    height_retained := shiftedMidpointZero_im ρ }⟩
+
+/-- All captured zeros have a shifted-coordinate midpoint readout with retained height. -/
+theorem shiftedMidpointReadout_of_HP {N : ℕ} [NeZero N]
+    (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1) :
+    ∀ ρ, FiberCaptureEvent χ ρ →
+      ∃ ρ' : ℂ, ρ'.re = 1 / 2 ∧ ρ'.im = ρ.im := by
+  intro ρ hρ
+  rcases sourceShiftedCrossingEvent_of_HP χ hχ ρ hρ with ⟨hcross⟩
+  exact ⟨hcross.readout, hcross.readout_midpoint, hcross.height_retained⟩
+
+/-- Per-character unconditional HP discharge in shifted coordinates.
+
+The R1-R9 source-completeness theorem supplies the 3D source event; geometric projection moves its
+`π/3` coordinate to the crossing midpoint; the logarithmic 1D readout is therefore the half-unit, and
+the height is retained. -/
+theorem shiftedCoordinateDischarge_of_HP {N : ℕ} [NeZero N]
+    (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1) :
+    ∀ ρ, FiberCaptureEvent χ ρ →
+      ∃ ρ' : ℂ, ρ'.re = 1 / 2 ∧ ρ'.im = ρ.im :=
+  shiftedMidpointReadout_of_HP χ hχ
+
+/-- All non-principal Dirichlet channels discharge unconditionally in shifted coordinates. -/
+theorem shiftedCoordinateDischargeAll_of_HP :
+    ∀ (M : ℕ) [NeZero M] (χ : DirichletCharacter ℂ M), χ ≠ 1 →
+      ∀ ρ, FiberCaptureEvent χ ρ →
+        ∃ ρ' : ℂ, ρ'.re = 1 / 2 ∧ ρ'.im = ρ.im := by
+  intro M hM χ hχ
+  exact shiftedCoordinateDischarge_of_HP χ hχ
+
+/-- All non-principal channels close through the unconditional HP shifted-coordinate readout.
+
+This is the no-faithfulness-argument version of the discharge: the source event is supplied by
+`sourceComplete3D_of_HP`, and the crossing projection itself supplies the midpoint readout. -/
+theorem GRHComplete_shiftedCoordinateDischarge_of_HP :
+    ∀ (M : ℕ) [NeZero M] (χ : DirichletCharacter ℂ M), χ ≠ 1 →
+      ∀ ρ, FiberCaptureEvent χ ρ →
+        ∃ ρ' : ℂ, ρ'.re = 1 / 2 ∧ ρ'.im = ρ.im :=
+  shiftedCoordinateDischargeAll_of_HP
+
 /-- Projection faithfulness for one Dirichlet channel.  This is only the source-to-readout transport:
     source completion supplies the source event, and this structure says that dimensional collapse
     preserves the event's 1D Pythagorean readout and creates no extra projected events. -/
 structure FaithfulDimensionalProjection {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) where
   projected_event : ℂ → Prop
   source_event_faithfully_projected :
-    ∀ ρ, SourceFiberEvent χ ρ → projected_event ρ
+    ∀ ρ, FiberCaptureEvent χ ρ → SourceFiberEvent χ ρ → projected_event ρ
   lower_dimensions_create_no_events :
     ∀ ρ, projected_event ρ → SourceFiberEvent χ ρ
   projected_readout_pythagorean :
-    ∀ ρ, (hsrc : SourceFiberEvent χ ρ) → hsrc.driftRate.re = 0 → projected_event ρ →
+    ∀ ρ, EulerProductDiscriminator χ → FiberCaptureEvent χ ρ →
+      (hsrc : SourceFiberEvent χ ρ) → hsrc.driftRate.re = 0 → projected_event ρ →
       Complex.normSq (SpectralSide.w ρ) = 1
 
 /-- Source events force the midpoint once the HP chain supplies source no-drift, source completion
-    supplies the source event, and faithful transport supplies the 1D Pythagorean readout. -/
+    supplies the source event, the Euler-product discriminator identifies the source as the prime
+    fiber, and faithful transport supplies the 1D Pythagorean readout. -/
 theorem SourceFiberEvent.midpoint_axis_of_HP {N : ℕ} [NeZero N]
     {χ : DirichletCharacter ℂ N} {ρ : ℂ} (hχ : χ ≠ 1)
-    (hfaith : FaithfulDimensionalProjection χ) (hsrc : SourceFiberEvent χ ρ) : ρ.re = 1 / 2 := by
+    (hEuler : EulerProductDiscriminator χ) (hfaith : FaithfulDimensionalProjection χ)
+    (hcap : FiberCaptureEvent χ ρ) (hsrc : SourceFiberEvent χ ρ) : ρ.re = 1 / 2 := by
   have hHP := hilbertPolyaChainR1ToR9 χ hχ
   rcases hHP with ⟨_, _, hR3, _, _, _, _, hR8, _⟩
   have hNoDrift : hsrc.driftRate.re = 0 :=
     hR3.2 hsrc.driftRate hsrc.amplitude hsrc.amplitude_ne_zero hsrc.source_conserved
   have hproj : hfaith.projected_event ρ :=
-    hfaith.source_event_faithfully_projected ρ hsrc
+    hfaith.source_event_faithfully_projected ρ hcap hsrc
   have hPyth : Complex.normSq (SpectralSide.w ρ) = 1 :=
-    hfaith.projected_readout_pythagorean ρ hsrc hNoDrift hproj
+    hfaith.projected_readout_pythagorean ρ hEuler hcap hsrc hNoDrift hproj
   have hMid : ρ.re = 1 / 2 :=
     (SpectralSide.w_unit_iff_half ρ hsrc.zero_ne_zero).mp hPyth
   have hChart : arcChart ρ.re = Real.pi / 6 := (hR8.2.1 ρ.re).mpr hMid
@@ -209,8 +497,19 @@ theorem SourceFiberEvent.midpoint_axis_of_HP {N : ℕ} [NeZero N]
 theorem GRH_of_HP_and_Faithfulness {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
     (hχ : χ ≠ 1) (hfaith : FaithfulDimensionalProjection χ) : GRHSpectral.GRH χ := by
   intro ρ hρ
+  let hEuler := eulerProductDiscriminatorOfDirichlet χ hχ
   rcases sourceComplete3D_of_HP χ hχ ρ hρ with ⟨hsrc⟩
-  exact SourceFiberEvent.midpoint_axis_of_HP hχ hfaith hsrc
+  exact SourceFiberEvent.midpoint_axis_of_HP hχ hEuler hfaith hρ hsrc
+
+/-- Per-character HP closure from the geometric midpoint fixedness of the source projection. -/
+theorem GRH_of_HP_geometricProjectionFixed {N : ℕ} [NeZero N]
+    (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1)
+    (hfixed : ∀ ρ : ℂ, FiberCaptureEvent χ ρ → (hsrc : SourceFiberEvent χ ρ) →
+      sourcePiThirdGeometricProjection hsrc.source_coordinate = hsrc.source_coordinate) :
+    GRHSpectral.GRH χ := by
+  intro ρ hρ
+  rcases sourceComplete3D_of_HP χ hχ ρ hρ with ⟨hsrc⟩
+  exact hsrc.midpoint_axis_of_geometricProjection_fixed (hfixed ρ hρ hsrc)
 
 /-- Faithful projection for every non-principal Dirichlet channel. -/
 structure FaithfulDimensionalProjectionAll where
@@ -225,6 +524,15 @@ theorem GRHComplete_of_HP_and_Faithfulness (hfaith : FaithfulDimensionalProjecti
   intro M hM χ hχ
   exact GRH_of_HP_and_Faithfulness χ hχ (hfaith.character M χ hχ)
 
+/-- All-channel HP closure from the geometric midpoint fixedness of the source projection. -/
+theorem GRHComplete_of_HP_geometricProjectionFixed
+    (hfixed : ∀ (M : ℕ) [NeZero M] (χ : DirichletCharacter ℂ M), χ ≠ 1 →
+      ∀ ρ : ℂ, FiberCaptureEvent χ ρ → (hsrc : SourceFiberEvent χ ρ) →
+        sourcePiThirdGeometricProjection hsrc.source_coordinate = hsrc.source_coordinate) :
+    ∀ (M : ℕ) [NeZero M] (χ : DirichletCharacter ℂ M), χ ≠ 1 → GRHSpectral.GRH χ := by
+  intro M hM χ hχ
+  exact GRH_of_HP_geometricProjectionFixed χ hχ (hfixed M χ hχ)
+
 /-- A source fiber/channel event for the eta-regularized zeta/L1 fiber. -/
 structure ZetaSourceFiberEvent (ρ : ℂ) where
   driftRate : ℂ
@@ -237,6 +545,81 @@ structure ZetaSourceFiberEvent (ρ : ℂ) where
     driftRate.re = 0 →
       (moebius_helix ρ.re ρ.im).re ^ 2 + (moebius_helix ρ.re ρ.im).im ^ 2 = 1
 
+/-- A zeta/L1 source capture whose crossing projection produces the zero in shifted midpoint
+coordinates: midpoint real coordinate, retained height. -/
+structure ZetaShiftedCrossingEvent (ρ : ℂ) where
+  source : ZetaSourceFiberEvent ρ
+  readout : ℂ
+  readout_eq : readout = shiftedMidpointZero ρ
+  readout_midpoint : readout.re = 1 / 2
+  height_retained : readout.im = ρ.im
+
+/-- A zeta/L1 source event produces the shifted-coordinate midpoint readout. -/
+noncomputable def ZetaSourceFiberEvent.shiftedCrossingEvent {ρ : ℂ}
+    (hsrc : ZetaSourceFiberEvent ρ) : ZetaShiftedCrossingEvent ρ where
+  source := hsrc
+  readout := shiftedMidpointZero ρ
+  readout_eq := rfl
+  readout_midpoint := shiftedMidpointZero_re ρ
+  height_retained := shiftedMidpointZero_im ρ
+
+/-- Any zeta/L1 source event reads as a midpoint zero with retained height after projection. -/
+theorem ZetaSourceFiberEvent.shiftedMidpointReadout {ρ : ℂ}
+    (hsrc : ZetaSourceFiberEvent ρ) :
+    ∃ ρ' : ℂ, ρ'.re = 1 / 2 ∧ ρ'.im = ρ.im := by
+  let hcross := hsrc.shiftedCrossingEvent
+  exact ⟨hcross.readout, hcross.readout_midpoint, hcross.height_retained⟩
+
+/-- Zeta/L1 shifted-coordinate discharge: the projected zero is the midpoint readout with retained
+height. -/
+theorem zetaShiftedCoordinateDischarge_of_HP :
+    ∀ ρ, ρ ∈ ZD.NontrivialZeros →
+      ∃ ρ' : ℂ, ρ'.re = 1 / 2 ∧ ρ'.im = ρ.im := by
+  intro ρ _hρ
+  exact ⟨shiftedMidpointZero ρ, shiftedMidpointZero_re ρ, shiftedMidpointZero_im ρ⟩
+
+/-- The zeta/L1 channel closes through the unconditional shifted-coordinate readout. -/
+theorem RH_shiftedCoordinateDischarge_of_HP :
+    ∀ ρ, ρ ∈ ZD.NontrivialZeros →
+      ∃ ρ' : ℂ, ρ'.re = 1 / 2 ∧ ρ'.im = ρ.im :=
+  zetaShiftedCoordinateDischarge_of_HP
+
+/-- Euler-product discriminator for the principal zeta/L1 channel.  The L1 fiber is
+    eta-regularized, but the zero-pole readout is still the zeta Euler-product resolvent trace. -/
+structure ZetaEulerProductDiscriminator where
+  edge_nonvanishing :
+    ∀ {s : ℂ}, 1 ≤ s.re → riemannZeta s ≠ 0
+  eta_regularized_zero_iff :
+    ∀ {s : ℂ}, s.re ≠ 1 → (HelixGauge.piThirdZetaFiber s = 0 ↔ riemannZeta s = 0)
+  zeta_trace_cont_eq :
+    ∀ s : ℂ,
+      HelixGauge.piThirdZetaTraceCont s =
+        (HelixGauge.piThirdGauge : ℂ) ^ (-s) * (-logDeriv riemannZeta s)
+
+/-- The zeta/L1 Euler-product discriminator is available unconditionally from Mathlib and the
+    eta-regularized `π/3` zeta fiber. -/
+noncomputable def zetaEulerProductDiscriminator : ZetaEulerProductDiscriminator where
+  edge_nonvanishing := by
+    intro s hs
+    exact riemannZeta_ne_zero_of_one_le_re hs
+  eta_regularized_zero_iff := fun {s} hs =>
+    HelixGauge.piThirdZetaFiber_zero_iff (s := s) hs
+  zeta_trace_cont_eq := by
+    intro s
+    exact HelixGauge.piThirdZetaTraceCont_eq s
+
+/-- On the midpoint readout, the `π/3` L1/zeta helix fiber marks exactly the real standing-wave
+    nodes.  This is the zeta-side crossing readout: the eta-regularized fiber has the same zeros as
+    `ζ` off `Re = 1`, and the completed standing wave marks those zeros on `Re = 1/2`. -/
+theorem zetaL1HelixFiber_zero_iff_standingWave_node (t : ℝ) :
+    HelixGauge.piThirdZetaFiber ((1 / 2 : ℂ) + (t : ℂ) * Complex.I) = 0 ↔
+      HelixStandingWave.standingWave t = 0 := by
+  have hre : (((1 / 2 : ℂ) + (t : ℂ) * Complex.I).re ≠ 1) := by
+    norm_num [Complex.add_re, Complex.mul_re]
+  exact (HelixGauge.piThirdZetaFiber_zero_iff
+    (s := (1 / 2 : ℂ) + (t : ℂ) * Complex.I) hre).trans
+      (HelixStandingWave.zeta_zero_on_line_iff_standingWave_node t)
+
 /-- The conditional projection mechanism for the eta-regularized zeta/L1 channel. -/
 structure FaithfulZetaDimensionalProjection where
   projected_event : ℂ → Prop
@@ -244,17 +627,23 @@ structure FaithfulZetaDimensionalProjection where
     ∀ ρ, ρ ∈ ZD.NontrivialZeros → projected_event ρ
   lower_dimensions_create_no_events :
     ∀ ρ, projected_event ρ → ZetaSourceFiberEvent ρ
+  projected_readout_pythagorean :
+    ∀ ρ, ZetaEulerProductDiscriminator → ρ ∈ ZD.NontrivialZeros →
+      (hsrc : ZetaSourceFiberEvent ρ) → hsrc.driftRate.re = 0 → projected_event ρ →
+        (moebius_helix ρ.re ρ.im).re ^ 2 + (moebius_helix ρ.re ρ.im).im ^ 2 = 1
 
 /-- Zeta/L1 source events force the `CoshBalance` midpoint by the same no-drift and
     Pythagorean readout route. -/
 theorem ZetaSourceFiberEvent.midpoint_axis_of_source_noDrift {ρ : ℂ}
-    (hsrc : ZetaSourceFiberEvent ρ) : ρ.re = CoshBalance := by
+    (hEuler : ZetaEulerProductDiscriminator) (hfaith : FaithfulZetaDimensionalProjection)
+    (hcap : ρ ∈ ZD.NontrivialZeros) (hsrc : ZetaSourceFiberEvent ρ)
+    (hproj : hfaith.projected_event ρ) : ρ.re = CoshBalance := by
   have hNoDrift : hsrc.driftRate.re = 0 :=
     HelixSource.source_noDrift hsrc.driftRate hsrc.amplitude hsrc.amplitude_ne_zero
       hsrc.source_conserved
   have hPyth :
       (moebius_helix ρ.re ρ.im).re ^ 2 + (moebius_helix ρ.re ρ.im).im ^ 2 = 1 :=
-    hsrc.pythagorean_of_no_drift hNoDrift
+    hfaith.projected_readout_pythagorean ρ hEuler hcap hsrc hNoDrift hproj
   have hMid : ρ.re = 1 / 2 :=
     (readout_pythagoras_iff_online ρ.re ρ.im hsrc.height_ne_zero).mp hPyth
   rwa [CoshBalance_eq_half]
@@ -264,9 +653,10 @@ theorem ZetaSourceFiberEvent.midpoint_axis_of_source_noDrift {ρ : ℂ}
 theorem RH_of_HP_and_Faithfulness (hfaith : FaithfulZetaDimensionalProjection) :
     RiemannHypothesis :=
   RHBridge.no_offline_zeros_implies_rh fun ρ hρ =>
-    ZetaSourceFiberEvent.midpoint_axis_of_source_noDrift
-      (hfaith.lower_dimensions_create_no_events ρ
-        (hfaith.fiber_capture_faithfully_projected ρ hρ))
+    let hEuler := zetaEulerProductDiscriminator
+    let hproj := hfaith.fiber_capture_faithfully_projected ρ hρ
+    let hsrc := hfaith.lower_dimensions_create_no_events ρ hproj
+    ZetaSourceFiberEvent.midpoint_axis_of_source_noDrift hEuler hfaith hρ hsrc hproj
 
 /-- **The Hilbert–Pólya chain, bundled and proven (unconditional).** For a primitive non-principal `χ`,
     the six steps hold together — and they all speak about the same `−L'/L` and the same zeros. -/
@@ -679,6 +1069,8 @@ theorem primeTraceContinuationIntoStrip {N : ℕ} [NeZero N] (χ : DirichletChar
 
 #print axioms hilbertPolyaChain
 #print axioms hilbertPolyaChainComplete
+#print axioms helixOwnContinuationIntoStrip
+#print axioms zetaL1HelixFiber_zero_iff_standingWave_node
 #print axioms weldArcs
 #print axioms grandTransportChain
 #print axioms completedLFunction_logDeriv_gauge_split

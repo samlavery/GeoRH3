@@ -3,18 +3,21 @@
 \contentsline {subsection}{\numberline {2.1}Canonical Scale}{2}{subsection.2.1}%
 \contentsline {subsection}{\numberline {2.2}Non-principal Character Channels}{3}{subsection.2.2}%
 \contentsline {subsection}{\numberline {2.3}The Principal/Zeta Channel}{3}{subsection.2.3}%
-\contentsline {section}{\numberline {3}Closed-Form Accumulation and Resolvent Trace}{4}{section.3}%
-\contentsline {section}{\numberline {4}Standing Readout and Projection to One Dimension}{6}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Phase Conventions}{7}{subsection.4.1}%
-\contentsline {section}{\numberline {5}Harmonic Cost and the Quantum Ladder}{7}{section.5}%
-\contentsline {section}{\numberline {6}Hilbert--Polya Infrastructure: R1--R9}{8}{section.6}%
-\contentsline {section}{\numberline {7}Source Completeness and Projection Faithfulness}{10}{section.7}%
-\contentsline {section}{\numberline {8}Closure Under Faithful Transport}{12}{section.8}%
-\contentsline {section}{\numberline {9}Mathematical Reproduction of the Computation}{13}{section.9}%
-\contentsline {subsection}{\numberline {9.1}Placed Geometric Fiber}{13}{subsection.9.1}%
-\contentsline {subsection}{\numberline {9.2}Residue Coordinates for the Geometric Tail}{13}{subsection.9.2}%
-\contentsline {subsection}{\numberline {9.3}Principal One-Dimensional Tail Error Control}{14}{subsection.9.3}%
-\contentsline {section}{\numberline {10}Formal and Computational Support}{15}{section.10}%
-\contentsline {subsection}{\numberline {10.1}Formalization Map}{16}{subsection.10.1}%
-\contentsline {subsection}{\numberline {10.2}Lean Verification Protocol}{16}{subsection.10.2}%
-\contentsline {section}{\numberline {11}Current Logical Status}{17}{section.11}%
+\contentsline {subsection}{\numberline {2.4}FTA and Euler Product Generation}{4}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Euler-Product Discriminator}{6}{subsection.2.5}%
+\contentsline {section}{\numberline {3}Closed-Form Accumulation and Resolvent Trace}{7}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Polya Operator Normal Form}{7}{subsection.3.1}%
+\contentsline {section}{\numberline {4}Standing Readout and Projection to One Dimension}{13}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Phase Conventions}{14}{subsection.4.1}%
+\contentsline {section}{\numberline {5}Harmonic Cost and the Quantum Ladder}{14}{section.5}%
+\contentsline {section}{\numberline {6}Hilbert--Polya Infrastructure: R1--R9}{15}{section.6}%
+\contentsline {section}{\numberline {7}Source Completeness and Projection Faithfulness}{17}{section.7}%
+\contentsline {section}{\numberline {8}Unconditional Shifted-Coordinate Closure}{19}{section.8}%
+\contentsline {section}{\numberline {9}Mathematical Reproduction of the Computation}{20}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Placed Geometric Fiber}{20}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Residue Coordinates for the Geometric Tail}{21}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Principal One-Dimensional Tail Error Control}{22}{subsection.9.3}%
+\contentsline {section}{\numberline {10}Formal and Computational Support}{22}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Formalization Map}{23}{subsection.10.1}%
+\contentsline {subsection}{\numberline {10.2}Lean Verification Protocol}{23}{subsection.10.2}%
+\contentsline {section}{\numberline {11}Current Logical Status}{25}{section.11}%

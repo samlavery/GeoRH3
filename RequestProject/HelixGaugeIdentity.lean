@@ -365,6 +365,27 @@ theorem zetaFiber_zero_resolventTrace_pole (C : ℝ) (hC : 0 < C) {ρ : ℂ}
     (riemannZeta_analyticOnNhd_compl_one ρ (Set.mem_compl_singleton_iff.mpr hρ1))
     ((zetaFiber_zero_iff C hC hρre).mp hz) (riemannZeta_not_eventuallyEq_zero hρ1)
 
+/-- The continued L1/ζ helix resolvent trace.  Unlike the L1 fiber, the trace itself is the
+    zeta logarithmic derivative; eta regularizes the fiber but does not replace the zero-pole
+    readout `−ζ'/ζ`. -/
+noncomputable def ZetaTraceCont (C : ℝ) (s : ℂ) : ℂ :=
+  (C : ℂ) ^ (-s) * (-logDeriv riemannZeta s)
+
+theorem zetaTraceCont_eq (C : ℝ) (s : ℂ) :
+    ZetaTraceCont C s = (C : ℂ) ^ (-s) * (-logDeriv riemannZeta s) := by
+  rfl
+
+/-- A zero of the eta-regularized L1 fiber is a pole of the gauged ζ resolvent trace. -/
+theorem zetaFiber_zero_zetaTraceCont_pole (C : ℝ) (hC : 0 < C) {ρ : ℂ}
+    (hρre : ρ.re ≠ 1) (hz : zetaFiber C ρ = 0) :
+    Chi3Pole.PoleAt (ZetaTraceCont C) ρ := by
+  have hpole : Chi3Pole.PoleAt (fun s => -logDeriv riemannZeta s) ρ :=
+    zetaFiber_zero_resolventTrace_pole C hC hρre hz
+  have hg : ContinuousAt (fun s => (C : ℂ) ^ (-s)) ρ :=
+    (continuous_neg.const_cpow (Or.inl (by exact_mod_cast hC.ne'))).continuousAt
+  change Chi3Pole.PoleAt (fun s => (C : ℂ) ^ (-s) * (-logDeriv riemannZeta s)) ρ
+  exact poleAt_gauge_mul hg (gauge_ne_zero C hC ρ) hpole
+
 /-! ## Concrete `π/3` gauge used by the 3D fiber numerics -/
 
 /-- The canonical radial growth `A = π/6`. -/
@@ -433,5 +454,17 @@ theorem piThirdZetaFiber_zero_resolventTrace_pole {ρ : ℂ}
     (hρre : ρ.re ≠ 1) (hz : piThirdZetaFiber ρ = 0) :
     ¬ ∃ L, Tendsto (fun s => -logDeriv riemannZeta s) (nhdsWithin ρ {ρ}ᶜ) (nhds L) :=
   zetaFiber_zero_resolventTrace_pole piThirdGauge piThirdGauge_pos hρre hz
+
+/-- The concrete `π/3` L1/ζ continued trace. -/
+noncomputable def piThirdZetaTraceCont (s : ℂ) : ℂ := ZetaTraceCont piThirdGauge s
+
+theorem piThirdZetaTraceCont_eq (s : ℂ) :
+    piThirdZetaTraceCont s = (piThirdGauge : ℂ) ^ (-s) * (-logDeriv riemannZeta s) := by
+  rfl
+
+theorem piThirdZetaFiber_zero_zetaTraceCont_pole {ρ : ℂ}
+    (hρre : ρ.re ≠ 1) (hz : piThirdZetaFiber ρ = 0) :
+    Chi3Pole.PoleAt piThirdZetaTraceCont ρ :=
+  zetaFiber_zero_zetaTraceCont_pole piThirdGauge piThirdGauge_pos hρre hz
 
 end HelixGauge

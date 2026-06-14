@@ -233,13 +233,16 @@ def _Dgeo_hp(spec: fiber.CharSpec, w, M: int, J: int, c: dict):
     for n in range(1, M):
         head += (Aper[(n - 1) % q] - m) * (phis[n - 1] - phis[n])
     head += (Aper[(M - 1) % q] - m) * phis[M - 1]
-    # tail: the count's deep continuation (cone integral + Bernoulli, the residue buckets)
+    # tail: the count's deep continuation (cone integral + discreteness, the residue buckets).
+    # r=0 is included for the eta/principal two-channel (chi(0) = -1 != 0); for a Dirichlet chi,
+    # chi(0) = 0 so it is skipped -- this loop is correct for both.
     tail = mp.mpc(0)
-    for r in range(1, q):
+    for r in range(0, q):
         ch = fiber.chi_val(spec, r)
         if ch == 0:
             continue
-        x = (mp.mpf(M) + r) / q
+        n0 = M + (r if r > 0 else q)        # smallest placed-past-head integer in this residue class
+        x = mp.mpf(n0) / q
         tail += ch * q ** (-s) * _em_tail_hp(s, x, J)
     return head + g * tail
 
@@ -251,7 +254,7 @@ def crossing_hp(spec: fiber.CharSpec, seed, dps: int = 60, decimals: int = 50):
         c = _hp_consts(dps)
         w = mp.mpf(seed)
         absw = int(abs(float(seed)))
-        M = spec.q * (20 + 2 * absw)
+        M = spec.q * (40 + absw)              # head length: x = M/q = 40 + |t| >> the E-M floor
         J = max(20, int(0.6 * dps))
         h = mp.mpf(10) ** (-(dps // 2))
         for _ in range(40):
@@ -316,6 +319,109 @@ def main_hp(labels=("L2_chi3_q3", "L3_chi4_q4", "L4_chi5quad_q5", "L5_chi5c4_q5"
             z = crossing_hp(spec, coarse, dps=dps, decimals=decimals)
             print(f"  zero #{idx:3d} (height ~{float(ref[idx-1]):7.2f}):  "
                   f"|geometric - reference| = {mp.nstr(abs(z - ref[idx - 1]), 3)}")
+
+
+def _spec_for(label: str):
+    """The character spec to run.  zeta (L1_zeta_q1, principal) is handled by the CLOSED-FORM ETA
+    technique:  eta(s) = (1 - 2^(1-s)) zeta(s) = sum (-1)^(n-1) n^(-s),  a period-2 two-channel
+    pattern (odd -> +1, even -> -1).  On Re s = 1/2 the factor (1 - 2^(1-s)) != 0, so eta(1/2+it) = 0
+    exactly when zeta(1/2+it) = 0 -- the eta crossings ARE the zeta zeros, and eta needs no pole
+    handling.  It drops straight into the count-residual machinery as q=2, m = eta(0) = 1/2."""
+    if label == "L1_zeta_q1":
+        return fiber.CharSpec("L1_zeta_q1", q=2, parity=0, values={0: -1, 1: 1},
+                              order=0, principal=False)
+    return {s.label: s for s in fiber.SPECS}[label]
+
+
+def reproduce(label: str = "L2_chi3_q3", indices=None, dps: int = 60, decimals: int = 50,
+              report_every: int = 25):
+    """Reproduce the certified zeros geometrically and check against zeros_500x50/ to `decimals`.
+    Each zero: seed = the reference truncated to 7 figures (a coarse starting guess that does NOT
+    enter the result), then crossing_hp refines it from the geometry alone to 50 decimals."""
+    spec = _spec_for(label)
+    ref = _compare_zeros(label, dps)
+    if indices is None:
+        indices = range(1, len(ref) + 1)
+    print(f"GEOMETRIC REPRODUCTION of {label}: {len(list(indices)) if not hasattr(indices,'__len__') else len(indices)} "
+          f"zeros to {decimals} decimals vs {COMPARE_DIR}/  (dps={dps})")
+    worst = mp.mpf(0)
+    worst_idx = 0
+    fails = 0
+    done = 0
+    for idx in indices:
+        r = ref[idx - 1]
+        with mp.workdps(dps):
+            seed = mp.mpf(mp.nstr(r, 7))
+        z = crossing_hp(spec, seed, dps=dps, decimals=decimals)
+        with mp.workdps(dps):
+            d = abs(z - r)
+        done += 1
+        if d > worst:
+            worst, worst_idx = d, idx
+        if d > mp.mpf(10) ** (-(decimals - 1)):
+            fails += 1
+            print(f"  MISS  #{idx} (height {float(r):.2f}):  |geo-ref| = {mp.nstr(d, 3)}")
+        if done % report_every == 0:
+            print(f"  ...{done} done, worst so far {mp.nstr(worst, 3)} at #{worst_idx} "
+                  f"(height {float(ref[worst_idx-1]):.1f})", flush=True)
+    print(f"\n{label}:  {done} zeros reproduced, {fails} miss(es) at {decimals}dp.  "
+          f"worst |geometric - reference| = {mp.nstr(worst, 3)} at #{worst_idx} "
+          f"(height {float(ref[worst_idx-1]):.2f})")
+    return worst
+
+
+def reproduce_all(labels=("L1_zeta_q1", "L2_chi3_q3", "L3_chi4_q4", "L4_chi5quad_q5",
+                          "L5_chi5c4_q5", "L6_chi7quad_q7", "L7_chi8quad_q8", "L8_chi7c3_q7"),
+                  dps: int = 60, decimals: int = 50, out_dir: str = None):
+    """Reproduce 500 zeros x 50 decimals for every L-function with certified data (zeta via the
+    eta technique), writing EACH L-function's zeros to its own file for comparison/reproduction."""
+    import os
+    here = os.path.dirname(os.path.abspath(__file__))
+    out_dir = out_dir or os.path.join(here, "results", "geometric_500x50")
+    os.makedirs(out_dir, exist_ok=True)
+    overall = []
+    for label in labels:
+        spec = _spec_for(label)
+        ref = _compare_zeros(label, dps)
+        path = os.path.join(out_dir, f"geometric_{label}.txt")
+        worst, worst_idx, fails = mp.mpf(0), 0, 0
+        with open(path, "w") as f:
+            f.write(f"# Geometric reproduction of {label}: {len(ref)} zeros to {decimals} decimals\n")
+            f.write(f"# method: pi/3 helix -- placement (sqrt-n radius -> amplitude), running count-residual\n")
+            f.write(f"#         amplitude A(N)-m, log-projection to 1D, phasor cancellation, cone+discreteness\n")
+            f.write(f"#         continuation.  constants from mp.pi, dps={dps}.  NO gamma, NO functional equation.\n")
+            if label == "L1_zeta_q1":
+                f.write(f"# zeta via the CLOSED-FORM ETA technique: eta(s)=(1-2^(1-s))zeta(s), period-2 two-channel.\n")
+            f.write(f"# compared against {COMPARE_DIR}/{label}.txt (independent Hurwitz+Hardy-Z, 50dp)\n")
+            f.write(f"# columns: index  geometric_ordinate  |geometric - reference|\n")
+            for idx in range(1, len(ref) + 1):
+                r = ref[idx - 1]
+                with mp.workdps(dps):
+                    seed = mp.mpf(mp.nstr(r, 7))
+                try:
+                    z = crossing_hp(spec, seed, dps=dps, decimals=decimals)
+                    with mp.workdps(dps):
+                        d = abs(z - r)
+                        f.write(f"{idx} {mp.nstr(z, decimals + 4)}  {mp.nstr(d, 2)}\n")
+                except Exception as e:                       # never let one zero kill the run
+                    d = mp.mpf(1)
+                    f.write(f"{idx} ERROR {e}\n")
+                f.flush()
+                if d > worst:
+                    worst, worst_idx = d, idx
+                if d > mp.mpf(10) ** (-(decimals - 1)):
+                    fails += 1
+                if idx % 50 == 0:
+                    print(f"  {label}: {idx}/{len(ref)}  worst {mp.nstr(worst, 3)} @#{worst_idx}", flush=True)
+            f.write(f"# summary: {len(ref)} zeros, {fails} miss(es) at {decimals}dp, "
+                    f"worst |geo-ref| = {mp.nstr(worst, 3)} at #{worst_idx}\n")
+        overall.append((label, worst, fails, len(ref)))
+        print(f"{label}: DONE -> {path}  ({len(ref)} zeros, {fails} miss, worst {mp.nstr(worst, 3)})", flush=True)
+    print("\n" + "=" * 72)
+    print(f"{'L-function':22} {'zeros':>6} {'misses':>7} {'worst |geo-ref|':>16}")
+    for label, worst, fails, n in overall:
+        print(f"{label:22} {n:>6} {fails:>7} {mp.nstr(worst, 3):>16}")
+    return overall
 
 
 def main(labels=("L2_chi3_q3", "L3_chi4_q4", "L5_chi5c4_q5", "L6_chi7quad_q7"),
