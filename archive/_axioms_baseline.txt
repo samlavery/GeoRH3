@@ -1,0 +1,17 @@
+# Axioms baseline for RequestProject.HilbertPolyaChain targets
+# Captured before archival cleanup. Any later deviation = the cleanup altered the proof -> revert.
+# Method: lean_verify (LSP) per theorem.
+
+hilbertPolyaChainR1ToR11            : propext, Classical.choice, Quot.sound
+spectral_geometric_correspondence   : propext, Classical.choice, Quot.sound
+sign_flip_forces_NTZ                : propext, Classical.choice, Quot.sound
+spectral_harmonic_NTZ_correspondence: propext, Classical.choice, Quot.sound
+hilbert_polya_resolvent_identification: propext, Classical.choice, Quot.sound
+producedNTZ_set                     : propext, Classical.choice, Quot.sound
+producedNTZ_mobius_unitary          : propext, Classical.choice, Quot.sound
+GRH_Full_by_Char                    : propext, Classical.choice, Quot.sound
+hilbert_polya_on_critical_line      : propext, Classical.choice, Quot.sound
+GRH_for_chi1_by_crossing_induction  : propext, Classical.choice, Quot.sound
+RH_by_HP                            : hp_spectral_correspondence, propext, Classical.choice, Quot.sound
+GRH_by_HP                           : hp_spectral_correspondence_general, propext, Classical.choice, Quot.sound
+helixDriftFreeAndFTA                : propext, Classical.choice, Quot.sound
