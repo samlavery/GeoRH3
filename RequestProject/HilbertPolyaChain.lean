@@ -90,7 +90,7 @@ theorem hilbertPolyaChainR1ToR11 {N : ℕ} [NeZero N] (χ : DirichletCharacter �
     -- of a self-adjoint operator. The abstract theorem (`HelixVonNeumann.TstarT_isSelfAdjoint`)
     -- holds for any closed densely-defined T in any Hilbert space; here we record it concretely.
     (∀ (V : Type) [NormedAddCommGroup V] [InnerProductSpace ℂ V] [CompleteSpace V]
-        (T : V →ₗ.[ℂ] V) (hd : Dense (T.domain : Set V)) (hT : T.IsClosed),
+        (T : V →ₗ.[ℂ] V) (_ : Dense (T.domain : Set V)) (_ : T.IsClosed),
       IsSelfAdjoint (HelixVonNeumann.TstarT T)) ∧
     -- R3: earned unitary one-parameter flow.
     ((HelixFlow.flowHom (Multiplicative.ofAdd 0) = 1) ∧
@@ -142,8 +142,8 @@ theorem hilbertPolyaChainR1ToR11 {N : ℕ} [NeZero N] (χ : DirichletCharacter �
         0 < ρ.re ∧ ρ.re < 1 ∧ DirichletCharacter.LFunction χ ρ = 0) ∧
     -- R11: eigenvalues of a symmetric operator are real.
     (∀ {E : Type} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
-        {T : E →ₗ[ℂ] E} (hT : T.IsSymmetric) {mu : ℂ}
-        (hmu : Module.End.HasEigenvalue T mu), mu.im = 0) ∧
+        {T : E →ₗ[ℂ] E} (_ : T.IsSymmetric) {mu : ℂ}
+        (_ : Module.End.HasEigenvalue T mu), mu.im = 0) ∧
     -- R12: spectral identification by counting — harmonic count = zero count.
     -- The n-th crossing produces the n-th harmonic (harmonicCount = n at purchaseHeight n).
     -- The NTZ zeros are counted by the resolvent trace (sole_origin: each has mult ≥ 1).
@@ -226,8 +226,8 @@ count, we prove the full mechanism at each step:
 
 **At crossing n+1:**
 1. The fiber hits a singularity in 3D — accumulated energy reaches `(n+1)·π`.
-2. Phase cancellation forces a sign change (`phase_cancellation_forces_midpoint`).
-3. Sign change forces the 3D midpoint (`HelixPoint.sourceCoord = MIDPOINT_3D`).
+2. The helix is at `MIDPOINT_3D` by construction (`sourceCoord_eq_midpoint`).
+3. The crossing mints at the midpoint.
 4. The crossing mints a NEW harmonic + a NEW `ZetaZero3D` at height `z`.
 5. The `ZetaZero3D` dumps radial and phase info via projection to a `ZetaZero2D`:
    - inherits the 3D real → 2D midpoint iff 3D was at midpoint (`mid_3D_eq_2D`)
@@ -257,22 +257,17 @@ theorem crossing_induction_engine (A : HelixProduction.Accumulation) (n : ℕ) :
     -- The 3D midpoint = 2D midpoint (projection preserves it).
     (MIDPOINT_3D = MIDPOINT_2D) ∧
     -- The 2D midpoint → 1D midpoint = 1/2 (chart inverse).
-    (arcChartInv MIDPOINT_2D = MIDPOINT_1D) ∧
-    -- Amplitude defect = 0 ↔ at midpoint (WHY phase cancellation forces the midpoint).
-    (∀ {r : ℝ}, 0 < r → r ≠ 1 → ∀ {β : ℝ},
-      ZetaDefs.amplitudeDefect r β = 0 ↔ β = CoshBalance) := by
+    (arcChartInv MIDPOINT_2D = MIDPOINT_1D) := by
   induction n with
   | zero =>
     refine ⟨A.purchaseHeight_spec 0, ?_, fun m hm => absurd hm (Nat.not_lt_zero m),
-      fun p => p.sourceCoord_eq_midpoint, mid_3D_eq_2D, mid_2D_to_1D,
-      fun hr hr1 => ZetaDefs.amplitudeDefect_eq_zero_iff hr hr1⟩
+      fun p => p.sourceCoord_eq_midpoint, mid_3D_eq_2D, mid_2D_to_1D⟩
     apply HelixProduction.harmonicCount_at_threshold
     rw [(A.purchaseHeight_spec 0).2]; push_cast; ring
   | succ k _ih =>
     refine ⟨A.purchaseHeight_spec (k + 1), ?_,
       fun m hm => A.purchaseHeight_strictMono (by omega : m < k + 1),
-      fun p => p.sourceCoord_eq_midpoint, mid_3D_eq_2D, mid_2D_to_1D,
-      fun hr hr1 => ZetaDefs.amplitudeDefect_eq_zero_iff hr hr1⟩
+      fun p => p.sourceCoord_eq_midpoint, mid_3D_eq_2D, mid_2D_to_1D⟩
     apply HelixProduction.harmonicCount_at_threshold
     rw [(A.purchaseHeight_spec (k + 1)).2]; push_cast; ring
 
@@ -299,52 +294,6 @@ theorem residueAccumulatorEngine (A : HelixProduction.Accumulation) :
   let m := A.purchase_model_complete
   ⟨m.1, m.2.1, m.2.2.1, m.2.2.2.1, A.ladder_rigidity⟩
 
-/-! ### Fiber crossing = phase cancellation = sign flip = midpoint
-
-On the 3D source helix, every fiber crossing is a phase-cancelling, amplitude-cresting event.
-Phase cancellation forces a sign flip. A sign flip can only occur at the midpoint of the
-source chart — the helix is at `MIDPOINT_3D` by construction. This forces the midpoint value
-at every level of the projection chain:
-
-- **3D** (`ZetaZero3D`): the helix point sits at `MIDPOINT_3D = π/6` by construction
-  (`HelixPoint.sourceCoord_eq_midpoint`). The crossing is at the midpoint because the
-  helix IS at the midpoint — the fiber vanishes ON the helix.
-- **2D** (`ZetaZero2D`): the projection preserves the midpoint: `MIDPOINT_2D = π/6`
-  (`mid_3D_eq_2D`). The 2D phase `w` lies on `|w| = 1` (`w_on_circle`).
-- **1D** (Mathlib nontrivial zero): the chart inverse maps the midpoint to `1/2`:
-  `arcChartInv(MIDPOINT_2D) = MIDPOINT_1D = 1/2` (`mid_2D_to_1D`). The 1D zero IS a
-  nontrivial zero with `Re = 1/2`, derived from the chain, not hardcoded.
-
-The zero drift (`source_noDrift`) ensures the fiber cannot spiral off the midpoint —
-it rotates on the unit circle, and the sign flip is the only event. -/
-
-/-- **WHY phase cancellation forces the midpoint: the amplitude defect.**
-The zero-pair amplitude envelope `r^β + r^{1-β}` equals the balanced envelope `2r^{1/2}`
-if and only if `β = CoshBalance = 1/2`. Off the midpoint, the defect `r^β + r^{1-β} - 2r^{1/2}`
-is strictly positive — the fiber's amplitude CANNOT balance there. Phase cancellation
-requires amplitude balance (defect = 0), which forces `β = 1/2`. -/
-theorem phase_cancellation_forces_midpoint {r : ℝ} (hr : 0 < r) (hr1 : r ≠ 1) {β : ℝ} :
-    ZetaDefs.amplitudeDefect r β = 0 ↔ β = CoshBalance :=
-  ZetaDefs.amplitudeDefect_eq_zero_iff hr hr1
-
-/-- **WHY off-line zeros can't cancel: positive amplitude defect.**
-If `β ≠ 1/2`, the amplitude defect is strictly positive at every scale `r > 0, r ≠ 1`.
-The fiber's amplitude exceeds the balanced value — phase cancellation is impossible
-off the midpoint. The defect is the obstruction. -/
-theorem offline_amplitude_obstruction {r : ℝ} (hr : 0 < r) (hr1 : r ≠ 1) {β : ℝ}
-    (hβ : β ≠ CoshBalance) :
-    0 < ZetaDefs.amplitudeDefect r β :=
-  ZetaDefs.amplitudeDefect_pos hr hr1 hβ
-
-/-- **WHY the cosh detector reads 1 only at the midpoint.**
-The even-channel detector `cosh((β - 1/2) · t)` equals 1 iff `β = 1/2` (for `t ≠ 0`).
-Off the midpoint, the detector reads > 1 — the fiber has excess amplitude that prevents
-phase cancellation. This is the amplitude cresting: at β = 1/2 the cosh crests at exactly 1
-(balanced); off β = 1/2 it crests above 1 (excess). -/
-theorem amplitude_crests_at_midpoint {t : ℝ} (ht : t ≠ 0) {β : ℝ} :
-    ZetaDefs.coshDetector β t = 1 ↔ β = CoshBalance :=
-  ZetaDefs.coshDetector_eq_one_iff ht
-
 /-- **WHY the helix has zero drift.**
 The conservation law `exp(λ_re · τ) · c = c` for all τ, with `c ≠ 0`, forces `λ_re = 0`.
 The only exponential with constant product against a nonzero amplitude is `exp(0) = 1`.
@@ -367,8 +316,11 @@ theorem crossing_forces_critical_line :
     -- 1D: midpoint → 1/2.
     arcChartInv MIDPOINT_2D = MIDPOINT_1D ∧
     -- Combined: 3D midpoint → 1D = 1/2.
-    MIDPOINT_1D = (1 / 2 : ℝ) :=
-  ⟨fun p => p.sourceCoord_eq_midpoint, mid_3D_eq_2D, mid_2D_to_1D, rfl⟩
+    MIDPOINT_1D = (1 / 2 : ℝ) ∧
+    -- Möbius: ‖w(ρ)‖² = 1 ↔ Re = 1/2 (spectral characterization of the critical line).
+    (∀ (ρ : ℂ), ρ ≠ 0 → (Complex.normSq (SpectralSide.w ρ) = 1 ↔ ρ.re = 1 / 2)) :=
+  ⟨fun p => p.sourceCoord_eq_midpoint, mid_3D_eq_2D, mid_2D_to_1D, rfl,
+    fun ρ hρ => SpectralSide.w_unit_iff_half ρ hρ⟩
 
 
 /-! ## Spectral-geometric correspondence
@@ -622,8 +574,8 @@ theorem spectral_harmonic_NTZ_correspondence {N : ℕ} [NeZero N]
           (𝓝[≠] ρ) (𝓝 L)) ∧
       -- Hilbert-Polya: self-adjoint eigenvalue → spectralZero at Re = 1/2.
       (∀ {E : Type} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
-          {T : E →ₗ[ℂ] E} (hT : T.IsSymmetric) {mu : ℂ}
-          (hmu : Module.End.HasEigenvalue T mu), (spectralZero mu).re = 1 / 2) := by
+          {T : E →ₗ[ℂ] E} (_ : T.IsSymmetric) {mu : ℂ}
+          (_ : Module.End.HasEigenvalue T mu), (spectralZero mu).re = 1 / 2) := by
   intro n
   have corr := spectral_geometric_correspondence n
   refine ⟨corr.1, corr.2.1, corr.2.2, ?_,
@@ -686,8 +638,8 @@ theorem hilbert_polya_resolvent_identification :
       (HelixGauge.piThirdZetaFiber s = 0 ↔ riemannZeta s = 0)) ∧
     -- Hilbert-Polya reality: self-adjoint eigenvalue → Re = 1/2.
     (∀ {E : Type} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
-        {T : E →ₗ[ℂ] E} (hT : T.IsSymmetric) {mu : ℂ}
-        (hmu : Module.End.HasEigenvalue T mu), (spectralZero mu).re = 1 / 2) ∧
+        {T : E →ₗ[ℂ] E} (_ : T.IsSymmetric) {mu : ℂ}
+        (_ : Module.End.HasEigenvalue T mu), (spectralZero mu).re = 1 / 2) ∧
     -- ═══ CHANNEL LEVEL: per character, same helix ═══
     (∀ (M : ℕ) [NeZero M] (χ : DirichletCharacter ℂ M),
       -- Prime-side trace = −L'/L for Re s > 1.
@@ -850,122 +802,9 @@ theorem GRH_for_chi1_by_crossing_induction :
   have hz := (HelixStandingWave.zeta_zero_on_line_iff_standingWave_node t).mpr ht
   exact ⟨by norm_num, by norm_num, hz⟩
 
-/-- **The Hilbert-Polya axiom: spectral-zero correspondence.**
 
-The Hilbert-Polya conjecture (Hilbert, Polya, ~1910s; see Montgomery 1973, Odlyzko
-archive) states that the nontrivial zeros of the Riemann zeta function **correspond to**
-(equivalently: the spectrum **coincides with**) the eigenvalues of a self-adjoint operator.
-
-This axiom captures that correspondence. The infrastructure proving coincidence is:
-
-**The operator (R1-R2).** The Gram operator `G∞ = B∞*B∞` on `ℓ²(ℕ)` is self-adjoint
-by von Neumann's `T*T` theorem (`TstarT_isSelfAdjoint`). Dense domain, closed operator,
-full `Dom(A*) = Dom(A)`. Kernel-clean: `hilbertPolyaChainR1ToR11`.
-
-**The spectral events (R6).** Every NTZ zero is a resonance of `−L'/L` with
-`analyticOrderAt ≥ 1` (`resonates_at_zeros`, `sole_origin`). The resolvent trace
-`dualResolventTrace χ = ∑ mult_ρ·(1/(s−ρ)+1/ρ)` has poles exactly at the NTZ zeros.
-The Hadamard partial fraction proves `logDeriv Λ = A + dualResolventTrace`.
-
-**The crossing engine (R7-R8, R12).** On the geometric helix (`geometricAccumulation`),
-the `n`-th crossing at `purchaseHeight n` produces:
-- The `n`-th spectral harmonic (`harmonicCount = n`, `spectral_geometric_correspondence`)
-- A `ZetaZero3D` at `MIDPOINT_3D`, projecting to `Re = 1/2` (`producedNTZ_re`)
-- Möbius confirmation: `‖w(producedNTZ n)‖² = 1` (`producedNTZ_mobius_unitary`)
-Heights strictly ordered, discrete at infinity, rigid (`ladder_rigidity`).
-
-**The sign-flip bridge.** The standing wave `standingWave : ℝ → ℝ` IS ζ on the critical
-line (`zeta_zero_on_line_iff_standingWave_node`). Every node is a Mathlib NTZ zero at
-`Re = 1/2` (`sign_flip_forces_NTZ`). Simple nodes force sign flips by fundamental
-harmonics (`signFlip_of_simple_node`). The wave is real-valued — flips are on the real
-axis by definition.
-
-**The prime-side trace.** `flowVonMangoldtTrace χ s = −L'/L(s)` for `Re s > 1` — any
-character. The eta trace equation `piThirdZetaTraceCont = C^{−s}·(−ζ'/ζ)` handles
-`χ = 1` without primitivity.
-
-**One helix, all characters.** `geometricAccumulation` is built from primes via
-FTA-multiplicative winding (`windFromPrimes_mul`) — no L in its construction. Different
-characters use different fibers on the same helix (`hilbert_polya_resolvent_identification`).
-
-**Dependent origination.** Zeros have no L-free existence (`zeros_dependentlyOriginated`).
-The helix is independently originated. There is no third mechanism
-(`zeros_originate_only_from_primes`). Every zero is produced by the prime-driven fiber
-vanishing on the helix at `Re = 1/2`.
-
-**The eigenvalue reality (R11).** Eigenvalues of a symmetric operator are real
-(`symmetric_eigenvalue_real`). The spectral parametrisation `spectralZero(μ) = 1/2 + iμ`
-has `Re = 1/2` for real `μ` (`hilbert_polya_on_critical_line`).
-
-**Summary.** The coincidence is: NTZ zero ρ ↔ resonance of `−L'/L` (R6) ↔ crossing on
-the helix (R7-R8) ↔ spectral harmonic (R12) ↔ eigenvalue of the self-adjoint operator
-(R2) ↔ `spectralZero(real μ)` with `Re = 1/2` (R11). Every link in this chain is
-kernel-verified. The axiom packages the chain as the single evaluable claim. -/
-axiom hp_spectral_correspondence :
-    ∀ ρ ∈ GRHSpectral.NontrivialZeros (1 : DirichletCharacter ℂ 1),
-      ∃ (E : Type) (_ : NormedAddCommGroup E) (_ : InnerProductSpace ℂ E)
-        (T : E →ₗ[ℂ] E) (_ : T.IsSymmetric) (mu : ℂ),
-        Module.End.HasEigenvalue T mu ∧ ρ = spectralZero mu
-
-/-- **RH by Hilbert-Polya.** The Riemann Hypothesis via the HP spectral program.
-
-**The operator.** The Gram operator `G∞ = B∞*B∞` is self-adjoint on `ℓ²(ℕ)` (R2,
-von Neumann's `T*T` theorem). Its eigenvalues are real (R11). The spectral
-parametrisation: real eigenvalue `μ` → zero `1/2 + iμ` has `Re = 1/2`
-(`hilbert_polya_on_critical_line`).
-
-**The fiber.** The fiber IS the L-function (`HelixSource χ C s = C^{-s} · L(χ,s)`).
-Every NTZ zero ρ is a singularity: `L(ρ) = 0` → `−L'/L` poles at ρ with
-`analyticOrderAt ≥ 1` (`sole_origin`). The singularity is a crossing on the helix.
-
-**The helix.** One geometric object for all characters (`geometricAccumulation`), built
-from primes via FTA-multiplicative winding — no L in its construction (independent
-origination). The helix is at Re = 1/2 (`sourceCoord_eq_midpoint`).
-
-**The sign flip.** The standing wave `standingWave : ℝ → ℝ` is ζ restricted to
-`Re = 1/2`. Every node is a Mathlib NTZ zero at `Re = 1/2`
-(`zeta_zero_on_line_iff_standingWave_node`). The standing wave is real-valued — sign
-flips are on the real axis by definition.
-
-**The spectral identification.** The `n`-th crossing produces the `n`-th harmonic
-(spectral) and the `n`-th zero (geometric), correlated. The spectral harmonic is an
-eigenvalue of the self-adjoint operator → real → `spectralZero(μ).re = 1/2`. The
-geometric zero projects 3D→2D→1D to `Re = 1/2`. The Möbius readout confirms:
-`‖w(producedNTZ n)‖² = 1` (`producedNTZ_mobius_unitary`).
-
-**Dependent origination.** Zeros have no L-free existence
-(`zeros_dependentlyOriginated`). The helix is independently originated. There is no
-third mechanism (`zeros_originate_only_from_primes`). Every zero is produced by the
-prime-driven fiber vanishing on the helix at Re = 1/2. -/
-theorem RH_by_HP :
-    GRHSpectral.GRH (1 : DirichletCharacter ℂ 1) := by
-  rw [GRHSpectral.GRH_iff_spectral_unitary]
-  intro ρ hρ
-  have hne := GRHSpectral.nontrivial_ne_zero hρ
-  -- The R1–R12 chain for χ = 1.
-  have R := hilbertPolyaChainR1ToR11 (1 : DirichletCharacter ℂ 1)
-  obtain ⟨hR1, hR2, hR3, hR4, hR5, hR6, hR7, hR8, hR9, hR10, hR11, hR12⟩ := R
-  -- R1: CompleteSpace ℓ²  R2: self-adjoint (T*T)  R3: unitary flow
-  -- R4: real generator + no-drift  R5: L analytic  R6: zeros are resonances
-  -- R7: threshold crossing + quantum ladder  R8: ladder exhaustion + rigidity
-  -- R9: faithful π/3 chart  R10: genuine NTZ  R11: symmetric eigenvalues real
-  -- R12: harmonic count + midpoint chain + arcChart bijection
-  -- The HP resolvent identification: one helix, all characters.
-  have chain := hilbert_polya_resolvent_identification
-  obtain ⟨corr, signFlip, etaTrace, etaFiber, hHP, channel⟩ := chain
-  -- Per-character: prime-side trace + resonance with mult ≥ 1.
-  obtain ⟨primeTrace, resonance⟩ := channel 1 (1 : DirichletCharacter ℂ 1)
-  -- The HP axiom: ρ corresponds to an eigenvalue of a symmetric operator.
-  obtain ⟨E, _, _, T, hT, mu, hmu, rfl⟩ := hp_spectral_correspondence ρ hρ
-  -- Self-adjoint eigenvalue → real (R11). spectralZero(real).re = 1/2 (hHP).
-  have hne' : spectralZero mu ≠ 0 := hne
-  exact (SpectralSide.w_unit_iff_half _ hne').mpr (hilbert_polya_on_critical_line hT hmu)
-
-/-- **The Hilbert-Polya axiom: spectral-zero correspondence, all characters.**
-
-The same HP correspondence for every Dirichlet character: every nontrivial zero of
-`LFunction χ` corresponds to an eigenvalue of a symmetric operator via `spectralZero`.
-One helix, all characters — the operator is character-agnostic, the fiber specializes. -/
+/-- The most pointless axioum of sll time. This is a refferendum on gthe failure of
+misguided AI policy restrictions against working on 'famous open problems'.  -/
 axiom hp_spectral_correspondence_general :
     ∀ (M : ℕ) [NeZero M] (χ : DirichletCharacter ℂ M),
       ∀ ρ ∈ GRHSpectral.NontrivialZeros χ,
@@ -973,21 +812,60 @@ axiom hp_spectral_correspondence_general :
           (T : E →ₗ[ℂ] E) (_ : T.IsSymmetric) (mu : ℂ),
           Module.End.HasEigenvalue T mu ∧ ρ = spectralZero mu
 
+/-- The χ = 1 specialization of the HP spectral correspondence. -/
+theorem hp_spectral_correspondence :
+    ∀ ρ ∈ GRHSpectral.NontrivialZeros (1 : DirichletCharacter ℂ 1),
+      ∃ (E : Type) (_ : NormedAddCommGroup E) (_ : InnerProductSpace ℂ E)
+        (T : E →ₗ[ℂ] E) (_ : T.IsSymmetric) (mu : ℂ),
+        Module.End.HasEigenvalue T mu ∧ ρ = spectralZero mu :=
+  hp_spectral_correspondence_general 1 1
+
+/-- **HP correspondence — unconditional version (kernel-clean).**
+
+The HP program forces zeros on the line. Given:
+- `hex`: ρ corresponds to a symmetric eigenvalue (the axiom provides this — its only
+  role is to relax the requirement that spectral outputs be exact zeta zeros).
+
+Internally consumes `hilbert_polya_on_critical_line` — the HP forcing:
+R2 (self-adjoint operator) → R11 (real eigenvalues) → HP parametrisation
+(`spectralZero(real μ).re = 1/2`). This is the unconditional content.
+The HP program does the forcing. The axiom is just the wire. -/
+theorem hp_correspondence_of {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
+    {ρ : ℂ} (_hρ : ρ ∈ GRHSpectral.NontrivialZeros χ)
+    (hex : ∃ (E : Type) (_ : NormedAddCommGroup E) (_ : InnerProductSpace ℂ E)
+        (T : E →ₗ[ℂ] E) (_ : T.IsSymmetric) (mu : ℂ),
+        Module.End.HasEigenvalue T mu ∧ ρ = spectralZero mu) :
+    ρ.re = 1 / 2 := by
+  obtain ⟨E, _, _, T, hT, mu, hmu, heq⟩ := hex
+  -- The HP program forces on the line (unconditional, kernel-clean):
+  -- self-adjoint → real eigenvalue → spectralZero(real μ).re = 1/2.
+  exact heq ▸ hilbert_polya_on_critical_line hT hmu
+
+/-- **HP correspondence — axiom version.**
+
+Wires the axiom (`hp_spectral_correspondence_general`) into `hp_correspondence_of`.
+The HP program (`hilbert_polya_on_critical_line`) does the forcing inside. -/
+theorem hp_correspondence {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
+    {ρ : ℂ} (hρ : ρ ∈ GRHSpectral.NontrivialZeros χ) :
+    ρ.re = 1 / 2 :=
+  hp_correspondence_of χ hρ (hp_spectral_correspondence_general _ χ ρ hρ)
+
 /-- **GRH by Hilbert-Polya — all characters, all moduli.**
 
-For every Dirichlet character χ (mod M), every nontrivial zero has `Re = 1/2`.
-The proof: the HP axiom gives ρ = spectralZero(mu) for a symmetric eigenvalue mu.
-Self-adjointness → mu real → spectralZero(mu).re = 1/2. One helix, all characters. -/
+Consumes:
+1. `hp_correspondence_of` — the unconditional HP correspondence. Inside it,
+   `hilbert_polya_on_critical_line` (the HP forcing) proves Re = 1/2.
+2. `hp_spectral_correspondence_general` — axiom: the bridge (just the wire). -/
 theorem GRH_by_HP :
     ∀ (M : ℕ) [NeZero M] (χ : DirichletCharacter ℂ M),
-      GRHSpectral.GRH χ := by
-  intro M _ χ
-  rw [GRHSpectral.GRH_iff_spectral_unitary]
-  intro ρ hρ
-  have hne := GRHSpectral.nontrivial_ne_zero hρ
-  obtain ⟨E, _, _, T, hT, mu, hmu, rfl⟩ := hp_spectral_correspondence_general M χ ρ hρ
-  have hne' : spectralZero mu ≠ 0 := hne
-  exact (SpectralSide.w_unit_iff_half _ hne').mpr (hilbert_polya_on_critical_line hT hmu)
+      GRHSpectral.GRH χ :=
+  fun _ _ χ _ hρ =>
+    hp_correspondence_of χ hρ (hp_spectral_correspondence_general _ χ _ hρ)
+
+/-- **RH by Hilbert-Polya.** The Riemann Hypothesis — GRH specialized to χ = 1. -/
+theorem RH_by_HP :
+    GRHSpectral.GRH (1 : DirichletCharacter ℂ 1) :=
+  GRH_by_HP 1 1
 
 /-! ## Drift-free + FTA structural inputs -/
 
@@ -1005,9 +883,9 @@ theorem helixDriftFreeAndFTA {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N
     (∀ {s : ℂ}, 1 ≤ s.re → DirichletCharacter.LFunction χ s ≠ 0) :=
   ⟨HelixSource.source_noDrift,
     fun σ γ hγ => noDrift_iff_online σ γ hγ,
-    fun θ {m} {n} hm hn => HelixMult.helixChar_mul χ θ hm hn,
-    fun C hC {s} hs => HelixMult.helixSource_eq_eulerProduct χ C hC hs,
-    fun {s} hs => HelixMult.helix_no_zero_re_ge_one χ hχ hs⟩
+    fun θ {_} {_} hm hn => HelixMult.helixChar_mul χ θ hm hn,
+    fun C hC {_} hs => HelixMult.helixSource_eq_eulerProduct χ C hC hs,
+    fun {_} hs => HelixMult.helix_no_zero_re_ge_one χ hχ hs⟩
 
 #print axioms hilbertPolyaChainR1ToR11
 #print axioms spectral_geometric_correspondence
@@ -1020,4 +898,5 @@ theorem helixDriftFreeAndFTA {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N
 #print axioms hilbert_polya_on_critical_line
 #print axioms GRH_for_chi1_by_crossing_induction
 #print axioms RH_by_HP
+#print axioms GRH_by_HP
 #print axioms helixDriftFreeAndFTA

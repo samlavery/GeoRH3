@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2023)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: proof_bridge.aux
+The style file: alpha.bst
+Database file #1: proof_bridge_refs.bib
+You've used 14 entries,
+            2543 wiz_defined-function locations,
+            663 strings with 6623 characters,
+and the built_in function-call counts, 5104 in all, are:
+= -- 509
+> -- 197
+< -- 12
++ -- 61
+- -- 58
+* -- 344
+:= -- 838
+add.period$ -- 46
+call.type$ -- 14
+change.case$ -- 73
+chr.to.int$ -- 14
+cite$ -- 14
+duplicate$ -- 236
+empty$ -- 400
+format.name$ -- 79
+if$ -- 1057
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 22
+newline$ -- 75
+num.names$ -- 44
+pop$ -- 77
+preamble$ -- 1
+purify$ -- 91
+quote$ -- 0
+skip$ -- 185
+stack$ -- 0
+substring$ -- 256
+swap$ -- 38
+text.length$ -- 12
+text.prefix$ -- 7
+top$ -- 0
+type$ -- 80
+warning$ -- 0
+while$ -- 50
+width$ -- 15
+write$ -- 198

@@ -1,0 +1,82 @@
+\begin{thebibliography}{WW27}
+
+\bibitem[Apo76]{Apostol1976}
+Tom~M. Apostol.
+\newblock {\em Introduction to Analytic Number Theory}.
+\newblock Undergraduate Texts in Mathematics. Springer, New York, 1976.
+
+\bibitem[BK99]{BerryKeating1999}
+Michael~V. Berry and Jonathan~P. Keating.
+\newblock The riemann zeros and eigenvalue asymptotics.
+\newblock {\em SIAM Review}, 41(2):236--266, 1999.
+
+\bibitem[Con99]{Connes1999}
+Alain Connes.
+\newblock Trace formula in noncommutative geometry and the zeros of the riemann
+  zeta function.
+\newblock {\em Selecta Mathematica}, 5(1):29--106, 1999.
+
+\bibitem[Dav00]{Davenport2000}
+Harold Davenport.
+\newblock {\em Multiplicative Number Theory}, volume~74 of {\em Graduate Texts
+  in Mathematics}.
+\newblock Springer, New York, 3 edition, 2000.
+\newblock Revised and with a preface by Hugh L. Montgomery.
+
+\bibitem[DH36]{DavenportHeilbronn1936}
+Harold Davenport and Hans Heilbronn.
+\newblock On the zeros of certain dirichlet series.
+\newblock {\em Journal of the London Mathematical Society}, 11(3):181--185,
+  1936.
+
+\bibitem[Edw74]{Edwards1974}
+Harold~M. Edwards.
+\newblock {\em Riemann's Zeta Function}.
+\newblock Academic Press, New York, 1974.
+
+\bibitem[IK04]{IwaniecKowalski2004}
+Henryk Iwaniec and Emmanuel Kowalski.
+\newblock {\em Analytic Number Theory}, volume~53 of {\em American Mathematical
+  Society Colloquium Publications}.
+\newblock American Mathematical Society, Providence, RI, 2004.
+
+\bibitem[KS00]{KeatingSnaith2000}
+Jonathan~P. Keating and Nina~C. Snaith.
+\newblock Random matrix theory and $\zeta(1/2+it)$.
+\newblock {\em Communications in Mathematical Physics}, 214:57--89, 2000.
+
+\bibitem[MV07]{MontgomeryVaughan2007}
+Hugh~L. Montgomery and Robert~C. Vaughan.
+\newblock {\em Multiplicative Number Theory I: Classical Theory}, volume~97 of
+  {\em Cambridge Studies in Advanced Mathematics}.
+\newblock Cambridge University Press, Cambridge, 2007.
+
+\bibitem[Rie59]{Riemann1859}
+Bernhard Riemann.
+\newblock {Ueber die Anzahl der Primzahlen unter einer gegebenen Groesse}.
+\newblock {\em Monatsberichte der Koeniglich Preussischen Akademie der
+  Wissenschaften zu Berlin}, pages 671--680, 1859.
+
+\bibitem[RS80]{ReedSimon1980}
+Michael Reed and Barry Simon.
+\newblock {\em Methods of Modern Mathematical Physics. I: Functional Analysis}.
+\newblock Academic Press, New York, revised and enlarged edition, 1980.
+
+\bibitem[Tat67]{Tate1967}
+John~T. Tate.
+\newblock Fourier analysis in number fields and hecke's zeta-functions.
+\newblock In J.~W.~S. Cassels and A.~Froehlich, editors, {\em Algebraic Number
+  Theory}, pages 305--347. Academic Press, London, 1967.
+
+\bibitem[Tit86]{Titchmarsh1986}
+Edward~C. Titchmarsh.
+\newblock {\em The Theory of the Riemann Zeta-Function}.
+\newblock Oxford University Press, Oxford, 2 edition, 1986.
+\newblock Revised by D. R. Heath-Brown.
+
+\bibitem[WW27]{WhittakerWatson1927}
+Edmund~T. Whittaker and George~N. Watson.
+\newblock {\em A Course of Modern Analysis}.
+\newblock Cambridge University Press, Cambridge, 4 edition, 1927.
+
+\end{thebibliography}

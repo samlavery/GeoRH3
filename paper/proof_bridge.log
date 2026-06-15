@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.5.22)  14 JUN 2026 09:10
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.5.22)  15 JUN 2026 00:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -338,24 +338,24 @@ File: l3backend-pdftex.def 2023-04-19 L3 backend support: PDF output (pdfTeX)
 (./proof_bridge.aux)
 \openout1 = `proof_bridge.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 31.
-LaTeX Font Info:    ... okay on input line 31.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 32.
+LaTeX Font Info:    ... okay on input line 32.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -434,19 +434,19 @@ e
 \Gin@req@height=\dimen177
 \Gin@req@width=\dimen178
 )
-Package hyperref Info: Link coloring OFF on input line 31.
+Package hyperref Info: Link coloring OFF on input line 32.
 
 (./proof_bridge.out) (./proof_bridge.out)
 \@outlinefile=\write3
 \openout3 = `proof_bridge.out'.
 
-LaTeX Font Info:    Trying to load font information for U+msa on input line 33.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 34.
 
 
 (/usr/local/texlive/2023/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 33.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 34.
 
 
 (/usr/local/texlive/2023/texmf-dist/tex/latex/amsfonts/umsb.fd
@@ -458,83 +458,48 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 \tf@toc=\write4
 \openout4 = `proof_bridge.toc'.
 
- [2] [3] [4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14]
-[15] [16] [17] [18]
-Underfull \hbox (badness 1205) in paragraph at lines 1356--1358
-[]\OT1/cmr/m/n/10.95 This is the Lean the-o-rem \OT1/cmtt/m/n/10.95 shiftedCoor
-dinateDischarge[]of[]HP\OT1/cmr/m/n/10.95 . The proof uses no
+
+Underfull \hbox (badness 1496) in paragraph at lines 116--118
+[]\OT1/cmr/m/n/10.95 identify the closed-form am-pli-tude ac-cu-mu-la-tion $\OM
+L/cmm/m/it/10.95 C[]L\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 s; ^^_\OT1/cmr/m/n
+/10.95 )$ and the re-sol-vent trace
  []
 
-
-Overfull \hbox (71.86244pt too wide) in paragraph at lines 1363--1366
-\OT1/cmr/m/n/10.95 formalized as \OT1/cmtt/m/n/10.95 sourcePiThirdGeometricProj
-ection\OT1/cmr/m/n/10.95 . Hence, by \OT1/cmtt/m/n/10.95 sourcePiThirdGeometric
-Projection[]midpoint\OT1/cmr/m/n/10.95 , 
- []
-
-
-Overfull \hbox (32.90007pt too wide) in paragraph at lines 1376--1380
-\OT1/cmr/m/n/10.95 by \OT1/cmtt/m/n/10.95 piThirdLogReadout[]midpoint\OT1/cmr/m
-/n/10.95 . The cross-ing event is then pack-aged as \OT1/cmtt/m/n/10.95 SourceS
-hiftedCrossingEvent\OT1/cmr/m/n/10.95 :
- []
-
-[19]
-Overfull \hbox (56.3698pt too wide) in paragraph at lines 1413--1416
-[]\OT1/cmr/m/n/10.95 This is \OT1/cmtt/m/n/10.95 RH[]shiftedCoordinateDischarge
-[]of[]HP\OT1/cmr/m/n/10.95 , built from \OT1/cmtt/m/n/10.95 zetaShiftedCoordina
-teDischarge[]of[]HP\OT1/cmr/m/n/10.95 .
- []
-
-
-Overfull \hbox (32.47601pt too wide) in paragraph at lines 1419--1426
-\OT1/cmtt/m/it/10.95 GRH[]of[]HP[]and[]Faithfulness\OT1/cmr/m/it/10.95 , \OT1/c
-mtt/m/it/10.95 GRHComplete[]of[]HP[]and[]Faithfulness\OT1/cmr/m/it/10.95 , and 
-\OT1/cmtt/m/it/10.95 RH[]of[]HP[]and[]Faithfulness
- []
-
-[20] [21] [22] [23] [24]
-Overfull \hbox (4.1364pt too wide) in paragraph at lines 1789--1790
-[]|$\OT1/cmtt/m/n/10 sourcePiThirdGeometricProjection _ 
- []
-
-[25] (./proof_bridge.aux)
+[2] [3] [4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17]
+[18] [19] [20] [21] [22] [23] [24] [25] [26] (./proof_bridge.bbl [27]) [28]
+(./proof_bridge.aux)
 Package rerunfilecheck Info: File `proof_bridge.out' has not changed.
-(rerunfilecheck)             Checksum: B751F33744CC3DA86DFB64F1F6D52DB8;4963.
+(rerunfilecheck)             Checksum: EA307ED67C7AF5CC716E4816A05A3665;4976.
  ) 
 Here is how much of TeX's memory you used:
- 11509 strings out of 476097
- 179680 string characters out of 5791132
- 1880851 words of memory out of 5000000
- 31644 multiletter control sequences out of 15000+600000
- 526716 words of font info for 89 fonts, out of 8000000 for 9000
+ 11561 strings out of 476097
+ 180470 string characters out of 5791132
+ 1866851 words of memory out of 5000000
+ 31652 multiletter control sequences out of 15000+600000
+ 524921 words of font info for 80 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,10n,76p,549b,707s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,9n,76p,549b,720s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 ></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
 </usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><
-/usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmitt10.pfb><
 /usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></
 usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></u
 sr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr
-/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/l
-ocal/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/loc
-al/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local
-/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/t
-exlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/tex
-live/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texliv
-e/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2
-023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2023
-/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2023/
-texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2023/te
-xmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/2023/tex
-mf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/2023/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmtt8.pfb></usr/local/texlive/2023/texmf-
-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on proof_bridge.pdf (25 pages, 364310 bytes).
+/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/l
+ocal/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/loc
+al/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local
+/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/t
+exlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texl
+ive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive
+/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/
+2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive/20
+23/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2023
+/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/2023/
+texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on proof_bridge.pdf (28 pages, 322862 bytes).
 PDF statistics:
- 407 PDF objects out of 1000 (max. 8388607)
- 334 compressed objects within 4 object streams
- 98 named destinations out of 1000 (max. 500000)
+ 466 PDF objects out of 1000 (max. 8388607)
+ 398 compressed objects within 4 object streams
+ 144 named destinations out of 1000 (max. 500000)
  185 words of extra memory for PDF output out of 10000 (max. 10000000)
 
