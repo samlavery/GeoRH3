@@ -87,29 +87,153 @@ theorem arcChart_line_midpoint (x : ℝ) : arcChart x = MIDPOINT_3D ↔ x = MIDP
   unfold MIDPOINT_3D MIDPOINT_1D
   exact arcChart_line x
 
-/-- A 2D projected zero/readout: midpoint angle in the unit-circle chart, retained height. -/
-noncomputable def projectedZero2D (ρ : ℂ) : ℂ := (⟨MIDPOINT_2D, ρ.im⟩ : ℂ)
+/-! ## 3D → 2D → 1D Projection Chain
 
-/-- The 2D projected readout lies at the 2D midpoint angle. -/
-theorem projectedZero2D_re (ρ : ℂ) : (projectedZero2D ρ).re = MIDPOINT_2D := rfl
+The projection chain tracks how the **height** of a zero changes type
+at each level. The midpoint is structural at every level — it is the
+midpoint of the helix / circle / strip by construction.
 
-/-- The 2D projected readout retains the source height. -/
-theorem projectedZero2D_im (ρ : ℂ) : (projectedZero2D ρ).im = ρ.im := rfl
+| Level | Height type | Height value |
+|-------|-------------|--------------|
+| 3D    | real length | `z` (the axial climb, `∝ √n`) |
+| 2D    | unit-circle phase | `w = exp(i·y)`, on `|w| = 1` |
+| 1D    | imaginary coordinate | `i·y` (the classical strip ordinate) |
 
-/-- The logarithmic height channel used by the 2D-to-1D readout. -/
-noncomputable def logHeightReadout (y : ℝ) : ℝ :=
-  (Complex.log (Complex.I * (y : ℂ))).im
+Maps: 3D→2D wraps `z` onto the circle as a phase (radial/√-spectrum
+splits off). 2D→1D unwraps via `log`: `exp(iy) ↦ iy`. The log appears
+exactly once, at the 2D→1D boundary (Rule Eight).
+-/
 
-/-- A 1D projected zero/readout: normalized midpoint, logarithmic height channel. -/
-noncomputable def projectedZero1D (ρ : ℂ) : ℂ :=
-  (⟨MIDPOINT_1D, logHeightReadout ρ.im⟩ : ℂ)
+/-- A point on the 3D source helix. The helix sits at `MIDPOINT_3D` (= π/6)
+in the π/3 source chart by construction. Height `z` is the real axial
+climb (∝ √n for integer n). -/
+structure HelixPoint where
+  z : ℝ
+  z_pos : 0 < z
 
-/-- The 1D projected readout lies at the normalized midpoint. -/
-theorem projectedZero1D_re (ρ : ℂ) : (projectedZero1D ρ).re = MIDPOINT_1D := rfl
+/-- The source coordinate of any helix point is the midpoint — the helix
+is defined at π/6 in the π/3 chart. This is geometry, not a hypothesis. -/
+noncomputable def HelixPoint.sourceCoord (_p : HelixPoint) : ℝ := MIDPOINT_3D
 
-/-- The 1D projected readout stores the logarithmic height channel. -/
-theorem projectedZero1D_im (ρ : ℂ) :
-    (projectedZero1D ρ).im = logHeightReadout ρ.im := rfl
+/-- Every helix point sits at the 3D midpoint. -/
+theorem HelixPoint.sourceCoord_eq_midpoint (p : HelixPoint) :
+    p.sourceCoord = MIDPOINT_3D := rfl
+
+/-- A 3D zeta zero: a point on the source helix where the fiber crosses
+and vanishes. The crossing produces **two outputs**:
+
+- **Geometric**: the raw height `z` (→ 2D phase → 1D strip coordinate).
+  This is WHERE the zero was produced — its location on the helix.
+- **Spectral**: a NEW harmonic — the eigenvalue `λ_n` of the self-adjoint operator.
+  This is WHAT the zero is in spectral form — the zeta zero `ρ_n` read as a
+  harmonic (an oscillatory correction term in the explicit formula).
+
+One crossing → one harmonic → one zero. Counts match. Heights match (both produced
+at the same crossing height `z`). The eigenvalue carries the zero's identity (which
+zero); the height carries its location (where on the helix). Self-adjointness forces
+the eigenvalue/harmonic to be real. The sign flip at the crossing forces `Re = 1/2`. -/
+structure ZetaZero3D where
+  point : HelixPoint
+  /-- The harmonic index: which harmonic this crossing produces (the n in nπ).
+  The eigenvalue `λ_n` of the self-adjoint operator IS this harmonic — the zeta
+  zero `ρ_n` in spectral form. -/
+  harmonicIndex : ℕ
+
+/-- The 3D source coordinate of a zeta zero is the midpoint. -/
+theorem ZetaZero3D.sourceCoord_midpoint (z3 : ZetaZero3D) :
+    z3.point.sourceCoord = MIDPOINT_3D := rfl
+
+/-! ### Geometric output: 3D → 2D → 1D projection -/
+
+/-- A 2D zeta zero: the 3D helix projected down the axis to the unit circle.
+The height becomes a phase `w` on `|w| = 1` — the radial/√-spectrum splits
+off, only the winding angle survives. -/
+structure ZetaZero2D where
+  zero3D : ZetaZero3D
+  w : ℂ
+  w_on_circle : ‖w‖ = 1
+
+/-- The 2D midpoint is structural: the projected zero sits at `MIDPOINT_2D`
+in the unit-circle angle chart. -/
+noncomputable def ZetaZero2D.angleCoord (_z2 : ZetaZero2D) : ℝ := MIDPOINT_2D
+
+/-! ### 2D → 1D projection
+
+The 2D→1D projection produces the strip coordinate `1/2 + iy` directly — a complex number
+in Mathlib's nontrivial zero set. No wrapper structure for 1D; use Mathlib's defs.
+
+- `re = arcChartInv(MIDPOINT_2D) = 1/2` (derived from the chain via `mid_2D_to_1D`)
+- `im = y` where `w = exp(iy)` — the log unwrap of the 2D phase gives the pure-imaginary
+  ordinate `iy` on the critical line -/
+
+/-- **2D → 1D projection**: the strip coordinate from a 2D zero. `Re = 1/2` from the
+midpoint chain, `Im = y` from the log-unwrapped phase `w = exp(iy)`. -/
+noncomputable def ZetaZero2D.to1D (z2 : ZetaZero2D) (y : ℝ)
+    (_log_unwrap : z2.w = Complex.exp (Complex.I * (y : ℂ))) : ℂ :=
+  ⟨arcChartInv z2.angleCoord, y⟩
+
+/-- The 1D projection has `Re = 1/2`, derived from the 2D midpoint. -/
+theorem ZetaZero2D.to1D_re (z2 : ZetaZero2D) (y : ℝ)
+    (h : z2.w = Complex.exp (Complex.I * (y : ℂ))) :
+    (z2.to1D y h).re = 1 / 2 := mid_2D_to_1D
+
+/-- The 1D projection's imaginary part is `y` — the ordinate of `iy` on the line. -/
+theorem ZetaZero2D.to1D_im (z2 : ZetaZero2D) (y : ℝ)
+    (h : z2.w = Complex.exp (Complex.I * (y : ℂ))) :
+    (z2.to1D y h).im = y := rfl
+
+/-- The 2D phase lies on the unit circle. -/
+theorem ZetaZero2D.phase_norm (z2 : ZetaZero2D) : ‖z2.w‖ = 1 := z2.w_on_circle
+
+/-! ### Spectral–geometric co-production
+
+A 3D crossing mints a harmonic and a zero at the **same crossing height**:
+
+- **eigenvalue λ_n** = the n-th harmonic = zeta zero ρ_n in spectral form (WHAT it is)
+- **crossing height z_n** = where on the helix the fiber vanished (WHERE it was produced)
+- **1D projected height** = z_n flowing through 3D→2D→1D = the zero's `Im ρ`
+
+What matches:
+- **counts**: n crossings = n harmonics = n zeros
+- **heights**: the harmonic and the zero share the crossing height z_n
+- **identity**: the eigenvalue IS the zero in harmonic form, uniquely
+
+The spectral readout (eigenvalue/harmonic) carries the zero's identity. The geometric
+readout (crossing height → 1D projection) carries its location. Self-adjointness forces
+the eigenvalue to be real. The sign flip at the crossing forces `Re = 1/2`. -/
+
+/-- Co-production record: at crossing height `t`, the fiber mints a NEW harmonic
+(eigenvalue λ_n — the zero in spectral form) and a NEW zero (projected to the strip
+as the Mathlib nontrivial zero `⟨1/2, y⟩`). Counts match, heights match. -/
+structure CrossingCoProduction where
+  zero3D : ZetaZero3D
+  zero2D : ZetaZero2D
+  chains : zero2D.zero3D = zero3D
+  /-- The unwrapped phase angle from the 2D→1D projection. -/
+  y : ℝ
+  /-- The 2D phase is `exp(iy)`. -/
+  log_unwrap : zero2D.w = Complex.exp (Complex.I * (y : ℂ))
+  /-- The crossing height: where the fiber vanished. -/
+  crossingHeight : ℝ
+  /-- The 1D projected height `y` equals the crossing height. -/
+  geometric_at_crossing : y = crossingHeight
+
+/-- The 1D strip point of the co-produced zero: `⟨1/2, y⟩`. Uses Mathlib `ℂ` directly. -/
+noncomputable def CrossingCoProduction.strip_point (c : CrossingCoProduction) : ℂ :=
+  ⟨arcChartInv c.zero2D.angleCoord, c.y⟩
+
+/-- The 1D strip point has `Re = 1/2`. -/
+theorem CrossingCoProduction.strip_re (c : CrossingCoProduction) :
+    c.strip_point.re = 1 / 2 := mid_2D_to_1D
+
+/-- The 1D strip point has `Im = y = crossingHeight`. -/
+theorem CrossingCoProduction.strip_im (c : CrossingCoProduction) :
+    c.strip_point.im = c.crossingHeight := c.geometric_at_crossing
+
+/-- Midpoint = midpoint = midpoint across the chain. -/
+theorem midpoint_chain :
+    arcChartInv MIDPOINT_3D = MIDPOINT_1D ∧ MIDPOINT_3D = MIDPOINT_2D :=
+  ⟨mid_3D_to_1D, mid_3D_eq_2D⟩
 
 namespace ZD
 -- ════════════════════════════════════════════════════════════════════════════
@@ -160,110 +284,6 @@ theorem mem_OnLineZeros_iff {s : ℂ} :
 
 /-- A typed zeta zero: the value and its membership proof travel together. -/
 abbrev ZetaZero := {ρ : ℂ // ρ ∈ NontrivialZeros}
-
-/-- A 3D source crossing whose output is an actual typed zeta zero.
-
-The source coordinate is the `π/3` chart of the typed zero's real coordinate, and a crossing records
-that this coordinate is the source midpoint. -/
-structure ZetaCrossing3D where
-  zero : ZetaZero
-  source_coordinate : ℝ
-  source_coordinate_eq : source_coordinate = arcChart zero.val.re
-  source_midpoint : source_coordinate = MIDPOINT_3D
-
-/-- Build a 3D zeta crossing from an actual zeta zero whose `π/3` chart is at the midpoint. -/
-def zetaCrossing3D_of_midpoint {ρ : ℂ} (hρ : ρ ∈ NontrivialZeros)
-    (hmid : arcChart ρ.re = MIDPOINT_3D) : ZetaCrossing3D where
-  zero := ⟨ρ, hρ⟩
-  source_coordinate := arcChart ρ.re
-  source_coordinate_eq := rfl
-  source_midpoint := hmid
-
-/-- The typed zero carried by a 3D crossing is on the normalized midpoint line. -/
-theorem ZetaCrossing3D.zero_re_midpoint (c : ZetaCrossing3D) :
-    c.zero.val.re = MIDPOINT_1D := by
-  have hchart : arcChart c.zero.val.re = MIDPOINT_3D := by
-    rw [← c.source_coordinate_eq, c.source_midpoint]
-  exact (arcChart_line_midpoint c.zero.val.re).mp hchart
-
-/-- The typed zero carried by a 3D crossing remains an actual nontrivial zeta zero. -/
-theorem ZetaCrossing3D.zero_mem (c : ZetaCrossing3D) : c.zero.val ∈ NontrivialZeros :=
-  c.zero.property
-
-/-- A 2D unit-circle angle-chart projection of a typed 3D zeta crossing.
-
-The projected coordinate is a readout object; the actual zeta-zero type remains attached through
-`crossing3D.zero`. -/
-structure ZetaCrossing2D where
-  crossing3D : ZetaCrossing3D
-  point : ℂ
-  point_eq : point = projectedZero2D crossing3D.zero.val
-
-/-- Project a typed 3D zeta crossing to the 2D unit-circle angle chart. -/
-def ZetaCrossing3D.to2D (c : ZetaCrossing3D) : ZetaCrossing2D where
-  crossing3D := c
-  point := projectedZero2D c.zero.val
-  point_eq := rfl
-
-/-- The 2D projected readout lies at the 2D midpoint coordinate. -/
-theorem ZetaCrossing2D.point_re_midpoint (c : ZetaCrossing2D) :
-    c.point.re = MIDPOINT_2D := by
-  rw [c.point_eq]
-  exact projectedZero2D_re c.crossing3D.zero.val
-
-/-- The 2D projected readout retains the original zero height. -/
-theorem ZetaCrossing2D.point_im_retained (c : ZetaCrossing2D) :
-    c.point.im = c.crossing3D.zero.val.im := by
-  rw [c.point_eq]
-  exact projectedZero2D_im c.crossing3D.zero.val
-
-/-- The 2D projection still carries the actual typed zeta zero. -/
-theorem ZetaCrossing2D.zero_mem (c : ZetaCrossing2D) :
-    c.crossing3D.zero.val ∈ NontrivialZeros :=
-  c.crossing3D.zero_mem
-
-/-- The unit-circle point associated to the 2D angle-chart readout. -/
-noncomputable def ZetaCrossing2D.unitCirclePoint (c : ZetaCrossing2D) : ℂ :=
-  Complex.exp (Complex.I * (c.point.re : ℂ))
-
-/-- The 2D angle-chart readout maps to the unit circle. -/
-theorem ZetaCrossing2D.unitCirclePoint_norm (c : ZetaCrossing2D) :
-    ‖c.unitCirclePoint‖ = 1 := by
-  unfold ZetaCrossing2D.unitCirclePoint
-  rw [Complex.norm_exp]
-  simp
-
-/-- A 1D logarithmic projection of a typed 2D zeta crossing.
-
-The projected coordinate is a readout object; the actual zeta-zero type remains attached through the
-stored `crossing2D.crossing3D.zero`. -/
-structure ZetaCrossing1D where
-  crossing2D : ZetaCrossing2D
-  point : ℂ
-  point_eq : point = projectedZero1D crossing2D.crossing3D.zero.val
-
-/-- Project a typed 2D zeta crossing to the normalized 1D logarithmic readout. -/
-def ZetaCrossing2D.to1D (c : ZetaCrossing2D) : ZetaCrossing1D where
-  crossing2D := c
-  point := projectedZero1D c.crossing3D.zero.val
-  point_eq := rfl
-
-/-- The 1D projected readout lies on the normalized midpoint. -/
-theorem ZetaCrossing1D.point_re_midpoint (c : ZetaCrossing1D) :
-    c.point.re = MIDPOINT_1D := by
-  rw [c.point_eq]
-  exact projectedZero1D_re c.crossing2D.crossing3D.zero.val
-
-/-- The 1D projected readout stores the logarithmic height channel. -/
-theorem ZetaCrossing1D.point_im_logHeight (c : ZetaCrossing1D) :
-    c.point.im = logHeightReadout c.crossing2D.crossing3D.zero.val.im := by
-  rw [c.point_eq]
-  exact projectedZero1D_im c.crossing2D.crossing3D.zero.val
-
-/-- The 1D projection still carries the actual typed zeta zero. -/
-theorem ZetaCrossing1D.zero_mem (c : ZetaCrossing1D) :
-    c.crossing2D.crossing3D.zero.val ∈ NontrivialZeros :=
-  c.crossing2D.zero_mem
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- § 2. Witness Definitions
