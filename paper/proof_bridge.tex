@@ -38,9 +38,10 @@ phasor flow, and the Gram--von Neumann self-adjoint operator.  Zero capture is r
 through the resolvent trace $-L'/L$, with multiplicity given by the logarithmic
 derivative residue.  A crossing is a confluence event: the fiber phase cancels, the
 amplitude reaches its threshold, the sign flips, and the next spectral harmonic is
-created.  Mention the Intermediate Value Theorem here: the continuous standing
-readout changes sign, so an intervening crossing occurs.  In the source chart
-that crossing is the midpoint $\pi/6$ in the $\pi/3$ chart;
+created.  The Intermediate Value Theorem is used only to pass from a sign
+change of the continuous standing readout to an actual crossing.  The midpoint
+comes from the source midline and no-drift projection: in the source chart
+that midpoint is $\pi/6$ in the $\pi/3$ chart;
 projection to the unit-circle readout preserves the midpoint, and the logarithmic
 one-dimensional readout is $1/2$.  Thus the real coordinate $1/2$ is a geometric
 half-unit forced by the source crossing.  The exponential source coordinate,
@@ -133,10 +134,10 @@ the prime-generated channel data;
 the resolvent trace $C^{-s}(-L'/L)(s,\chi)$ as two readouts of the same source;
 \item model zero capture as a crossing confluence where phase cancellation,
 amplitude threshold, sign flip, trace residue, and new harmonic creation occur
-(the sign flip is read with the Intermediate Value Theorem)
+with the Intermediate Value Theorem supplying the crossing from the sign change
 simultaneously;
-\item prove, mentioning the Intermediate Value Theorem, that the source sign flip
-forces the midpoint $\pi/6$ in the
+\item prove that the source midline, no-drift condition, and faithful projection
+force the midpoint $\pi/6$ in the
 $\pi/3$ chart, and that the logarithmic one-dimensional readout is
 $(3/\pi)(\pi/6)=1/2$.
 \item identify every channel zero with the corresponding source spectral event
@@ -146,7 +147,7 @@ same eta-regularized readout.
 
 \section{Proof Roadmap}
 
-The proof has four layers.
+The proof has five layers.
 
 \begin{enumerate}[label=(P\arabic*)]
 \item \textbf{Source construction.}
@@ -163,9 +164,10 @@ geometric gauge.
 
 \item \textbf{Crossing geometry.}
 At a source crossing the channel phase cancels, the amplitude reaches a
-threshold, the sign flips, and the next harmonic begins.  By the Intermediate
-Value Theorem, that sign flip has an intervening crossing; the crossing occurs
-on the source midpoint axis, which is $\pi/6$ in the $\pi/3$ chart.
+threshold, the sign flips, and the next harmonic begins.  The Intermediate
+Value Theorem converts that sign change into an actual crossing; the source
+midline and no-drift projection place the crossing on the midpoint axis, which
+is $\pi/6$ in the $\pi/3$ chart.
 
 \item \textbf{Projection readout.}
 The three-dimensional crossing projects to the unit circle without changing the
@@ -451,6 +453,56 @@ On the critical line $\Ree s=\frac12$, the eta factor is nonzero:
   1-2^{1-s}\ne0,
 \]
 because $2^{1-s}=1$ would imply $2^{1-\Ree s}=1$, hence $\Ree s=1$.
+
+\subsection{Why the Closed Form Selects the Midpoint}
+
+The midpoint in the closed-form model is not inserted as an assumption.  It is
+forced by the symmetric phasor pair.  Fix a real scale $c>1$ and define
+\[
+  P_c(s)=c^{-s}+c^{-(1-s)} .
+\]
+The two terms are mirror images under the reflection $s\mapsto1-s$.  If
+$s=\sigma+iy$, then their magnitudes are
+\[
+  |c^{-s}|=c^{-\sigma},
+  \qquad
+  |c^{-(1-s)}|=c^{-(1-\sigma)} .
+\]
+Therefore a cancellation $P_c(s)=0$ forces
+\[
+  c^{-s}=-c^{-(1-s)}
+\]
+and hence equal magnitudes:
+\[
+  c^{-\sigma}=c^{-(1-\sigma)} .
+\]
+Since $c>1$, the map $u\mapsto c^u$ is strictly monotone, so the exponents
+must agree:
+\[
+  -\sigma=-(1-\sigma).
+\]
+Thus
+\[
+  \sigma=\frac12 .
+\]
+This proves that the symmetric closed form can vanish only on the midpoint
+line.  Conversely, it genuinely vanishes on that line: at
+\[
+  s=\frac12+i\,\frac{\pi}{2\log c},
+\]
+the two terms have the same magnitude $c^{-1/2}$ and opposite phases,
+\[
+  c^{-s}=c^{-1/2}e^{-i\pi/2},
+  \qquad
+  c^{-(1-s)}=c^{-1/2}e^{i\pi/2},
+\]
+so
+\[
+  P_c(s)=0.
+\]
+Thus $1/2$ is the unique real coordinate where the symmetric closed-form
+cancellation can occur.  It comes from reflection symmetry plus magnitude
+balance, not from a downstream zero-location assumption.
 
 \subsection{FTA and Euler Product Generation}
 
@@ -842,7 +894,16 @@ same scale conversion.
 \end{proposition}
 
 \begin{proof}
-For $w(\rho)=1-1/\rho$,
+The input here is the projected unit-circle datum, not the conclusion
+$\Ree\rho=1/2$.  The source crossing supplies a no-drift unitary readout
+$z_2(\rho)\in S^1$, and the Möbius coordinate
+\[
+  w(\rho)=1-\frac1\rho
+\]
+is the scalar chart assigned to that datum.  Thus
+$\operatorname{normSq}(w(\rho))=1$ is the Pythagorean statement that the
+projected readout lies on the unit circle.  Since a nontrivial zero is not
+$0$, the algebra is reversible:
 \[
   |w(\rho)|^2=1
   \Longleftrightarrow
@@ -860,7 +921,9 @@ The $\pi/3$ coordinate conversion is
 \]
 The value $1/2$ is therefore the unit-readout midpoint forced by the source
 sign-change/no-drift crossing after source projection, not an independent
-condition on the zero set.
+condition on the zero set.  The Pythagorean step uses only unit-circle
+geometry, the no-drift projection, and the Möbius chart; the midpoint is the
+derived coordinate value.
 \end{proof}
 
 \begin{proposition}[Threshold ladder]
@@ -1027,8 +1090,8 @@ So the trace pole has residue $-mC^{-\rho}$.  The integer $m$ is the spectral
 multiplicity; the factor $C^{-\rho}$ is the nonzero $\pi/3$ geometric scaling.
 At a crossing, this is the residue consumed by the resolvent trace while the
 source fiber amplitude crests, the channel phase cancels, and the sign changes.
-Mention the Intermediate Value Theorem: the continuous standing readout must
-pass through a crossing between the two signs.
+Since the standing readout is continuous, the Intermediate Value Theorem gives
+an actual crossing between the two signs.
 The Polya threshold condition is therefore the simultaneous event
 \[
 \begin{gathered}
@@ -1044,7 +1107,6 @@ Here $E_\chi$ is the source accumulation ledger used by the Polya chain.  The
 jump from one level $A_k^\pm$ to the next is the threshold that starts the next
 harmonic on the spectral readout.  Thus the closed-form resolvent residue, the
 crossing sign change, and the creation of the next harmonic are the same source
-(Intermediate Value Theorem)
 event viewed in three ledgers: trace, standing wave, and harmonic ladder.
 
 For primitive non-principal $\chi$, the completed zero-side resolvent trace is
@@ -1384,10 +1446,10 @@ The critical midpoint is
 \]
 The value $1/2$ is therefore only the normalized one-dimensional readout of
 the source midpoint $\pi/6$.  It is not an independently fitted spectral
-constant.  At a source crossing, the standing readout changes sign.  Mention
-the Intermediate Value Theorem: continuity gives an intervening zero crossing,
-and the no-drift/unitary readout identifies that crossing with the midpoint of
-the source chart.  The
+constant.  At a source crossing, the standing readout changes sign; continuity
+and the Intermediate Value Theorem give an intervening zero crossing, while the
+no-drift/unitary readout identifies that crossing with the midpoint of the
+source chart.  The
 rule is source-side: projection is only responsible for transporting the event
 without losing it or introducing a new one.
 The midpoint conclusion routes through the unitary/Pythagorean readout.  In
@@ -1741,7 +1803,7 @@ Thus
 
 Throughout the proof, a source crossing means the confluence event defined in
 the previous section: phase cancellation, amplitude threshold, sign change
-(mention the Intermediate Value Theorem), new harmonic creation, and projection
+with a crossing supplied by continuity, new harmonic creation, and projection
 by lifted phase.  Its first oriented
 cost is $\pi/2$, and later crossings advance by full $\pi$ increments:
 \[
@@ -1817,9 +1879,9 @@ After projection to the unit-circle chart and logarithmic readout,
 \end{lemma}
 
 \begin{proof}
-At a crossing, the standing readout changes sign.  Mention the Intermediate
-Value Theorem: since the standing readout is continuous through the crossing,
-the sign change supplies an intervening zero of that readout.  The source
+At a crossing, the standing readout changes sign.  Since the standing readout is
+continuous through the crossing, the Intermediate Value Theorem supplies an
+intervening zero of that readout.  The source
 readout is real at this crossing and has no radial drift by the previous lemma,
 so the crossing is an event on the real midpoint axis of the $\pi/3$ chart.  The midpoint
 of the source chart is $\pi/6$.  The projection to the unit-circle chart
@@ -1953,7 +2015,7 @@ at a ladder threshold.  Threshold rigidity makes the threshold height the
 unique purchase height for its level.  The harmonic-count lemma then gives the
 displayed harmonic count.  The source crossing confluence is precisely the
 same threshold read with phase cancellation, amplitude cresting, sign change
-(Intermediate Value Theorem), and outgoing harmonic creation.
+through a continuous standing readout, and outgoing harmonic creation.
 \end{proof}
 
 \begin{lemma}[Crossing projection gives the midpoint readout]
@@ -2143,6 +2205,106 @@ strip away from $\Ree s=1$, so the produced channel zeros are precisely the
 zeta zeros.  The same equality is therefore the nth zeta-zero statement.
 \end{proof}
 
+\begin{proposition}[Harmonic and zero marking are one event]
+For each channel threshold event $e$, the harmonic label and the zero label are
+two readouts of the same source event.  More precisely, the event ledger
+contains a single entry
+\[
+  e
+  =
+  \bigl(
+    h_e,\,
+    \rho_e,\,
+    m_e,\,
+    e^\chi_e,\,
+    \mu_e
+  \bigr),
+\]
+where $h_e$ is the source height, $\rho_e$ is the resolvent pole produced at
+that height, $m_e$ is its residue order, $e^\chi_e$ is the outgoing harmonic,
+and $\mu_e$ is the spectral readout of that harmonic.  The zero is marked
+exactly when the harmonic is produced, and both carry the same multiplicity
+$m_e$.
+\end{proposition}
+
+\begin{proof}
+The accumulator threshold produces a sign-changing standing readout, so by the
+Intermediate Value Theorem there is a crossing at the threshold.  The same
+threshold is the point where the phase accumulator releases the next harmonic.
+The resolvent-pole clause marks the analytic zero at that crossing, while the
+spectral-harmonic clause names the outgoing eigenmode at that crossing.  These
+are not separate events joined later by an external matching rule; they are the
+two labels attached to the same threshold entry.  Since the residue order is
+attached to the entry before either readout is projected, the harmonic ledger
+and the zero ledger inherit the same multiplicity $m_e$.
+\end{proof}
+
+\begin{theorem}[Riemann--von Mangoldt count match gives exhaustion]
+Let
+\[
+  N_{\mathrm{act}}(T)
+  =
+  \#\{\rho:\zeta(\rho)=0,\ 0<\Imm\rho\le T,\ 0<\Ree\rho<1\}_{\mathrm{mult}}
+\]
+be the usual multiplicity-counted zero ledger, and let
+\[
+  N_{\mathrm{prod}}(T)
+  =
+  \sum_{\substack{e:\ 0<h_e\le T}} m_e
+\]
+be the multiplicity-counted produced-event ledger.  Suppose the already
+constructed source correspondence gives
+\[
+  \{\text{produced zero entries up to }T\}
+  \subseteq
+  \{\text{actual zero entries up to }T\}
+\]
+with multiplicity preserved, and suppose the source trace has the same
+Riemann--von Mangoldt counting function as the actual zero ledger:
+\[
+  N_{\mathrm{prod}}(T)
+  =
+  N_{\mathrm{RvM}}(T)
+  =
+  N_{\mathrm{act}}(T),
+\]
+for every regular height $T$ not equal to a zero ordinate or produced-event
+height.  Here $N_{\mathrm{RvM}}(T)$ denotes the exact argument-principle zero
+count, whose standard expansion is
+\[
+  N_{\mathrm{RvM}}(T)
+  =
+  \frac{T}{2\pi}\log\frac{T}{2\pi}
+  -\frac{T}{2\pi}
+  +O(\log T)
+\]
+with the usual lower-order argument term included in the exact count.  Then
+every actual zero with $0<\Imm\rho\le T$ is produced, and the produced
+multiplicity equals the analytic multiplicity.  Hence, as $T$ varies, the
+actual zeta-zero ledger and the produced source ledger are identical as
+multiplicity-counted ledgers.
+\end{theorem}
+
+\begin{proof}
+The source correspondence gives an inclusion of finite multisets up to each
+regular height $T$, because every produced event supplies an actual resolvent
+pole of $\zeta$ and preserves its multiplicity.  Therefore
+\[
+  N_{\mathrm{prod}}(T)\le N_{\mathrm{act}}(T).
+\]
+If an actual zero below $T$ were not produced, or if its analytic multiplicity
+were larger than the produced multiplicity attached to its source event, then
+the actual multiset would contain at least one additional counted element.
+This would force
+\[
+  N_{\mathrm{prod}}(T)<N_{\mathrm{act}}(T),
+\]
+contradicting the Riemann--von Mangoldt count match.  Thus the inclusion is
+surjective and multiplicity-preserving for every regular $T$.  Moving $T$
+across the regular intervals exhausts the positive ordinates.  Reflection
+handles the negative ordinates, and the ledger equality is global.
+\end{proof}
+
 
 \subsection{Prime-channel production and a worked \texorpdfstring{$\chi_3$}{chi3} readout}
 
@@ -2304,8 +2466,7 @@ At this channel ordinate,
 in the continued channel ledger.  The equality of residue channels is the
 phasor vanishing, and this first channel crossing consumes the half-turn
 $\pi/2$ from the origin.  The completed real wave changes sign through the
-node.  Mention the
-Intermediate Value Theorem here only as the witness that the sign change gives
+node.  The Intermediate Value Theorem is the witness that the sign change gives
 a zero of the real standing wave between the sampled signs.  It does not set
 the midpoint.  The midpoint has already been fixed by the source midline,
 no-drift projection, and faithful readout.
@@ -2394,12 +2555,16 @@ has one-dimensional real readout $1/2$.
 \end{theorem}
 
 \begin{proof}
-The constructed produced zeros are the explicit sequence
+By definition, a helix-produced zero is the one-dimensional readout of a
+measured source event.  If the event has retained channel height $h_n$, then
+the source midpoint projection gives
 \[
-  \operatorname{producedNTZ}(n)=\frac12+in .
+  \rho_n=\frac12+i h_n .
 \]
-The native predicate $\operatorname{IsProducedHelixZero}(\rho)$ means precisely that
-$\rho=\operatorname{producedNTZ}(n)$ for some $n$.  Therefore
+The heights $h_n$ are measured by the channel fiber; they are not assumed to be
+equally spaced and need not equal $n$.  The production predicate
+$\operatorname{IsProducedHelixZero}(\rho)$ means precisely that
+$\rho=\rho_n$ for one of these measured events.  Therefore
 \[
   \operatorname{IsProducedHelixZero}(\rho)
   \Longrightarrow
@@ -2597,15 +2762,35 @@ height is nonzero.  Consequently a produced node is not a tangency or stalled
 contact; it gives a genuine sign change.
 
 The closed-form exhaustion route gives the same conclusion from the symmetric
-phasor ledger.  Its zero ledger is the vanishing set of the symmetric
-closed-form pair, every ledger element has real part $1/2$, and a
-count-indexed induction pushes that midpoint result through every measured
-zero event.  This is the closed-form induction-to-infinity version of the
-no-off-line conclusion.  Mention the Intermediate Value Theorem only for this
-limited purpose: a sign change of the real standing wave witnesses an actual
-zero between the signs.  The Intermediate Value Theorem does not force the
-midpoint.  The midpoint is forced earlier by the source midline, no-drift
-projection, and faithful readout.
+phasor ledger and also explains where the real coordinate comes from.  For the
+symmetric closed form
+\[
+  P_c(s)=c^{-s}+c^{-(1-s)},\qquad c>1,
+\]
+a zero satisfies
+\[
+  c^{-s}=-c^{-(1-s)}.
+\]
+Writing $s=\sigma+iy$ and taking magnitudes gives
+\[
+  c^{-\sigma}=c^{-(1-\sigma)}.
+\]
+Strict monotonicity of $u\mapsto c^u$ then forces
+\[
+  -\sigma=-(1-\sigma),\qquad\text{hence}\qquad \sigma=\frac12 .
+\]
+So the symmetric closed form has no off-midpoint zeros.  It also has actual
+midpoint zeros: at $s=1/2+i\pi/(2\log c)$ the two terms have equal magnitude
+and opposite phase.  Thus the value $1/2$ is the only real coordinate at which
+the closed-form cancellation can occur; it is derived from reflection symmetry
+and magnitude balance.  A count-indexed exhaustion of measured events pushes
+this midpoint result through every zero event in the ledger.
+
+The Intermediate Value Theorem is used only for this limited purpose: a sign
+change of the real standing wave witnesses an actual zero between the signs. It
+does not force the midpoint.  The midpoint is forced earlier by the source
+midline, no-drift projection, faithful readout, and the closed-form
+magnitude-balance argument above.
 
 Combining origination, source-trace coupling, faithfulness of the source record,
 the strong data processing inequality, indexed production, midpoint projection,

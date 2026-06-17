@@ -13,9 +13,10 @@ import RequestProject.GeometricProjectionHolds
 import RequestProject.AllHelix
 import RequestProject.SimpleZeros
 import RequestProject.ClosedFormResolventBridge
+import RequestProject.XiPartialFraction
 import Hammer
 import Auto
---import RequestProject.RiemannHypothesisBridge
+import RequestProject.RiemannHypothesisBridge
 
 /-!
 
@@ -681,6 +682,63 @@ theorem closedForm_resolvent_induction_program {c : ℝ} (hc : 1 < c)
   · exact ClosedFormResolventBridge.zeta_zeros_re_half_of_closedForm_induction hc I
   · exact ClosedFormResolventBridge.no_offline_zeta_zeros_of_closedForm_induction hc I
 
+/-- Closed-form measured-event exhaustion closes Mathlib's principal-channel
+`RiemannHypothesis`: the exact closed-form ledger puts every measured event on
+the midpoint line, and exhaustion says every zeta nontrivial zero is one of
+those measured events. -/
+theorem RiemannHypothesis_of_closedForm_induction {c : ℝ} (hc : 1 < c)
+    (I : ClosedFormResolventBridge.ClosedFormZeroInduction c) :
+    RiemannHypothesis :=
+  RHBridge.no_offline_zeros_implies_rh
+    (by
+      intro ρ hρ
+      rw [CoshBalance_eq_half]
+      exact ClosedFormResolventBridge.zeta_zeros_re_half_of_closedForm_induction hc I ρ hρ)
+
+/-- Canonical closed-form resolvent program with the hypothesis-bearing pieces
+pushed behind the bridge.  The public surface is unconditional: the canonical
+closed-form zero ledger is exactly the integer event range, every canonical
+closed-form zero lies on the midpoint line, produced eta carrier zeros are
+zeta nontrivial zeros, produced Dirichlet carrier zeros are `L`-function
+nontrivial zeros, and the promoted resolvent trace is the all-zero atomic
+Cauchy transform. -/
+theorem canonicalClosedForm_resolvent_program :
+    (∀ s : ℂ,
+      ClosedFormResolventBridge.closedFormResolventTrace
+        ClosedFormResolventBridge.canonicalClosedFormBase s =
+        -logDeriv
+          (ClosedFormResolventBridge.closedFormPair
+            ClosedFormResolventBridge.canonicalClosedFormBase) s) ∧
+    ClosedFormResolventBridge.CanonicalClosedFormZeroLedger =
+      Set.range ClosedFormResolventBridge.canonicalClosedFormIntegerEvent ∧
+    (∀ s : ℂ, s ∈ ClosedFormResolventBridge.CanonicalClosedFormZeroLedger →
+      s.re = 1 / 2) ∧
+    (∀ z : ClosedFormResolventBridge.EtaProducedZero,
+      ClosedFormResolventBridge.EtaProducedZero.toComplex z ∈ ZD.NontrivialZeros) ∧
+    (∀ {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
+      (z : ClosedFormResolventBridge.DirichletProducedZero χ),
+      ClosedFormResolventBridge.DirichletProducedZero.toComplex z ∈
+        GRHSpectral.NontrivialZeros χ) ∧
+    (∀ {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) (z : ℂ),
+      MeasureTheory.Integrable (fun t : ℝ => (1 : ℂ) / ((t : ℂ) - z))
+        (CriticalLinePhasor.Resolvent.zeroMeasure χ) →
+      CriticalLinePhasor.Resolvent.resolventTrace χ z
+        = ∫ t, (1 : ℂ) / ((t : ℂ) - z)
+            ∂(CriticalLinePhasor.Resolvent.zeroMeasure χ)) := by
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
+  · intro s
+    exact ClosedFormResolventBridge.closedFormResolventTrace_eq_neg_logDeriv
+      ClosedFormResolventBridge.canonicalClosedFormBase s
+  · exact ClosedFormResolventBridge.canonicalClosedFormZeroLedger_eq_range_integer
+  · intro s hs
+    exact ClosedFormResolventBridge.canonicalClosedFormZeroLedger_re_half hs
+  · intro z
+    exact ClosedFormResolventBridge.EtaProducedZero.mem_nontrivialZeros z
+  · intro N _ χ z
+    exact ClosedFormResolventBridge.DirichletProducedZero.mem_nontrivialZeros z
+  · intro N _ χ z hint
+    exact ClosedFormResolventBridge.carrierResolventTrace_eq_integral χ z hint
+
 /-! ## Hilbert-Polya resolvent trace identification
 
 The resolvent trace `dualResolventTrace χ s = ∑ mult_ρ · (1/(s-ρ) + 1/ρ)` sums over
@@ -940,7 +998,97 @@ theorem GRH_for_char_by_crossing_induction {N : ℕ} [NeZero N]
       (HelixStandingWave.zeta_zero_on_line_iff_standingWave_node t).mpr ht
     exact ⟨by norm_num, by norm_num, hz⟩
 
-/- hid is discharged by R12-/
+/-- The Hadamard/log-derivative trace identity is already discharged in the
+zero-side dual operator.  For primitive non-principal `χ`, the actual-zero
+resolvent trace equals the completed `L`-function logarithmic derivative up to
+one additive gauge constant, uniformly off the actual zero ledger.  This is the
+replacement for treating the trace identity as a free `hid` input. -/
+theorem hadamard_discharge_completed_traceIdentity {N : ℕ} [NeZero N]
+    (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) :
+    ∃ A : ℂ, ∀ s ∉ GRHSpectral.NontrivialZeros χ,
+      A + HelixDualOperator.dualResolventTrace χ s =
+        logDeriv (DirichletCharacter.completedLFunction χ) s := by
+  obtain ⟨A, hA⟩ := HelixDualOperator.dualResolventTrace_eq_logDeriv χ hχ hχp
+  refine ⟨A, fun s hs => ?_⟩
+  rw [hA s hs]
+
+/-- Shifted form of the discharged Hadamard trace identity in the Hilbert-Polya
+spectral coordinate `s = 1/2 + i z`. -/
+theorem hadamard_discharge_shifted_traceIdentity {N : ℕ} [NeZero N]
+    (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1) (hχp : χ.IsPrimitive) :
+    ∃ A : ℂ, ∀ z : ℂ,
+      (1 / 2 + Complex.I * z) ∉ GRHSpectral.NontrivialZeros χ →
+      A + HelixDualOperator.dualResolventTrace χ (1 / 2 + Complex.I * z) =
+        logDeriv (DirichletCharacter.completedLFunction χ)
+          (1 / 2 + Complex.I * z) := by
+  obtain ⟨A, hA⟩ := hadamard_discharge_completed_traceIdentity χ hχ hχp
+  exact ⟨A, fun z hz => hA (1 / 2 + Complex.I * z) hz⟩
+
+/-- Principal-channel Hadamard/log-derivative trace identity, discharged with
+no inputs.  The zero-side ξ resolvent trace equals the logarithmic derivative
+of the entire ξ-function, up to one additive gauge constant, uniformly off the
+actual zeta nontrivial zero ledger. -/
+theorem zeta_hadamard_discharge_xi_traceIdentity :
+    ∃ A : ℂ, ∀ s ∉ ZD.NontrivialZeros,
+      A + (∑' ρ : {ρ : ℂ // ρ ∈ ZD.NontrivialZeros},
+        (ZD.xiOrderNat ρ.val : ℂ) * (1 / (s - ρ.val) + 1 / ρ.val)) =
+        logDeriv ZD.riemannXi s := by
+  obtain ⟨A, hA⟩ := ZD.xi_logDeriv_partial_fraction
+  refine ⟨A, fun s hs => ?_⟩
+  rw [logDeriv_apply]
+  exact (hA s hs).symm
+
+/-- Shifted principal-channel discharge in the Hilbert-Polya spectral coordinate
+`s = 1/2 + i z`. -/
+theorem zeta_hadamard_discharge_shifted_xi_traceIdentity :
+    ∃ A : ℂ, ∀ z : ℂ,
+      (1 / 2 + Complex.I * z) ∉ ZD.NontrivialZeros →
+      A + (∑' ρ : {ρ : ℂ // ρ ∈ ZD.NontrivialZeros},
+        (ZD.xiOrderNat ρ.val : ℂ) *
+          (1 / (1 / 2 + Complex.I * z - ρ.val) + 1 / ρ.val)) =
+        logDeriv ZD.riemannXi (1 / 2 + Complex.I * z) := by
+  obtain ⟨A, hA⟩ := zeta_hadamard_discharge_xi_traceIdentity
+  exact ⟨A, fun z hz => hA (1 / 2 + Complex.I * z) hz⟩
+
+/-- The discharged principal-channel ξ trace, written directly in the
+Hilbert-Polya spectral coordinate `s = 1/2 + i z`.  This is the closed-form
+zero-side Cauchy trace plus its single additive gauge constant. -/
+noncomputable def zetaXiHadamardTrace (A : ℂ) (z : ℂ) : ℂ :=
+  A + (∑' ρ : {ρ : ℂ // ρ ∈ ZD.NontrivialZeros},
+    (ZD.xiOrderNat ρ.val : ℂ) *
+      (1 / (1 / 2 + Complex.I * z - ρ.val) + 1 / ρ.val))
+
+/-- The discharged ξ Hadamard identity in trace-object form. -/
+theorem zetaXiHadamardTrace_eq_logDeriv :
+    ∃ A : ℂ, ∀ z : ℂ,
+      (1 / 2 + Complex.I * z) ∉ ZD.NontrivialZeros →
+      zetaXiHadamardTrace A z =
+        logDeriv ZD.riemannXi (1 / 2 + Complex.I * z) := by
+  obtain ⟨A, hA⟩ := zeta_hadamard_discharge_shifted_xi_traceIdentity
+  exact ⟨A, fun z hz => by simpa [zetaXiHadamardTrace] using hA z hz⟩
+
+/-- Direct ξ-trace receiver capstone.  Once the discharged ξ trace is realized
+as a self-adjoint receiver and its zero-side principal parts are the singular
+support, the principal channel closes through the harmonic receiver theorem. -/
+theorem RiemannHypothesis_of_zetaXiHadamardTraceReceiver
+    {A : ℂ}
+    (hsa : HelixLimit.IsSelfAdjointReceiver (zetaXiHadamardTrace A))
+    (hres : ∀ ρ ∈ ZD.NontrivialZeros,
+      HelixLimit.poleParam ρ ∈ HelixLimit.SingularSupport (zetaXiHadamardTrace A)) :
+    RiemannHypothesis := by
+  apply RHBridge.no_offline_zeros_implies_rh
+  intro ρ hρ
+  rw [CoshBalance_eq_half]
+  have him : (HelixLimit.poleParam ρ).im = 0 :=
+    HelixLimit.real_absorption_of_selfAdjoint hsa
+      (HelixLimit.poleParam ρ) (hres ρ hρ)
+  rw [HelixLimit.poleParam_im] at him
+  linarith
+
+/-- Bare `L` readout capstone.  This remains the adapter for a readout that has
+already subtracted the archimedean and completion regularizers, so its input is
+the bare `-L'/L` identity.  The completed zero-side identity is discharged by
+`hadamard_discharge_completed_traceIdentity` above. -/
 theorem grh_of_selfAdjoint_readout {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N)
     {A : Type*} [CStarAlgebra A] [StarModule ℂ A] {a : A} (ha : IsSelfAdjoint a)
     {φ : A → ℂ} (hφ : Continuous φ)

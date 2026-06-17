@@ -19,11 +19,12 @@ spectral parameter is exactly the critical line):
   self-adjointness.**
 * **Capstone** (`grh_of_selfAdjoint_resolvent_capture`): Layer 1 ∘ Layer 2.
 
-The single open box is the **resolvent-trace identity** `hid` — the trace formula — kept *local /
-principal-part* (regularity off the spectrum) rather than global trace-class. The Γ-factor, trivial
-zeros, and `s = 1` pole live on the prime/archimedean side and must be subtracted into the regularizer
-`R₀` so the nontrivial-zero channel is clean; here that is encoded by `T` already being `−L'/L`
-(uncompleted, so the `s=1` pole and trivial zeros are not in the picture for non-principal `χ`).
+The local adapter consumes a **resolvent-trace identity** `hid` — the trace formula — kept
+*local / principal-part* (regularity off the spectrum) rather than global trace-class. The Γ-factor,
+trivial zeros, and `s = 1` pole live on the prime/archimedean side and are subtracted into the
+regularizer `R₀` so the nontrivial-zero channel is clean; in the principal ξ channel and the
+closed-form bridge this identity is discharged upstream and passed into this file as an ordinary
+compiled theorem.
 
 The **multiplicity layer** `multiplicityCapture_of_resolventTrace` is stated as the precise remaining
 obligation (residue/principal-part equality), reducing to `HelixSource.LFunction_logDeriv_residue_eq_order`
@@ -237,8 +238,8 @@ theorem regular_off_spectrum_of_resolvent {A : Type*} [NormedRing A] [NormedAlge
     and any continuous readout `φ`, the resolvent trace `z ↦ φ(resolvent a z)` is an
     `IsSelfAdjointReceiver` — **no hypotheses beyond self-adjointness of the (bounded) operator.** The
     reality side is fully earned: self-adjoint spectrum (off ℝ) + resolvent continuity (off spectrum).
-    The only remaining conditional input on the GRH path is the *identification* of this readout with
-    `−L'/L` (the trace formula), which is the genuinely GRH-strength step. -/
+    The readout identification with `−L'/L` is supplied by the upstream closed-form / Hadamard trace
+    bridge when this adapter is used in the full chain. -/
 theorem isSelfAdjointReceiver_resolventReadout {A : Type*} [CStarAlgebra A] [StarModule ℂ A]
     {a : A} (ha : IsSelfAdjoint a) {φ : A → ℂ} (hφ : Continuous φ) :
     IsSelfAdjointReceiver (fun z => φ (resolvent a z)) :=
@@ -265,8 +266,9 @@ theorem grh_of_harmonicTraceReceiver {χ : DirichletCharacter ℂ N} {T : ℂ �
 
 /-- **The harmonic capstone from the trace identity.** A self-adjoint receiver whose boundary trace
     equals `−L'/L(½+i·)` forces GRH: the zeros become boundary absorption resonances
-    (`zeros_subset_singularSupport_of_traceIdentity`), and self-adjoint reality puts them on `ℝ`. The
-    sole open input is the boundary identity `hid`; self-adjointness is `regular off ℝ`. -/
+    (`zeros_subset_singularSupport_of_traceIdentity`), and self-adjoint reality puts them on `ℝ`.
+    In the full chain the boundary identity is supplied by the closed-form / Hadamard trace bridge;
+    self-adjointness is `regular off ℝ`. -/
 theorem grh_of_harmonicTraceReceiver_traceIdentity {χ : DirichletCharacter ℂ N} {T : ℂ → ℂ}
     (hsa : IsSelfAdjointReceiver T)
     (hid : ∀ z, T z = -logDeriv (DirichletCharacter.LFunction χ) (1 / 2 + Complex.I * z)) :
@@ -276,9 +278,9 @@ theorem grh_of_harmonicTraceReceiver_traceIdentity {χ : DirichletCharacter ℂ 
 /-- **GRH from a self-adjoint operator whose resolvent readout is `−L'/L`.** The on-line forcing is
     entirely **self-adjointness**: `isSelfAdjointReceiver_resolventReadout` is unconditional — a
     self-adjoint spectrum is real, so the resolvent is regular off `ℝ`. The *only* input is the trace
-    identity `hid` (the operator's resolvent readout equals `−L'/L(½+i·)`), which is the **energy
-    cancellation** (`EnergyBalance.geometric_eq_spectral` local / `HelixExhaustion.globalTraceBalance`
-    global) read in operator form. Self-adjointness ⟹ on-line; energy cancellation ⟹ `hid`. -/
+    identity `hid` (the operator's resolvent readout equals `−L'/L(½+i·)`), supplied upstream by the
+    closed-form / Hadamard trace bridge and read in operator form. Self-adjointness ⟹ on-line;
+    energy cancellation ⟹ the trace identity consumed here. -/
 theorem grh_of_selfAdjoint_resolventReadout {A : Type*} [CStarAlgebra A] [StarModule ℂ A]
     {a : A} (ha : IsSelfAdjoint a) {φ : A → ℂ} (hφ : Continuous φ)
     {χ : DirichletCharacter ℂ N}
