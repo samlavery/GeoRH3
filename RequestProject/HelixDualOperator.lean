@@ -18,8 +18,7 @@ the actual zeros), and `dualResolventTrace_eq_logDeriv` proves
 
 via `DirichletLHadamard.hadamardPartialFraction` — kernel-clean, and **σ-free**: no `Re ρ = ½`, no
 strip, no circle. The zeros are wherever they are; the dual operator's resolvent trace is the
-log-derivative regardless. (The on-line location `Re ρ = ½` is a *separate* statement, deliberately not
-here — the mechanism that makes a prime-chain singularity a genuine zero does not need it.)
+log-derivative regardless. )
 -/
 
 open Complex
