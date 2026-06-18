@@ -169,9 +169,11 @@ noncomputable def helixVel (p r : ℝ) (k : ℝ) : ℝ × ℝ × ℝ :=
 -/
 theorem helix_hasDerivAt (p r k : ℝ) :
     HasDerivAt (helix p r) (helixVel p r k) k := by
-  convert HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_id k ) ) ( HasDerivAt.cos ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_id k ) ) ( HasDerivAt.sin ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.const_mul p ( hasDerivAt_id k ) ) ) using 1;
-  unfold CriticalLinePhasor.Geometry.helixVel; norm_num; ring;
-  norm_num
+  convert HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const k r ) ( hasDerivAt_id k ) ) ( HasDerivAt.cos ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const k r ) ( hasDerivAt_id k ) ) ( HasDerivAt.sin ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.const_mul p ( hasDerivAt_id k ) ) ) using 1
+  · funext x
+    simp only [CriticalLinePhasor.Geometry.helix, Pi.mul_apply, id_eq]
+  · simp only [CriticalLinePhasor.Geometry.helixVel, Pi.mul_apply, id_eq]
+    refine Prod.ext ?_ (Prod.ext ?_ ?_) <;> ring
 /--
 **Squared speed of the helix is constant-free of the trig terms:**
 `‖γ'(k)‖² = p² + r² + (2π r k)²`.
@@ -249,11 +251,30 @@ theorem arclength_closed_form (p r k : ℝ) (hr : 0 < r) :
     exacts [ fun t => CriticalLinePhasor.Geometry.arclengthClosed p r t, funext fun t => HasDerivAt.deriv ( h_deriv t ), fun t ht => HasDerivAt.differentiableAt ( h_deriv t ), Continuous.continuousOn <| by exact Continuous.sqrt <| by continuity, by simp +decide [ CriticalLinePhasor.Geometry.arclengthClosed ] ];
   intros t
   unfold arclengthClosed speed;
-  convert HasDerivAt.add ( HasDerivAt.mul ( HasDerivAt.div_const ( hasDerivAt_id t ) _ ) ( HasDerivAt.sqrt ( HasDerivAt.add ( hasDerivAt_const _ _ ) ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_pow 2 t ) ) ) _ ) ) ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( HasDerivAt.arsinh ( HasDerivAt.div_const ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_id t ) ) _ ) ) ) using 1 <;> norm_num ; ring;
-  · field_simp;
-    rw [ Real.sq_sqrt <| by positivity, Real.sq_sqrt <| by positivity ] ; ring;
-    rw [ show p ^ 2 + r ^ 2 + r ^ 2 * Real.pi ^ 2 * t ^ 2 * 4 = ( p ^ 2 + r ^ 2 ) * ( ( p ^ 2 + r ^ 2 * Real.pi ^ 2 * t ^ 2 * 4 + r ^ 2 ) / ( p ^ 2 + r ^ 2 ) ) by rw [ mul_div_cancel₀ _ ( by positivity ) ] ; ring ] ; rw [ Real.sqrt_mul ( by positivity ) ] ; ring;
-  · positivity
+  have hpos : (0:ℝ) < p ^ 2 + r ^ 2 + 4 * π ^ 2 * r ^ 2 * t ^ 2 := by positivity
+  convert HasDerivAt.add ( HasDerivAt.mul ( HasDerivAt.div_const ( hasDerivAt_id t ) 2 ) ( HasDerivAt.sqrt ( HasDerivAt.add ( hasDerivAt_const t (p^2+r^2) ) ( HasDerivAt.mul ( hasDerivAt_const t (4*π^2*r^2) ) ( hasDerivAt_pow 2 t ) ) ) hpos.ne' ) ) ( HasDerivAt.mul ( hasDerivAt_const t ((p^2+r^2)/(4*π*r)) ) ( HasDerivAt.arsinh ( HasDerivAt.div_const ( HasDerivAt.mul ( hasDerivAt_const t (2*π*r) ) ( hasDerivAt_id t ) ) (√(p^2+r^2)) ) ) ) using 1
+  · rfl
+  · rfl
+  · funext x
+    simp only [Pi.add_apply, Pi.mul_apply, id_eq]
+  · norm_num
+    have hB : (0:ℝ) < p ^ 2 + r ^ 2 := by positivity
+    have hA : √(p ^ 2 + r ^ 2 + 4 * π ^ 2 * r ^ 2 * t ^ 2) > 0 := Real.sqrt_pos.mpr hpos
+    have hinner : √(1 + (2 * π * r * t / √(p ^ 2 + r ^ 2)) ^ 2) = √(p ^ 2 + r ^ 2 + 4 * π ^ 2 * r ^ 2 * t ^ 2) / √(p ^ 2 + r ^ 2) := by
+      rw [← Real.sqrt_div' _ (by positivity)]
+      congr 1
+      rw [div_pow, Real.sq_sqrt hB.le]
+      field_simp
+      ring
+    rw [hinner]
+    have hBp : (0:ℝ) < √(p ^ 2 + r ^ 2) := Real.sqrt_pos.mpr hB
+    have hA2 : √(p ^ 2 + r ^ 2 + 4 * π ^ 2 * r ^ 2 * t ^ 2) ^ 2 = p ^ 2 + r ^ 2 + 4 * π ^ 2 * r ^ 2 * t ^ 2 := Real.sq_sqrt hpos.le
+    have hB2 : √(p ^ 2 + r ^ 2) ^ 2 = p ^ 2 + r ^ 2 := Real.sq_sqrt hB.le
+    set A := √(p ^ 2 + r ^ 2 + 4 * π ^ 2 * r ^ 2 * t ^ 2) with hAdef
+    set B := √(p ^ 2 + r ^ 2) with hBdef
+    rw [inv_div]
+    field_simp
+    nlinarith [hA2, hB2, hA, hBp, Real.sqrt_nonneg (p ^ 2 + r ^ 2 + r ^ 2 * 2 ^ 2 * π ^ 2 * t ^ 2), Real.sq_sqrt (show (0:ℝ) ≤ p ^ 2 + r ^ 2 + r ^ 2 * 2 ^ 2 * π ^ 2 * t ^ 2 by positivity)]
 /-- The fixed geometric integer spacing `Δ = π/3`. -/
 noncomputable def Delta : ℝ := Real.pi / 3
 /-- The continuous geometric integer index `N(y) = S(k(y);p,r)/Δ`. -/
@@ -339,7 +360,7 @@ principal-character `L`-function is, on `s = σ + iy`,
 theorem euler_factor_vertical_line (ell : ℕ) (hell : 0 < ell) (σ y : ℝ) :
     1 - (ell : ℂ) ^ (-((σ : ℂ) + (y : ℂ) * I)) =
       1 - (((ell : ℝ) ^ (-σ) : ℝ) : ℂ) * Complex.exp (-(y * Real.log ell) * I) := by
-  convert congr_arg ( fun x : ℂ => 1 - x ) ( CriticalLinePhasor.cpow_vertical_line_phasor ( ell : ℝ ) ( by positivity ) σ y ) using 1
+  rw [← Complex.ofReal_natCast ell, CriticalLinePhasor.cpow_vertical_line_phasor ( ell : ℝ ) ( by positivity ) σ y]
 end CriticalLinePhasor.Geometry
 /-!
 ## Vanishing (cancellation) events force a sign change
@@ -397,15 +418,24 @@ theorem simple_zero_forces_sign_change (f : ℝ → ℝ) (x₀ L : ℝ)
     have := Metric.tendsto_nhdsWithin_nhds.1 ( show Filter.Tendsto ( fun y => ( f y - f x₀ ) / ( y - x₀ ) ) ( nhdsWithin x₀ { x₀ } ᶜ ) ( nhds L ) from ?_ );
     · exact Exists.elim ( this ( |L| ) ( abs_pos.mpr hL ) ) fun δ hδ => ⟨ δ, hδ.1, fun y hy hy' => by cases abs_cases L <;> nlinarith [ abs_lt.mp ( hδ.2 hy' hy ) ] ⟩;
     · rw [ hasDerivAt_iff_tendsto_slope ] at hf;
-      simpa [ div_eq_inv_mul ] using hf;
-  use δ, hδ_pos; intros y hy z hz; have := hδ y ?_ ?_ <;> have := hδ z ?_ ?_ <;> simp_all +decide [ div_mul_eq_mul_div, abs_lt ] ;
-  any_goals linarith;
-  · rw [ div_pos_iff ] at *;
-    cases ‹0 < f y * L ∧ 0 < y - x₀ ∨ f y * L < 0 ∧ y - x₀ < 0› <;> nlinarith [ mul_self_pos.2 hL ];
-  · constructor <;> linarith;
-  · lia;
-  · constructor <;> linarith;
-  · constructor <;> linarith
+      simpa only [ slope_fun_def_field, div_eq_inv_mul ] using hf;
+  refine ⟨δ, hδ_pos, fun y hy z hz => ?_⟩
+  obtain ⟨hy1, hy2⟩ := hy
+  obtain ⟨hz1, hz2⟩ := hz
+  have hsy : (f y - f x₀) / (y - x₀) * L > 0 := hδ y (by rw [abs_lt]; constructor <;> linarith) (by intro h; rw [h] at hy2; linarith)
+  have hsz : (f z - f x₀) / (z - x₀) * L > 0 := hδ z (by rw [abs_lt]; constructor <;> linarith) (by intro h; rw [h] at hz1; linarith)
+  rw [h0, sub_zero] at hsy hsz
+  have hyL : f y * L < 0 := by
+    have := mul_neg_of_pos_of_neg hsy (by linarith : y - x₀ < 0)
+    rw [div_mul_eq_mul_div, div_mul_cancel₀] at this
+    · exact this
+    · linarith
+  have hzL : f z * L > 0 := by
+    have := mul_pos hsz (by linarith : (0:ℝ) < z - x₀)
+    rw [div_mul_eq_mul_div, div_mul_cancel₀] at this
+    · exact this
+    · linarith
+  nlinarith [mul_self_pos.2 hL, hyL, hzL]
 /-- **A vanishing (cancellation) event forces a sign change.**
 This is the requested direction, stated with the vanishing hypothesis first.  If `f` has a
 zero at `x₀` (`f x₀ = 0`) that is transversal — meaning it has nonzero derivative `L` there —
@@ -541,7 +571,10 @@ The phasor equals the critical-line Dirichlet term `n^{-(1/2 + i y)}`.
 -/
 theorem phasor_eq_cpow (y : ℝ) (n : ℕ) (hn : 0 < n) :
     phasor y n = (n : ℂ) ^ (-((1 / 2 : ℂ) + (y : ℂ) * I)) := by
-      convert CriticalLinePhasor.cpow_critical_line y n hn |> Eq.symm using 1
+      rw [CriticalLinePhasor.cpow_critical_line y n hn]
+      unfold CriticalLinePhasor.OperatorReadout.phasor CriticalLinePhasor.OperatorReadout.weight CriticalLinePhasor.OperatorReadout.spin
+      push_cast
+      ring
 /-- **Spin generator.**  The diagonal operator on `Fin N → ℂ` whose eigenvalues are the
 value-dependent spin rates `log n` (here `n = i + 1`). -/
 noncomputable def genMatrix (N : ℕ) : Matrix (Fin N) (Fin N) ℂ :=
@@ -730,7 +763,7 @@ theorem N₀_eq_N_of_critical_line (f : ℂ → ℂ) (T : ℝ)
 -/
 theorem N₀_le_N (f : ℂ → ℂ) (T : ℝ) (hfin : (stripZeros f T).Finite) :
     N₀ f T ≤ N f T := by
-      convert Set.ncard_le_ncard ( onLineStripZeros_subset f T ) hfin using 1
+      exact Set.ncard_le_ncard ( onLineStripZeros_subset f T ) hfin
 /-
 **Hardy-type real angle function on the critical line.**  On the line `s = 1/2 + i y`
 the symmetric phasor closed form is the *real* function

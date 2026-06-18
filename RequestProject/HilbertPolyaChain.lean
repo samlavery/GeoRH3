@@ -14,8 +14,6 @@ import RequestProject.AllHelix
 import RequestProject.SimpleZeros
 import RequestProject.ClosedFormResolventBridge
 import RequestProject.XiPartialFraction
-import Hammer
-import Auto
 import RequestProject.RiemannHypothesisBridge
 
 /-!

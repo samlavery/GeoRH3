@@ -678,8 +678,7 @@ theorem eq_const_mul_exp_of_logDeriv_const {g : ℂ → ℂ} (hg_diff : Differen
     intro z
     have hg' : HasDerivAt g (deriv g z) z := (hg_diff z).hasDerivAt
     have hu : HasDerivAt (fun w => -(A * w)) (-A) z := by
-      have hAw : HasDerivAt (fun w : ℂ => A * w) A z := by simpa using (hasDerivAt_id z).const_mul A
-      simpa using hAw.neg
+      simpa using ((hasDerivAt_id z).const_mul (-A))
     have he : HasDerivAt (fun w => Complex.exp (-(A * w))) (Complex.exp (-(A * z)) * (-A)) z := by
       simpa using hu.cexp
     have hp : HasDerivAt h

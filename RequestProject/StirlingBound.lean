@@ -319,7 +319,6 @@ theorem gamma_one_norm_sq (t : ℝ) (ht : t ≠ 0) :
   rw [hsub] at hrefl
   have hnorm_eq : ‖Complex.Gamma ⟨1, t⟩‖ * ‖Complex.Gamma ⟨0, -t⟩‖ = π / |Real.sinh (π * t)| := by
     have hn := congr_arg (‖·‖) hrefl
-    simp only at hn
     rw [norm_mul, norm_div] at hn
     rw [Complex.norm_real, Real.norm_eq_abs, abs_of_pos pi_pos] at hn
     have hsin : Complex.sin (↑π * ⟨1, t⟩) = -(Complex.sinh (↑(π * t)) * I) := by
@@ -2475,12 +2474,10 @@ theorem betaUpperCompactWindowBound_independent :
           = Complex.betaIntegral ↑a ((CoshBalance : ℂ) + (t : ℂ) * Complex.I) := hbeta_arg
       _ = g t := hBeta'
   have hline_half_cont : Continuous phi1 := by
-    simpa [phi1] using
-      (continuous_const.add ((Complex.continuous_ofReal.comp continuous_id).mul continuous_const))
+    simp only [phi1]; fun_prop
   have hline_sum_cont :
       Continuous phi2 := by
-    simpa [phi2] using
-      (continuous_const.add ((Complex.continuous_ofReal.comp continuous_id).mul continuous_const))
+    simp only [phi2]; fun_prop
   have hGamma_half_cont : Continuous (fun t : ℝ => Complex.Gamma ((CoshBalance : ℂ) + (t : ℂ) * Complex.I)) := by
     refine continuous_iff_continuousAt.2 ?_
     intro t
@@ -2492,7 +2489,7 @@ theorem betaUpperCompactWindowBound_independent :
       nlinarith
     have hgamma : ContinuousAt Complex.Gamma (phi1 t) := (Complex.differentiableAt_Gamma _ hnot).continuousAt
     have hphi : ContinuousAt phi1 t := hline_half_cont.continuousAt
-    simpa [Function.comp, phi1] using hgamma.comp hphi
+    exact hgamma.comp hphi
   have hGamma_sum_cont :
       Continuous (fun t : ℝ => Complex.Gamma (((a + 1 / 2 : ℝ) : ℂ) + (t : ℂ) * Complex.I)) := by
     refine continuous_iff_continuousAt.2 ?_
@@ -2505,7 +2502,7 @@ theorem betaUpperCompactWindowBound_independent :
       linarith
     have hgamma : ContinuousAt Complex.Gamma (phi2 t) := (Complex.differentiableAt_Gamma _ hnot).continuousAt
     have hphi : ContinuousAt phi2 t := hline_sum_cont.continuousAt
-    simpa [Function.comp, phi2] using hgamma.comp hphi
+    exact hgamma.comp hphi
   have hGamma_sum_ne : ∀ t : ℝ,
       Complex.Gamma (((a + 1 / 2 : ℝ) : ℂ) + (t : ℂ) * Complex.I) ≠ 0 := by
     intro t
@@ -2570,12 +2567,10 @@ theorem betaLowerCompactWindowBound_independent :
           = Complex.betaIntegral ↑a ((CoshBalance : ℂ) + (t : ℂ) * Complex.I) := hbeta_arg
       _ = g t := hBeta'
   have hline_half_cont : Continuous phi1 := by
-    simpa [phi1] using
-      (continuous_const.add ((Complex.continuous_ofReal.comp continuous_id).mul continuous_const))
+    simp only [phi1]; fun_prop
   have hline_sum_cont :
       Continuous phi2 := by
-    simpa [phi2] using
-      (continuous_const.add ((Complex.continuous_ofReal.comp continuous_id).mul continuous_const))
+    simp only [phi2]; fun_prop
   have hGamma_half_cont : Continuous (fun t : ℝ => Complex.Gamma ((CoshBalance : ℂ) + (t : ℂ) * Complex.I)) := by
     refine continuous_iff_continuousAt.2 ?_
     intro t
@@ -2587,7 +2582,7 @@ theorem betaLowerCompactWindowBound_independent :
       nlinarith
     have hgamma : ContinuousAt Complex.Gamma (phi1 t) := (Complex.differentiableAt_Gamma _ hnot).continuousAt
     have hphi : ContinuousAt phi1 t := hline_half_cont.continuousAt
-    simpa [Function.comp, phi1] using hgamma.comp hphi
+    exact hgamma.comp hphi
   have hGamma_sum_cont :
       Continuous (fun t : ℝ => Complex.Gamma (((a + 1 / 2 : ℝ) : ℂ) + (t : ℂ) * Complex.I)) := by
     refine continuous_iff_continuousAt.2 ?_
@@ -2600,7 +2595,7 @@ theorem betaLowerCompactWindowBound_independent :
       linarith
     have hgamma : ContinuousAt Complex.Gamma (phi2 t) := (Complex.differentiableAt_Gamma _ hnot).continuousAt
     have hphi : ContinuousAt phi2 t := hline_sum_cont.continuousAt
-    simpa [Function.comp, phi2] using hgamma.comp hphi
+    exact hgamma.comp hphi
   have hGamma_sum_ne : ∀ t : ℝ,
       Complex.Gamma (((a + 1 / 2 : ℝ) : ℂ) + (t : ℂ) * Complex.I) ≠ 0 := by
     intro t

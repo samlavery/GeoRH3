@@ -17,7 +17,7 @@ open Complex MeasureTheory Set in
 lemma norm_mellin_le {f : ℝ → ℂ} {s : ℂ}
     (hf : MellinConvergent f s) :
     ‖mellin f s‖ ≤ ∫ t in Ioi (0 : ℝ), ‖(↑t : ℂ) ^ (s - 1) • f t‖ := by
-  convert MeasureTheory.norm_integral_le_integral_norm _
+  exact MeasureTheory.norm_integral_le_integral_norm _
 
 open Complex in
 /-- For t > 0, the norm of t^(s-1) • v equals t^(Re(s)-1) * ‖v‖. -/
@@ -94,7 +94,7 @@ lemma norm_completedRiemannZeta₀_le_mellin_norm (s : ℂ) :
     ‖completedRiemannZeta₀ s‖ ≤
     (∫ t in Set.Ioi (0:ℝ), t ^ (s.re / 2 - 1) * ‖(HurwitzZeta.hurwitzEvenFEPair 0).f_modif t‖) / 2 := by
   rw [ le_div_iff₀' ];
-  · convert norm_mellin_le ( zeta_f_modif_mellinConvergent ( s / 2 ) ) using 1;
+  · convert norm_mellin_le ( zeta_f_modif_mellinConvergent ( s / 2 ) ) using 1 <;> try rfl
     · unfold completedRiemannZeta₀;
       unfold HurwitzZeta.completedHurwitzZetaEven₀; norm_num [ mul_comm ] ;
       unfold WeakFEPair.Λ₀; ring;
@@ -109,7 +109,10 @@ lemma HurwitzZeta.evenKernel_zero_eq_tsum (t : ℝ) :
     HurwitzZeta.evenKernel 0 t = ∑' n : ℤ, Real.exp (-Real.pi * ↑n ^ 2 * t) := by
   -- Apply the definition of `evenKernel` with `a = 0`.
   have h_evenKernel_def : evenKernel 0 t = Complex.re (jacobiTheta₂ (0 : ℂ) (Complex.I * t)) := by
-    convert congr_arg Complex.re ( HurwitzZeta.evenKernel_def ( 0 : ℝ ) t ) using 1 ; norm_num [ jacobiTheta₂ ];
+    have hdef := HurwitzZeta.evenKernel_def ( 0 : ℝ ) t
+    simp only [Complex.ofReal_zero, zero_pow, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, mul_zero, zero_mul, neg_zero, Complex.exp_zero, one_mul] at hdef
+    rw [← hdef]
+    simp
   convert h_evenKernel_def using 1;
   unfold jacobiTheta₂ jacobiTheta₂_term; norm_num [ Complex.exp_re, Complex.exp_im ] ; ring;
   norm_num [ Complex.exp_re, Complex.exp_im ];
@@ -138,8 +141,10 @@ lemma HurwitzZeta.evenKernel_zero_sub_one_le {t : ℝ} (ht : 1 ≤ t) :
       have h_summable : Summable (fun n : ℕ => Real.exp (-Real.pi * n ^ 2 * t)) := by
         have := summable_geometric_of_lt_one ( by positivity ) ( show Real.exp ( -Real.pi * t ) < 1 by rw [ Real.exp_lt_one_iff ] ; nlinarith [ Real.pi_pos ] );
         exact this.of_nonneg_of_le ( fun n => by positivity ) fun n => by rw [ ← Real.exp_nat_mul ] ; ring_nf; gcongr ; norm_cast ; nlinarith;
-      convert h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => k + 1 ) from by intros a b; aesop ) using 2 ; norm_num ; ring;
-      norm_num;
+      convert h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => k + 1 ) from by intros a b; aesop ) using 2 <;> try rfl
+      norm_num
+      left
+      ring
   have h_sum_bound : ∑' n : ℕ, Real.exp (-Real.pi * (n + 1) ^ 2 * t) ≤ Real.exp (-Real.pi * t) / (1 - Real.exp (-Real.pi * t)) := by
     have h_sum_bound : ∑' n : ℕ, Real.exp (-Real.pi * (n + 1) ^ 2 * t) ≤ ∑' n : ℕ, (Real.exp (-Real.pi * t)) ^ (n + 1) := by
       refine' Summable.tsum_le_tsum _ _ _;
@@ -188,7 +193,7 @@ lemma mellin_norm_bound (σ : ℝ) (hσ0 : 0 ≤ σ) (hσ1 : σ ≤ 1) :
       rw [ Set.indicator_of_mem ] <;> norm_num [ ht ];
       norm_cast ; norm_num [ Real.rpow_neg ht.1.le ];
       rw [ abs_of_nonneg ] <;> norm_num [ ← Real.sqrt_eq_rpow ];
-      convert HurwitzZeta.evenKernel_zero_ge_rpow ht.1 using 1 ; norm_num [ Real.sqrt_eq_rpow, Real.rpow_neg ht.1.le ];
+      convert HurwitzZeta.evenKernel_zero_ge_rpow ht.1 using 1 <;> [rfl; norm_num [ Real.sqrt_eq_rpow, Real.rpow_neg ht.1.le ]];
     · refine' MeasureTheory.setIntegral_congr_fun measurableSet_Ioi fun t ht => _;
       unfold WeakFEPair.f_modif; norm_num [ ht.out.le ] ;
       rw [ Set.indicator_of_mem ] <;> norm_num [ ht.out ];

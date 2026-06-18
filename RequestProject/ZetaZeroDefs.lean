@@ -822,11 +822,13 @@ theorem amplitudeDefect_pos {r : ℝ} (hr : 0 < r) (hr1 : r ≠ 1) {β : ℝ} (h
       have h_identity : r ^ β + r ^ (1 - β) - 2 * r ^ (1 / 2 : ℝ) = (r ^ (β / 2) - r ^ ((1 - β) / 2)) ^ 2 := by
         ring;
         norm_num [ sq, ← Real.rpow_add hr ] ; ring;
-      convert sq_pos_of_ne_zero _;
-      · infer_instance;
-      · infer_instance;
-      · norm_num [ sub_eq_zero, Real.rpow_def_of_pos hr ];
-        grind +qlia
+      rw [show amplitudeDefect r β = r ^ β + r ^ (1 - β) - 2 * r ^ (1 / 2 : ℝ) from rfl, h_identity]
+      apply sq_pos_of_ne_zero
+      rw [sub_ne_zero]
+      intro hcontra
+      rw [Real.rpow_right_inj hr hr1] at hcontra
+      apply hβ
+      linarith
 
 lemma offline_zero_causes_amplitude_increase (ρ : ℂ) (hρ : IsOfflineZetaZero ρ)
     (hr : 0 < (r : ℝ)) (hr1 : r ≠ 1) :

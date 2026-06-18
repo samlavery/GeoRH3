@@ -1,6 +1,5 @@
 import Mathlib
 import RequestProject.HilbertPolyaChain
-import RequestProject.UniversalHelixUnitarity
 
 open scoped BigOperators
 open scoped Real

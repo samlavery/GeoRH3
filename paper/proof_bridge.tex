@@ -12,7 +12,6 @@
 \newtheorem{corollary}[definition]{Corollary}
 \newtheorem{lemma}[definition]{Lemma}
 \newtheorem{proposition}[definition]{Proposition}
-\newtheorem{conjecture}[definition]{Conjecture}
 \newtheorem{remark}[definition]{Remark}
 
 \DeclareMathOperator{\Ree}{Re}
@@ -22,7 +21,8 @@
 \DeclareMathOperator{\RH}{RH}
 \DeclareMathOperator{\argg}{arg}
 \DeclareMathOperator{\Log}{Log}
-\DeclareMathOperator{\logDeriv}{logDeriv}
+\DeclareMathOperator{\ord}{ord}
+\DeclareMathOperator{\hgt}{ht}
 
 \title{The Helix--Hilbert--Polya Bridge: A Canonical Source Proof}
 \author{Samuel Lavery}
@@ -454,55 +454,80 @@ On the critical line $\Ree s=\frac12$, the eta factor is nonzero:
 \]
 because $2^{1-s}=1$ would imply $2^{1-\Ree s}=1$, hence $\Ree s=1$.
 
-\subsection{Why the Closed Form Selects the Midpoint}
+\subsection{The Midpoint as the Reflection-Self-Dual Radius of the Channel}
 
-The midpoint in the closed-form model is not inserted as an assumption.  It is
-forced by the symmetric phasor pair.  Fix a real scale $c>1$ and define
+The midpoint $\sigma=1/2$ is not inserted as an assumption; it is the unique
+radius at which the accumulated character channel is invariant under the
+reflection $s\mapsto1-s$.  The fiber is the sequence of partial sums of the
+signed Dirichlet series: one term
 \[
-  P_c(s)=c^{-s}+c^{-(1-s)} .
+  a_n(s)=\chi(n)\,(Cn)^{-s}
 \]
-The two terms are mirror images under the reflection $s\mapsto1-s$.  If
-$s=\sigma+iy$, then their magnitudes are
+is incorporated for each integer $n$, with sign given by the character value.
+For a real (quadratic) channel the index set splits into a positive part, a
+negative part, and the part annihilated by $\chi$,
 \[
-  |c^{-s}|=c^{-\sigma},
+  \chi(n)=+1,\qquad
+  \chi(n)=-1,\qquad
+  \chi(n)=0,
+\]
+and the fiber is the difference of the two accumulated subseries,
+\[
+  F_\chi(s)=\sum_{n\ge1}\chi(n)(Cn)^{-s}=P_+(s)-P_-(s),
   \qquad
-  |c^{-(1-s)}|=c^{-(1-\sigma)} .
+  P_\pm(s)=\sum_{\chi(n)=\pm1}(Cn)^{-s}.
 \]
-Therefore a cancellation $P_c(s)=0$ forces
+The balance $P_+(\rho)=P_-(\rho)$ is precisely the vanishing $F_\chi(\rho)=0$ of
+the channel.
+
+Each index contributes a term at its own scale.  The area law $R_n^2=Cn$ makes
+the squared radius linear in $n$, so with
 \[
-  c^{-s}=-c^{-(1-s)}
+  c_n=Cn=R_n^2>1
 \]
-and hence equal magnitudes:
+the $n$-th term is $a_n(s)=\chi(n)\,c_n^{-s}$, and by the no-radial-drift normal
+form below its modulus depends only on the abscissa,
 \[
-  c^{-\sigma}=c^{-(1-\sigma)} .
+  |a_n(s)|=c_n^{-\sigma},\qquad s=\sigma+iy,
 \]
-Since $c>1$, the map $u\mapsto c^u$ is strictly monotone, so the exponents
-must agree:
+independently of the ordinate $y$.
+
+The completed source is two-sided (the double-ended helix below): the principal
+orientation and the reflected anti-helix realize the involution $s\mapsto1-s$,
+pairing the $n$-th term with $c_n^{-(1-s)}$.  The resulting reflection pair
 \[
-  -\sigma=-(1-\sigma).
+  Q_n(s)=c_n^{-s}+c_n^{-(1-s)}
 \]
-Thus
+has moduli $c_n^{-\sigma}$ and $c_n^{-(1-\sigma)}$, so any cancellation
+$Q_n(s)=0$ forces
 \[
-  \sigma=\frac12 .
+  c_n^{-\sigma}=c_n^{-(1-\sigma)};
 \]
-This proves that the symmetric closed form can vanish only on the midpoint
-line.  Conversely, it genuinely vanishes on that line: at
+since $c_n>1$, the map $u\mapsto c_n^{u}$ is strictly monotone, whence
 \[
-  s=\frac12+i\,\frac{\pi}{2\log c},
+  -\sigma=-(1-\sigma)\qquad\Longrightarrow\qquad \sigma=\tfrac12 .
 \]
-the two terms have the same magnitude $c^{-1/2}$ and opposite phases,
+This conclusion is independent of $c_n$, so a single abscissa $\sigma=1/2$
+balances every reflection pair $Q_n$ simultaneously: it is the unique
+reflection-self-dual radius of the whole channel.
+
+The balance is attained there.  At $s=\tfrac12+i\pi/(2\log c_n)$ the two terms
+have equal modulus $c_n^{-1/2}$ and opposite phase,
 \[
-  c^{-s}=c^{-1/2}e^{-i\pi/2},
+  c_n^{-s}=c_n^{-1/2}e^{-i\pi/2},
   \qquad
-  c^{-(1-s)}=c^{-1/2}e^{i\pi/2},
+  c_n^{-(1-s)}=c_n^{-1/2}e^{i\pi/2},
 \]
-so
-\[
-  P_c(s)=0.
-\]
-Thus $1/2$ is the unique real coordinate where the symmetric closed-form
-cancellation can occur.  It comes from reflection symmetry plus magnitude
-balance, not from a downstream zero-location assumption.
+so $Q_n(s)=0$.
+
+Hence $\sigma=1/2$ is the unique abscissa at which the channel is
+reflection-balanced, forced by the area-law scales, the absence of radial
+drift, and the two-sided reflection symmetry---not by any single scale and not
+by a downstream hypothesis on the zero set.  Whether the actual balance
+$P_+(\rho)=P_-(\rho)$ occurs at this self-dual abscissa rather than at a
+functional-equation impostor is settled separately by the Euler-product
+discriminator below, which is what distinguishes the prime-generated source from
+a Davenport--Heilbronn object sharing only the reflection symmetry.
 
 \subsection{FTA and Euler Product Generation}
 
@@ -577,7 +602,7 @@ gives
 In the convergence half-plane $\Ree s>1$, the same multiplicativity is read as
 an Euler product:
 \[
-  \operatorname{HelixSource}_\chi^C(s)
+  F_\chi^C(s)
   =
   \sum_{n\ge1}\chi(n)(Cn)^{-s}
   =
@@ -665,7 +690,7 @@ is the following package:
 \begin{enumerate}[label=(E\arabic*)]
 \item the source fiber factors into the prime Euler product in $\Ree s>1$:
 \[
-  \operatorname{HelixSource}_\chi^C(s)
+  F_\chi^C(s)
   =
   C^{-s}\prod_p(1-\chi(p)p^{-s})^{-1};
 \]
@@ -684,34 +709,29 @@ is the following package:
 \end{definition}
 
 \begin{proposition}[Euler product in the readout chain]
-The Pythagorean readout consumes the Euler-product discriminator before it
-converts a projected source event into the midpoint statement.  In mathematical
-terms, the readout step uses the package
+The unit-circle readout invokes the Euler-product discriminator before it
+converts a projected source event into the midpoint conclusion.  Concretely, the
+readout step takes as input the discriminator $\mathcal E_\chi$, the
+fiber-capture hypothesis $\rho\in\NTZ(\chi)$, the no-radial-drift normal form,
+and the unit-circle projection $z_2(\rho)$, and produces
 \[
-  \mathcal E_\chi,\qquad
-  \operatorname{FiberCaptureEvent}_\chi(\rho),\qquad
-  \operatorname{SourceFiberEvent}_\chi(\rho),\qquad
-  \text{no radial drift},\qquad
-  \operatorname{Proj}_\chi(\rho)
+  \lVert w(\rho)\rVert^2=1 ;
 \]
-to obtain
-\[
-  \|w(\rho)\|^2=1.
-\]
-The Pythagorean unit-circle identity then gives the midpoint conclusion
+the unit-circle identity then yields
 \[
   \Ree\rho=\frac12.
 \]
 \end{proposition}
 
 \begin{proof}
-The readout chain first builds $\mathcal E_\chi$ from the Dirichlet Euler
-product and winded von Mangoldt trace.  Only then does the projection chain
-provide the unit-circle/Pythagorean readout.  Therefore a
-functional-equation-only model passes through this readout step exactly when it
-supplies the same discriminator package.  This is the falsifier check: replacing
-the source object by a Davenport--Heilbronn-type readout with the same symmetry
-and no Euler-product source package fails at the discriminator.
+The discriminator $\mathcal E_\chi$ is assembled first, from the Dirichlet Euler
+product and the winded von Mangoldt trace; only afterwards does the projection
+furnish the unit-circle readout $z_2(\rho)$ and the identity
+$\lVert w(\rho)\rVert^2=1$.  Consequently a model defined by a functional
+equation alone reaches this step only if it supplies the same package
+$\mathcal E_\chi$.  A Davenport--Heilbronn object shares the reflection symmetry
+but lacks the Euler-product package, and therefore fails at $\mathcal E_\chi$;
+this is the falsifier the discriminator provides.
 \end{proof}
 
 \section{Source Accumulation and Resolvent Trace}
@@ -869,13 +889,13 @@ parallel eta-regularized fiber and standing readout.
 \begin{proposition}[Pythagorean midpoint readout]
 For a projected source fiber event, the Pythagorean unit-circle readout forces
 \[
-  \operatorname{normSq}(w(\rho))=1
+  \lVert w(\rho)\rVert^2=1
   \Longleftrightarrow
   \Ree\rho=\frac12.
 \]
 At the $\pi/3$ source scale this is the same midpoint statement
 \[
-  \operatorname{arcChart}(\Ree\rho)=\frac{\pi}{6}.
+  \alpha(\Ree\rho)=\frac{\pi}{6}.
 \]
 Equivalently, if $z_2(\rho)\in S^1$ is the two-dimensional unit-circle
 projection of the crossing, written in the $\pi/3$ angular chart, then the
@@ -901,7 +921,7 @@ $z_2(\rho)\in S^1$, and the Möbius coordinate
   w(\rho)=1-\frac1\rho
 \]
 is the scalar chart assigned to that datum.  Thus
-$\operatorname{normSq}(w(\rho))=1$ is the Pythagorean statement that the
+$\lVert w(\rho)\rVert^2=1$ is the Pythagorean statement that the
 projected readout lies on the unit circle.  Since a nontrivial zero is not
 $0$, the algebra is reversible:
 \[
@@ -915,9 +935,9 @@ $0$, the algebra is reversible:
 \]
 The $\pi/3$ coordinate conversion is
 \[
-  \operatorname{arcChart}(x)=\frac{\pi}{3}x,
+  \alpha(x)=\frac{\pi}{3}x,
   \qquad
-  \operatorname{arcChart}^{-1}(u)=\frac3\pi u.
+  \alpha^{-1}(u)=\frac3\pi u.
 \]
 The value $1/2$ is therefore the unit-readout midpoint forced by the source
 sign-change/no-drift crossing after source projection, not an independent
@@ -962,7 +982,7 @@ Assume the boundary trace identity
   -\frac{L'}{L}\!\left(\frac12+iz,\chi\right).
 \]
 If $\rho\in\NTZ(\chi)$ has order $m$, then at
-$z=\operatorname{poleParam}(\rho)$ the resolvent trace has a simple principal
+$z=z_\rho$ the resolvent trace has a simple principal
 part with residue $i\,m$.  In the $s$-variable and $\pi/3$ gauge this is the
 same residue law
 \[
@@ -980,24 +1000,24 @@ local invariant.
 \end{proof}
 
 \begin{proposition}[Source normal form for crossing correspondence]
-The source normal form used by the crossing correspondence has three mathematical
-components.  First, radial drift is zero under source conservation.  Second,
-the purchase-height ladder satisfies
+The source normal form used by the crossing correspondence has three
+components.  First, the radial drift rate vanishes under source conservation.
+Second, the threshold-height ladder satisfies
 \[
-  E(\operatorname{purchaseHeight}(n))=n\pi,\qquad
-  \operatorname{harmonicCount}(E,\operatorname{purchaseHeight}(n))=n,
+  E(h_n)=n\pi,\qquad
+  \mathcal N_{E}(h_n)=n,
 \]
-with rigidity for every sequence satisfying the same conversion law.  Third,
-each purchase crossing is identified with the corresponding midpoint geometric
-zero and unit-circle readout.
+with rigidity for every sequence obeying the same threshold law.  Third, each
+threshold crossing is identified with the corresponding midpoint zero and its
+unit-circle readout.
 \end{proposition}
 
 \begin{proof}
-The no-radial-drift normal form fixes the source placement $R_n^2=Cn$ at every
-harmonic threshold.  Threshold existence and the quantum ladder locate each
-crossing.  Ladder exhaustion and rigidity show that the purchase sequence is
-the only possible crossing sequence.  The $\pi/3$ chart supplies the midpoint
-coordinate, and the resolvent-pole side is supplied by the
+The no-radial-drift normal form fixes the placement $R_n^2=Cn$ at every
+threshold.  Continuity and strict monotonicity of the accumulation $E$ locate
+each crossing, and rigidity of the threshold ladder shows that the threshold
+sequence $(h_n)$ is the only crossing sequence.  The $\pi/3$ chart supplies the
+midpoint coordinate, and the resolvent-pole side is supplied by the
 logarithmic-derivative pole law.
 \end{proof}
 
@@ -1089,7 +1109,8 @@ and hence
 So the trace pole has residue $-mC^{-\rho}$.  The integer $m$ is the spectral
 multiplicity; the factor $C^{-\rho}$ is the nonzero $\pi/3$ geometric scaling.
 At a crossing, this is the residue consumed by the resolvent trace while the
-source fiber amplitude crests, the channel phase cancels, and the sign changes.
+source-fiber amplitude attains its threshold, the channel phase cancels, and the
+sign changes.
 Since the standing readout is continuous, the Intermediate Value Theorem gives
 an actual crossing between the two signs.
 The Polya threshold condition is therefore the simultaneous event
@@ -1121,7 +1142,7 @@ the partial-fraction accumulation
 where $m_\rho$ is the vanishing order of the completed $L$-function at $\rho$.
 The closed form is
 \[
-  \logDeriv \Lambda_\chi(s)
+  \frac{\Lambda_\chi'}{\Lambda_\chi}(s)
   =
   A+\mathcal R_\chi(s)
   \qquad (s\notin\NTZ(\chi)),
@@ -1131,7 +1152,7 @@ $\Lambda_\chi=\gamma_\chi L(s,\chi)$ gives, off the zeros in the strip,
 \[
   -\frac{L'}{L}(s,\chi)
   =
-  -A-\mathcal R_\chi(s)+\logDeriv \gamma_\chi(s).
+  -A-\mathcal R_\chi(s)+\frac{\gamma_\chi'}{\gamma_\chi}(s).
 \]
 Thus the prime-power accumulation, the zero-side resolvent trace, and the
 continued channel readout are the same readout up to the constant and
@@ -1238,7 +1259,7 @@ For non-principal $\chi$,
   \Theta_\chi(t)=\vartheta_\chi(t)+t\log C+\alpha_\chi.
 \]
 
-\section{Harmonic Cost and the Quantum Ladder}
+\section{Harmonic Cost and the Threshold Ladder}
 
 The full source geometry is double ended.  The midpoint is the origin of the
 fiber, and the reflected side is an anti-helix carrying the opposite orientation.
@@ -1261,11 +1282,11 @@ On the positive helix side used in the proof,
   A_0=\frac\pi2,\qquad A_{k+1}=A_k+\pi.
 \]
 Thus the first crossing is the only crossing on that side whose cost from the
-origin is a half quantum:
+origin is the half-step $\pi/2$:
 \[
   |A_0^+|=\frac\pi2.
 \]
-Every additional crossing on that same side costs one full quantum:
+Every additional crossing on that same side costs one full step $\pi$:
 \[
   A_{m+1}^+-A_m^+=\pi\qquad(m\ge0).
 \]
@@ -1273,16 +1294,9 @@ The reflected anti-helix obeys the same rule:
 \[
   |A_0^-|=\frac\pi2,\qquad |A_{m+1}^- - A_m^-|=\pi\qquad(m\ge0).
 \]
-So the half-quantum occurs once at the first crossing on each oriented side of
-the double-ended helix; all subsequent crossings consume full $\pi$ increments.
-
-\begin{conjecture}[Origin/Tate interface]
-If this helix model has a Tate-thesis-style global/local interpretation, the
-natural place for that connection is the shared origin of the double-ended
-helix.  The origin is where the two reflected orientations meet before the
-one-dimensional readout separates them into positive and negative crossing
-ladders \cite{Tate1967}.
-\end{conjecture}
+So the half-step $\pi/2$ occurs once, at the first crossing on each oriented
+side of the double-ended helix; all subsequent crossings advance by the full
+step $\pi$.
 
 \section{Hilbert--Polya Source Infrastructure: R1--R12}
 
@@ -1300,9 +1314,9 @@ adds two checks: off-line ordinary zeros are not helix-produced zeros, and
 every produced standing-wave helix zero is simple.  The closed-form audit
 supplies the phasor decomposition, exponential source height $z_3=e^y$,
 arclength count, and the vanishing-implies-sign-change lemma.  Its resolvent
-trace is the negative logarithmic derivative of the symmetric closed-form pair;
-the count-indexed exhaustion ledger then propagates the midpoint conclusion
-through every measured zero event.
+trace is the negative logarithmic derivative of the accumulated signed-phasor
+channel $P_+-P_-$; the count-indexed exhaustion ledger then propagates the
+midpoint conclusion through every measured zero event.
 
 \begin{enumerate}[label=R\arabic*., leftmargin=2cm]
 \item \textbf{Hilbert space.}
@@ -1323,7 +1337,7 @@ holds \cite{ReedSimon1980}.  The helix Gram operator is this concrete
 instantiation.  Eigenvalues of
 the symmetric/self-adjoint operator are real in R11.
 
-\item \textbf{Earned unitary phasor flow.}
+\item \textbf{Unitary phasor flow.}
 The FTA/Euler phasor flow is
 \[
   U(t)(n)=n^{it},\qquad |U(t)(n)|=1,
@@ -1347,11 +1361,11 @@ then
   \Ree\lambda=0.
 \]
 \item \textbf{Analytic $L$-function object.}
-For every character channel, the associated $L$-function is differentiable away from
+For every character channel, the associated $L$-function is holomorphic away from
 the point $s=1$:
 \[
   s\ne1\Longrightarrow
-  \operatorname{DifferentiableAt}_{\mathbb C}L(s,\chi).
+  L(\cdot,\chi)\ \text{is holomorphic at}\ s.
 \]
 For non-principal channels this is the Dirichlet closure ledger.  For the
 principal L1/zeta channel the eta-regularized fiber carries the same zero
@@ -1391,7 +1405,7 @@ At threshold $E(t)=n\pi$,
   \left\lfloor\frac{E(t)}{\pi}\right\rfloor=n.
 \]
 At a crossing threshold the source event is a confluence: the channel phase
-cancels, the amplitude reaches its crest, the resolvent trace consumes the
+cancels, the amplitude attains its threshold, the resolvent trace consumes the
 local residue, the sign changes, and, by the Intermediate Value Theorem, the
 standing readout crosses before the next harmonic begins on the spectral
 readout.  In the source normalization used by the Polya chain,
@@ -1400,8 +1414,9 @@ readout.  In the source normalization used by the Polya chain,
   A_0^\pm=\pm\frac{\pi}{2},\qquad
   A_{k+1}^\pm-A_k^\pm=\pm\pi .
 \]
-So the first crossing on each oriented side costs a half quantum, and every
-subsequent threshold is one full $\pi$ step.  The channel cancellation law is:
+So the first crossing on each oriented side costs the half-step $\pi/2$, and
+every subsequent threshold is one full step $\pi$.  The channel cancellation law
+is:
 \[
   \sum_{m\in F} s_m=0
   \Longleftrightarrow
@@ -1424,23 +1439,23 @@ Moreover, any crossing sequence $c_n$ satisfying
 \[
   E(c_n)=n\pi
 \]
-is forced to be the purchase-height sequence:
+must be the threshold-height sequence:
 \[
-  c_n=\operatorname{purchaseHeight}(n).
+  c_n=h_n.
 \]
 
 \item \textbf{Coordinate transport and Pythagorean readout.}
-The rechart
+The chart
 \[
-  \operatorname{arcChart}(x)=\frac\pi3x
+  \alpha(x)=\frac\pi3x
 \]
 has inverse
 \[
-  \operatorname{arcChartInv}(u)=\frac3\pi u.
+  \alpha^{-1}(u)=\frac3\pi u.
 \]
 The critical midpoint is
 \[
-  \operatorname{arcChart}(x)=\frac\pi6
+  \alpha(x)=\frac\pi6
   \Longleftrightarrow
   x=\frac12.
 \]
@@ -1453,10 +1468,9 @@ source chart.  The
 rule is source-side: projection is only responsible for transporting the event
 without losing it or introducing a new one.
 The midpoint conclusion routes through the unitary/Pythagorean readout.  In
-natural coordinates the readout satisfies
+natural coordinates the readout $r_{\sigma,\gamma}\in\mathbb R^2$ satisfies
 \[
-  (\operatorname{readout}_{\sigma,\gamma})_{\Ree}^{2}
-  +(\operatorname{readout}_{\sigma,\gamma})_{\Imm}^{2}=1
+  \lVert r_{\sigma,\gamma}\rVert^2=1
   \Longleftrightarrow
   \sigma=\frac12.
 \]
@@ -1482,27 +1496,24 @@ If $T$ is symmetric and $\mu$ is an eigenvalue of $T$, then
 \[
   \Imm\mu=0.
 \]
-The spectral parametrisation is
-\[
-  \operatorname{spectralZero}(\mu)=\frac12+i\mu .
-\]
+The spectral parametrisation is the map $\mu\mapsto\tfrac12+i\mu$.
 Therefore a real eigenvalue gives
 \[
-  \Ree(\operatorname{spectralZero}(\mu))=\frac12 .
+  \Ree\!\left(\tfrac12+i\mu\right)=\frac12 .
 \]
 
 \item \textbf{Counting and midpoint identification.}
 For the geometric accumulation object,
 \[
-  \operatorname{harmonicCount}(E,\operatorname{purchaseHeight}(n))=n.
+  \mathcal N_{E}(h_n)=n.
 \]
 The midpoint chain is
 \[
 \begin{aligned}
-  \operatorname{arcChartInv}(\operatorname{MIDPOINT}_{3D})
-    &=\operatorname{MIDPOINT}_{1D}=\frac12,\\
-  \operatorname{MIDPOINT}_{3D}
-    &=\operatorname{MIDPOINT}_{2D},
+  \alpha^{-1}(m_{3D})
+    &=m_{1D}=\frac12,\\
+  m_{3D}
+    &=m_{2D},
 \end{aligned}
 \]
 and the chart/inverse pair is bijective.
@@ -1525,9 +1536,9 @@ one-dimensional readout takes the logarithm.  It has the following simultaneous
 features:
 \begin{enumerate}[label=(C\arabic*)]
 \item the channel phases cancel, so the fiber vanishes in the channel sum;
-\item the accumulated amplitude reaches the relevant $\pi$-level crest at one
+\item the accumulated amplitude reaches the relevant $\pi$-level threshold at one
   of the ladder levels $A_m^{\pm}$, with the first oriented crossing carrying
-  the half-quantum cost $\pi/2$ and later crossings advancing by full $\pi$
+  the half-step cost $\pi/2$ and later crossings advancing by full $\pi$
   increments;
 \item the crossing consumes the threshold energy required to start the next
   harmonic on the spectral readout, so the outgoing side of the crossing begins
@@ -1573,17 +1584,16 @@ coordinate.  The branch of $\Log_{\mathcal H}$ is fixed by the continuous helix
 lift through the crossing.  The final channel ordinate is recorded separately by
 the event-height/readout functional
 \[
-  \operatorname{height}_{\mathcal H}(z_2(\rho))=\gamma=\Imm\rho,
+  \hgt_{\mathcal H}(z_2(\rho))=\gamma=\Imm\rho,
 \]
 so the imaginary coordinate is retained by the lifted branch readout rather
 than by the collapsed radial coordinate.  This is distinct from the source
 helix height coordinate used to place the event.
 
-\begin{definition}[Fiber capture event]
-For a Dirichlet channel $\chi$,
+\begin{definition}[Fiber-capture condition]
+For a Dirichlet channel $\chi$, a point $\rho$ satisfies the
+\emph{fiber-capture condition} when
 \[
-  \operatorname{FiberCaptureEvent}_\chi(\rho)
-  \quad:\Longleftrightarrow\quad
   \rho\in\NTZ(\chi).
 \]
 \end{definition}
@@ -1638,29 +1648,31 @@ threshold starts the next harmonic on the spectral readout.  Equivalently, if
 $h=h_\chi(\Imm\rho)$ is the threshold height and $E_\chi(h)=n\pi$ in the positive
 orientation, then
 \[
-  \operatorname{harmonicCount}(E_\chi,h)=n.
+  \mathcal N_{E_\chi}(h)=n.
 \]
 For the negative orientation the same statement holds after applying the
 reflected anti-helix orientation.
 \end{definition}
 
-\begin{definition}[Projection readout event]
-A projection readout event over $\rho$ is a source crossing confluence whose
-unit-circle projection is
+\begin{definition}[Projection readout]
+A \emph{projection readout} of a source crossing confluence at $\rho$ consists of
+its unit-circle projection
 \[
   z_2(\rho)=\exp(iu_\rho)
 \]
-on the continuous helix branch, with $u_\rho=\pi/6$ at the crossing midpoint.
-Its one-dimensional readout is
+on the continuous helix branch, the one-dimensional readout
 \[
-  \ell(\rho)=\frac3\pi u_\rho=\frac12,
+  \ell(\rho)=\frac3\pi u_\rho,
 \]
-and its channel ordinate is retained by the lifted phase:
+and the retained channel ordinate carried by the lifted phase,
 \[
-  \operatorname{height}_{\mathcal H}(z_2(\rho))=\Imm\rho .
+  \hgt_{\mathcal H}(z_2(\rho))=\Imm\rho .
 \]
-Here ``height'' means the event's retained channel ordinate in the readout
-ledger, not the raw 3D source-height coordinate.
+Here $\hgt_{\mathcal H}$ denotes the event's retained channel ordinate in the
+readout ledger, not the raw three-dimensional source-height coordinate.  The
+midpoint value $u_\rho=\pi/6$, equivalently $\ell(\rho)=1/2$, is \emph{not} part
+of this definition; for an actual crossing it is the content of the
+crossing-projection lemma below.
 \end{definition}
 
 \begin{definition}[Source fiber event]
@@ -1674,7 +1686,7 @@ event is a three-dimensional event over $\rho$ carrying the following data:
 \]
 \item the $\pi/3$ source coordinate
 \[
-  x_\rho=\operatorname{arcChart}(\Ree\rho)=\frac{\pi}{3}\Ree\rho;
+  x_\rho=\alpha(\Ree\rho)=\frac{\pi}{3}\Ree\rho;
 \]
 \item height retention
 \[
@@ -1688,25 +1700,26 @@ The midpoint conclusion is derived later from the crossing and spectral readout.
 \end{definition}
 
 \begin{definition}[Source-resolved zero]
-A source-resolved zero for a channel $\chi$ is a point $\rho$ carrying all of
-the following data:
+A point $\rho$ is a \emph{source-resolved zero} for a channel $\chi$ when it
+satisfies all of the following:
+\begin{enumerate}[label=(\roman*)]
+\item the fiber-capture condition $\rho\in\NTZ(\chi)$;
+\item the source-fiber conditions (S1)--(S6);
+\item a resolvent-pole event of multiplicity $m\ge1$;
+\item a residue-accumulator event;
+\item a spectral-harmonic event;
+\item a projection readout.
+\end{enumerate}
+Thus a source-resolved zero is an analytic zero together with its resolvent
+trace, source crossing, spectral harmonic, and projection readout.  Its readout
+coordinates are $\ell(\rho)$ and $\hgt_{\mathcal H}(z_2(\rho))$.  The reconstruction
+identity
 \[
-\begin{gathered}
-  \operatorname{FiberCaptureEvent}_\chi(\rho),\qquad
-  \operatorname{SourceFiberEvent}_\chi(\rho),\\
-  \operatorname{ResolventPoleEvent}_\chi(\rho),\qquad
-  \operatorname{ResidueAccumulatorEvent}_\chi(\rho),\\
-  \operatorname{SpectralHarmonicEvent}_\chi(\rho),\qquad
-  \operatorname{ProjectionReadoutEvent}_\chi(\rho).
-\end{gathered}
+  \rho=\ell(\rho)+i\,\hgt_{\mathcal H}(z_2(\rho)),
+  \qquad \ell(\rho)=\tfrac12,
 \]
-This is the precise object closed by the canonical proof: it is an analytic
-zero together with its source trace, source crossing, spectral harmonic, and
-projection readout.  The one-dimensional point produced by that readout is
-identified with the same zero $\rho$:
-\[
-  \rho=\ell(\rho)+i\,\operatorname{height}_{\mathcal H}(z_2(\rho)).
-\]
+is \emph{not} part of this definition; it is the conclusion of the
+Hilbert--Polya source correspondence below.
 \end{definition}
 
 \begin{definition}[HP spectral coordinate]
@@ -1748,7 +1761,7 @@ outgoing harmonic.  The spectral datum is computed on the threshold subspace by
 \[
   G_\chi e_\rho=\mu_\rho e_\rho,
   \qquad
-  \mu_\rho=\operatorname{height}_{\mathcal H}(z_2(\rho)).
+  \mu_\rho=\hgt_{\mathcal H}(z_2(\rho)).
 \]
 Since the crossing creates a nonzero outgoing harmonic, set
 \[
@@ -1763,7 +1776,7 @@ is exactly the tuple
 attached to that same source-resolved crossing, and when the counting/readout
 ledger identifies this harmonic eigenvalue with the retained height:
 \[
-  \mu_\rho=\operatorname{height}_{\mathcal H}(z_2(\rho)).
+  \mu_\rho=\hgt_{\mathcal H}(z_2(\rho)).
 \]
 Equivalently, the coordinate satisfies
 \[
@@ -1836,7 +1849,7 @@ all time is the trivial scaling.
 
 \begin{lemma}[Threshold rigidity]
 Let $E:\mathbb R\to\mathbb R$ be the monotone accumulation function of the
-source helix.  For each $n\ge0$ there is a unique purchase height $h_n$ with
+source helix.  For each $n\ge0$ there is a unique threshold height $h_n$ with
 \[
   E(h_n)=n\pi.
 \]
@@ -1854,9 +1867,9 @@ $E$ a singleton.
 \end{proof}
 
 \begin{lemma}[Harmonic count at threshold]
-At the $n$-th purchase height,
+At the $n$-th threshold height,
 \[
-  \operatorname{harmonicCount}(E,h_n)=n.
+  \mathcal N_{E}(h_n)=n.
 \]
 \end{lemma}
 
@@ -1902,7 +1915,7 @@ Let $\rho\in\NTZ(\chi)$.  Then the logarithmic derivative trace
 \]
 has no finite punctured limit at $s=\rho$.  More precisely, if
 \[
-  m=\operatorname{ord}_\rho L(\cdot,\chi)\ge1,
+  m=\ord_\rho L(\cdot,\chi)\ge1,
 \]
 then near $\rho$
 \[
@@ -2005,17 +2018,18 @@ height $z_3=e^{\Imm\rho}$ is a threshold crossing.  If $E_\chi(z_3)=n\pi$ in
 the positive orientation, then the corresponding spectral readout begins the $n$-th
 harmonic:
 \[
-  \operatorname{harmonicCount}(E_\chi,z_3)=n.
+  \mathcal N_{E_\chi}(z_3)=n.
 \]
 \end{lemma}
 
 \begin{proof}
 By definition of the residue accumulator event, the trace residue is consumed
-at a ladder threshold.  Threshold rigidity makes the threshold height the
-unique purchase height for its level.  The harmonic-count lemma then gives the
+at a ladder threshold.  Threshold rigidity makes that height the unique
+threshold height for its level.  The harmonic-count lemma then gives the
 displayed harmonic count.  The source crossing confluence is precisely the
-same threshold read with phase cancellation, amplitude cresting, sign change
-through a continuous standing readout, and outgoing harmonic creation.
+same threshold read with phase cancellation, the amplitude attaining its
+threshold, a sign change through a continuous standing readout, and outgoing
+harmonic creation.
 \end{proof}
 
 \begin{lemma}[Crossing projection gives the midpoint readout]
@@ -2037,7 +2051,7 @@ midpoint in the unit-circle chart.  Applying the inverse $\pi/3$ chart gives
 The lifted branch $\Log_{\mathcal H}$ records the vertical phase through the
 crossing, and the source-height functional records
 \[
-  \operatorname{height}_{\mathcal H}(z_2(\rho))=\Imm\rho .
+  \hgt_{\mathcal H}(z_2(\rho))=\Imm\rho .
 \]
 \end{proof}
 
@@ -2062,8 +2076,8 @@ residue accumulator lemma identifies the source threshold where the residue is
 spent, and the threshold lemma starts the corresponding harmonic.  The
 projection lemma gives the midpoint readout and retained height.  This is one
 source event expressed in the trace, source, spectral, and projection
-coordinates.  Collecting the six event
-clauses gives $\operatorname{SourceResolvedZero}_\chi(\rho)$.
+coordinates.  Collecting the six clauses shows that $\rho$ is a source-resolved
+zero for $\chi$.
 \end{proof}
 
 \begin{theorem}[Hilbert--Polya source correspondence]
@@ -2082,7 +2096,7 @@ created by the correspondence chain, then
 are defined by the channel source fiber.  The same source event is counted in
 the zero ledger and the harmonic ledger, so
 \[
-  \mu_\rho=\operatorname{height}_{\mathcal H}(z_2(\rho)),
+  \mu_\rho=\hgt_{\mathcal H}(z_2(\rho)),
   \qquad
   G_\chi v_\rho=\mu_\rho v_\rho,
   \qquad
@@ -2091,12 +2105,12 @@ the zero ledger and the harmonic ledger, so
 \end{theorem}
 
 \begin{proof}
-The correspondence chain first turns $\rho\in\NTZ(\chi)$ into
-$\operatorname{SourceResolvedZero}_\chi(\rho)$.  Thus the same event supplies:
+The correspondence chain first shows that $\rho\in\NTZ(\chi)$ is a
+source-resolved zero for $\chi$.  Thus the same event supplies:
 (i) a resolvent pole at $\rho$ with its multiplicity, (ii) the source threshold
 height $h_\rho$, (iii) the threshold harmonic $e_\rho$, and (iv) the projection
 readout $z_2(\rho)$ with retained height
-$\operatorname{height}_{\mathcal H}(z_2(\rho))=\Imm\rho$.
+$\hgt_{\mathcal H}(z_2(\rho))=\Imm\rho$.
 
 The source harmonic domain $\mathcal D_\chi$ is generated by the prime-power
 channel weights, so $e_\rho\in\mathcal D_\chi\subset\mathcal K_\chi$.  The
@@ -2116,7 +2130,7 @@ created by the crossing satisfies
 \[
   G_\chi e_\rho=\mu_\rho e_\rho,
   \qquad
-  \mu_\rho=\operatorname{height}_{\mathcal H}(z_2(\rho)).
+  \mu_\rho=\hgt_{\mathcal H}(z_2(\rho)).
 \]
 Dividing by the nonzero norm of $e_\rho$ gives
 \[
@@ -2125,24 +2139,24 @@ Dividing by the nonzero norm of $e_\rho$ gives
 
 This correlation is counting and source measurement, not a one-dimensional
 value assertion at the singularity.  Threshold rigidity gives
-a unique purchase height for each ladder count, and the harmonic-count lemma
+a unique threshold height for each ladder count, and the harmonic-count lemma
 labels the outgoing harmonic by that same count.  The resolvent-pole ledger
 labels the zero produced at that threshold by the same count and multiplicity.
 Therefore the harmonic eigenvalue $\mu_\rho$ and the retained height of the
 produced zero are attached to the same indexed source event:
 \[
-  \mu_\rho=\operatorname{height}_{\mathcal H}(z_2(\rho)).
+  \mu_\rho=\hgt_{\mathcal H}(z_2(\rho)).
 \]
 Finally, the projection readout lemma gives the one-dimensional midpoint and
 retains the height:
 \[
   \ell(\rho)=\frac12,
   \qquad
-  \operatorname{height}_{\mathcal H}(z_2(\rho))=\Imm\rho .
+  \hgt_{\mathcal H}(z_2(\rho))=\Imm\rho .
 \]
 The source-resolved zero identity becomes
 \[
-  \rho=\ell(\rho)+i\operatorname{height}_{\mathcal H}(z_2(\rho))
+  \rho=\ell(\rho)+i\hgt_{\mathcal H}(z_2(\rho))
        =\frac12+i\mu_\rho .
 \]
 This is exactly the source-compatible HP spectral coordinate constructed above.
@@ -2150,20 +2164,20 @@ This is exactly the source-compatible HP spectral coordinate constructed above.
 
 \begin{theorem}[Nth spectral output equals the nth produced zeta zero]
 Fix a channel $\chi$ and enumerate the positive-oriented source crossings by
-purchase height.  Let $e_n^\chi$ be the outgoing harmonic at the $n$-th
+threshold height.  Let $e_n^\chi$ be the outgoing harmonic at the $n$-th
 threshold and let $\mu_n^\chi$ be its spectral eigenvalue:
 \[
   G_\chi e_n^\chi=\mu_n^\chi e_n^\chi .
 \]
 Let $\rho_n^\chi$ be the zero produced by the same $n$-th source event, and set
 \[
-  \operatorname{SpecOut}_\chi(n)=\frac12+i\,\mu_n^\chi .
+  \rho^{\mathrm{out}}_\chi(n)=\frac12+i\,\mu_n^\chi .
 \]
 Then
 \[
-  \mu_n^\chi=\operatorname{height}_{\mathcal H}(z_2(\rho_n^\chi))
+  \mu_n^\chi=\hgt_{\mathcal H}(z_2(\rho_n^\chi))
   \qquad\text{and}\qquad
-  \operatorname{SpecOut}_\chi(n)=\rho_n^\chi .
+  \rho^{\mathrm{out}}_\chi(n)=\rho_n^\chi .
 \]
 In the principal eta-regularized channel, this says that the $n$-th spectral
 output coincides with the $n$-th zeta zero produced by the source crossing
@@ -2171,10 +2185,10 @@ ledger.
 \end{theorem}
 
 \begin{proof}
-The $n$-th purchase height is unique by threshold rigidity, and the harmonic
+The $n$-th threshold height is unique by threshold rigidity, and the harmonic
 count lemma gives
 \[
-  \operatorname{harmonicCount}(E_\chi,\operatorname{purchaseHeight}(n))=n .
+  \mathcal N_{E_\chi}(h_n)=n .
 \]
 The correspondence chain attaches exactly one source-resolved zero to that
 same indexed threshold crossing, by its resolvent pole, residue accumulator,
@@ -2183,7 +2197,7 @@ clause labels the outgoing harmonic $e_n^\chi$; the resolvent-pole clause labels
 the zero produced at the same source event as $\rho_n^\chi$.  Hence the
 eigenvalue and the zero height are correlated by the shared count:
 \[
-  \mu_n^\chi=\operatorname{height}_{\mathcal H}(z_2(\rho_n^\chi)).
+  \mu_n^\chi=\hgt_{\mathcal H}(z_2(\rho_n^\chi)).
 \]
 The three-dimensional singularity has only supplied this common source event;
 it has not been asserted to be the one-dimensional zeta zero value.  The latter
@@ -2191,11 +2205,11 @@ comes only after projection.  The crossing projection gives
 \[
   \ell(\rho_n^\chi)=1/2,
   \qquad
-  \operatorname{height}_{\mathcal H}(z_2(\rho_n^\chi))=\Imm\rho_n^\chi .
+  \hgt_{\mathcal H}(z_2(\rho_n^\chi))=\Imm\rho_n^\chi .
 \]
 Therefore
 \[
-  \operatorname{SpecOut}_\chi(n)
+  \rho^{\mathrm{out}}_\chi(n)
    =\frac12+i\mu_n^\chi
    =\ell(\rho_n^\chi)+i\Imm\rho_n^\chi
    =\rho_n^\chi .
@@ -2348,13 +2362,13 @@ midpoint is $\pi/6$.  No smoothing layer is inserted at the 3D or 2D stage.
 
 The zero is produced when the continued placed fiber reaches a cancellation
 node: the residue channels balance, the resultant phasor vanishes, and the
-source accumulator reaches the next crossing crest.  The trace
+source accumulator reaches the next threshold.  The trace
 $\mathcal T_\chi^{\pi/3}$ records the corresponding source-residue event.  The
-first positive crossing is the half-turn
+first positive crossing is the half-step
 \[
   A_0^+=\frac{\pi}{2},
 \]
-and every later positive crossing pays one full phase/amplitude quantum:
+and every later positive crossing advances by one full step $\pi$:
 \[
   E_\chi(h_{n+1})-E_\chi(h_n)=\pi,
   \qquad n\ge0 .
@@ -2464,7 +2478,7 @@ At this channel ordinate,
   P_+^{\pi/3}(\gamma_1)=P_-^{\pi/3}(\gamma_1)
 \]
 in the continued channel ledger.  The equality of residue channels is the
-phasor vanishing, and this first channel crossing consumes the half-turn
+phasor vanishing, and this first channel crossing consumes the half-step
 $\pi/2$ from the origin.  The completed real wave changes sign through the
 node.  The Intermediate Value Theorem is the witness that the sign change gives
 a zero of the real standing wave between the sampled signs.  It does not set
@@ -2539,7 +2553,7 @@ Thus the first one-dimensional zero produced by the $\chi_3$ source is
 \]
 This is the same event in three ledgers: prime-channel cancellation in the
 source, a unit-circle phasor record in two dimensions, and the one-dimensional
-spectral output $\operatorname{SpecOut}_{\chi_3}(1)=1/2+i\mu^{\chi_3}_1$.
+spectral output $\rho^{\mathrm{out}}_{\chi_3}(1)=1/2+i\mu^{\chi_3}_1$.
 
 
 \begin{theorem}[Off-line zeros are not produced by the helix]
@@ -2548,7 +2562,7 @@ helix-produced zero:
 \[
   \Ree\rho\ne\frac12
   \Longrightarrow
-  \rho\notin\operatorname{ProducedHelixZeros}.
+  \rho\notin\mathcal Z^{\mathrm{hel}}_\chi.
 \]
 Equivalently, every zero produced by the constructed helix crossing mechanism
 has one-dimensional real readout $1/2$.
@@ -2562,66 +2576,62 @@ the source midpoint projection gives
   \rho_n=\frac12+i h_n .
 \]
 The heights $h_n$ are measured by the channel fiber; they are not assumed to be
-equally spaced and need not equal $n$.  The production predicate
-$\operatorname{IsProducedHelixZero}(\rho)$ means precisely that
-$\rho=\rho_n$ for one of these measured events.  Therefore
+equally spaced and need not equal $n$.  Membership $\rho\in\mathcal Z^{\mathrm{hel}}_\chi$
+means precisely that $\rho=\rho_n$ for one of these measured events.  Therefore
 \[
-  \operatorname{IsProducedHelixZero}(\rho)
+  \rho\in\mathcal Z^{\mathrm{hel}}_\chi
   \Longrightarrow
-  \Ree\rho=\frac12 .
+  \Ree\rho=\frac12 ,
 \]
-Taking the contrapositive gives
+and the contrapositive gives
 \[
   \Ree\rho\ne\frac12
   \Longrightarrow
-  \neg\operatorname{IsProducedHelixZero}(\rho).
+  \rho\notin\mathcal Z^{\mathrm{hel}}_\chi.
 \]
-Ordinary vanishing of a holomorphic function is weaker than helix production.
-The production predicate used here is strictly the source-produced predicate,
-not arbitrary analytic vanishing.
+Ordinary vanishing of a holomorphic function is weaker than helix production:
+the predicate used here is membership in $\mathcal Z^{\mathrm{hel}}_\chi$, the
+set of source-produced zeros, not arbitrary analytic vanishing.
 \end{proof}
 
 \begin{theorem}[All produced helix zeros are simple]
 Every zero produced by the constructed helix standing-wave mechanism is simple:
-at each purchase height the standing-wave derivative is nonzero.  In symbols,
+at each threshold height the standing-wave derivative is nonzero.  In symbols,
 for every produced node $h_n$,
 \[
-  \operatorname{standingWave}(h_n)=0
+  W(h_n)=0
   \Longrightarrow
-  \exists d,\quad
-    \operatorname{HasDerivAt}(\operatorname{standingWave},d,h_n)
-    \quad\text{and}\quad d\ne0 .
+  W'(h_n)\ne0 .
 \]
 Consequently no produced helix node is non-simple, and every produced node has
 a genuine sign flip.
 \end{theorem}
 
 \begin{proof}
-In the concrete helix-production model the phase is $E(t)=t$ and the purchase
+In the concrete helix-production model the phase is $E(t)=t$ and the threshold
 heights are
 \[
   h_n=n\pi .
 \]
 The carrier is
 \[
-  \operatorname{waveC}(z)=-i\exp(iz),
+  \Omega(z)=-i\exp(iz),
 \]
 and the real standing wave is
 \[
-  \operatorname{standingWave}(t)=\Ree(\operatorname{waveC}(t))=\sin t .
+  W(t)=\Ree(\Omega(t))=\sin t .
 \]
-The derivative at a purchase height has real part $\cos(n\pi)$, which is
-nonzero.  Thus the produced node is transverse.
+The derivative at a threshold height is $W'(h_n)=\cos(n\pi)\ne0$.  Thus the
+produced node is transverse.
 
-Given a produced node hypothesis $\operatorname{standingWave}(h_n)=0$, the
-simplicity statement returns a derivative $d$ at $h_n$ with $d\ne0$.  Hence
-the carrier derivative cannot vanish at a produced cancellation node.  The
-nonzero derivative gives points on both sides of $h_n$ with opposite signs:
+At a produced node $W(h_n)=0$ the derivative $W'(h_n)\ne0$, so $W$ cannot have a
+stalled contact there.  This nonzero derivative gives points on both sides of
+$h_n$ with opposite signs:
 \[
   \forall\varepsilon>0,\quad
   \exists a\in(h_n-\varepsilon,h_n),\;
   \exists b\in(h_n,h_n+\varepsilon),\quad
-  \operatorname{standingWave}(a)\operatorname{standingWave}(b)<0 .
+  W(a)W(b)<0 .
 \]
 Thus vanishing at the produced node itself carries the sign flip; the
 Intermediate Value Theorem is only the continuity witness for the crossing
@@ -2682,18 +2692,17 @@ geometrically equal-spaced rungs.  The measured height $h_n$ and measured
 phase are separate data.  The height $h_n$ is where the $n$-th
 zero/cancellation is measured; for a real zeta or $L$-fiber, that location is
 determined by the conductor, the primes, and the residues encoded in the fiber
-accumulation $E_\chi$.  Write
-\(\mathrm{MZP}(h_n)=\operatorname{measuredZeroPhase}(h_n)\).  The first
-positive measured crossing is the half-turn crest, and every following
-crossing pays a full phase/amplitude quantum:
+accumulation $E_\chi$.  Let $\Phi(h_n)$ denote the measured phase at the $n$-th
+crossing.  The first positive measured crossing is the half-step $\pi/2$, and
+every following crossing advances by a full step $\pi$:
 \[
   \begin{aligned}
-  \mathrm{MZP}(h_0)&=\frac{\pi}{2},\\
-  \mathrm{MZP}(h_{n+1})&=\mathrm{MZP}(h_n)+\pi,\\
-  \operatorname{harmonicCount}(E_\chi,h_n)&=n .
+  \Phi(h_0)&=\frac{\pi}{2},\\
+  \Phi(h_{n+1})&=\Phi(h_n)+\pi,\\
+  \mathcal N_{E_\chi}(h_n)&=n .
   \end{aligned}
 \]
-The induction package consists of the origin, the first half-turn crossing,
+The induction package consists of the origin, the first half-step crossing,
 strict ordering, harmonic count, and later constant phase cost.  In the
 calibrated toy model $E(t)=t$, the
 phase ledger is $\pi/2,\pi/2+\pi,\pi/2+2\pi,\ldots$; the paper does not use
@@ -2702,8 +2711,8 @@ that calibration as the general $L$-function spacing law.
 Thus the production ledger is not a finite sample and not a numerical table; it
 is the whole induced sequence of measured cancellations from the origin through
 every $n\in\mathbb N$, with constant cost in the fiber phase and channel-dependent
-elapsed height after the first half-turn crossing.  This is also the bridge from actual zeros to produced
-crossings.  If $\rho\in\NTZ(\zeta)$, the source-trace identity makes $\rho$ a
+elapsed height after the first half-step crossing.  This is also the bridge from
+actual zeros to produced crossings.  If $\rho\in\NTZ(\zeta)$, the source-trace identity makes $\rho$ a
 pole of $-\zeta'/\zeta$ with its analytic multiplicity.  The origination bridge places
 that pole in the prime-built source ledger.  The measured-zero induction then
 assigns it to the unique counted cancellation event with that multiplicity, and
@@ -2720,10 +2729,10 @@ bijective on the retained source data, and the 2D-to-1D step is faithful as
 well: the positive height encoding is recovered by the logarithmic readout.
 
 The data-processing formulation says more than injectivity.  If
-\(\mathrm{derive}:S\to D\) is the deterministic source-to-readout map, then the
-downstream features are exactly
+\(D:S\to R\) is the deterministic source-to-readout map, then the downstream
+features are exactly its image,
 \[
-  \operatorname{passedDown}(\mathrm{derive})=\operatorname{range}(\mathrm{derive}).
+  \{\text{downstream features}\}=\operatorname{im}(D).
 \]
 Thus a genuine downstream feature with no source preimage is impossible; in
 finite form this is the same principle as \(H(f(X))\le H(X)\): processing
@@ -2747,8 +2756,8 @@ Hence the real coordinate of every source-produced zeta zero is
 \]
 The retained channel ordinate is the imaginary coordinate, so
 \[
-  \rho=\ell(\rho)+i\,\operatorname{height}_{\mathcal H}(z_2(\rho))
-       =\frac12+i\,\operatorname{height}_{\mathcal H}(z_2(\rho)).
+  \rho=\ell(\rho)+i\,\hgt_{\mathcal H}(z_2(\rho))
+       =\frac12+i\,\hgt_{\mathcal H}(z_2(\rho)).
 \]
 This retained ordinate is attached to the 3D source event by the source ledger;
 it is not asserted to be the raw 3D source-height coordinate.
@@ -2757,34 +2766,37 @@ Therefore $\Ree\rho=1/2$.
 The production-side checks rule out the two possible leaks.  First, any point
 with real part different from $1/2$ is not helix-produced.  Thus an off-line
 ordinary vanishing point cannot enter the zeta production ledger.  Second,
-produced standing-wave nodes are transverse: the derivative at each purchase
+produced standing-wave nodes are transverse: the derivative at each threshold
 height is nonzero.  Consequently a produced node is not a tangency or stalled
 contact; it gives a genuine sign change.
 
-The closed-form exhaustion route gives the same conclusion from the symmetric
-phasor ledger and also explains where the real coordinate comes from.  For the
-symmetric closed form
+The closed-form exhaustion route gives the same conclusion from the accumulated
+channel of signed phasors and also explains where the real coordinate comes from.
+Each index $n$ contributes a term at scale $c_n=Cn=R_n^2>1$, and the two-sided
+helix supplies its reflection pair
 \[
-  P_c(s)=c^{-s}+c^{-(1-s)},\qquad c>1,
+  Q_n(s)=c_n^{-s}+c_n^{-(1-s)}.
 \]
-a zero satisfies
+A cancellation $Q_n(s)=0$ satisfies
 \[
-  c^{-s}=-c^{-(1-s)}.
+  c_n^{-s}=-c_n^{-(1-s)},
 \]
-Writing $s=\sigma+iy$ and taking magnitudes gives
+and writing $s=\sigma+iy$ and taking moduli gives
 \[
-  c^{-\sigma}=c^{-(1-\sigma)}.
+  c_n^{-\sigma}=c_n^{-(1-\sigma)}.
 \]
-Strict monotonicity of $u\mapsto c^u$ then forces
+Strict monotonicity of $u\mapsto c_n^{u}$ then forces
 \[
-  -\sigma=-(1-\sigma),\qquad\text{hence}\qquad \sigma=\frac12 .
+  -\sigma=-(1-\sigma),\qquad\text{hence}\qquad \sigma=\frac12 ,
 \]
-So the symmetric closed form has no off-midpoint zeros.  It also has actual
-midpoint zeros: at $s=1/2+i\pi/(2\log c)$ the two terms have equal magnitude
-and opposite phase.  Thus the value $1/2$ is the only real coordinate at which
-the closed-form cancellation can occur; it is derived from reflection symmetry
-and magnitude balance.  A count-indexed exhaustion of measured events pushes
-this midpoint result through every zero event in the ledger.
+the same abscissa for every scale $c_n$.  So the reflection pairs have no
+off-midpoint balance, and the balance is attained: at
+$s=1/2+i\pi/(2\log c_n)$ the two terms have equal modulus and opposite phase.
+Thus $\sigma=1/2$ is the only abscissa at which the channel is
+reflection-balanced; it is forced by the area-law scales, the absence of radial
+drift, and the two-sided reflection symmetry.  A count-indexed exhaustion of
+measured events propagates this midpoint conclusion through every zero event in
+the ledger.
 
 The Intermediate Value Theorem is used only for this limited purpose: a sign
 change of the real standing wave witnesses an actual zero between the signs. It

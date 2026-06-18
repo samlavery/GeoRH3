@@ -790,7 +790,7 @@ theorem c_fun_analyticAt (s : ℂ) (hσ : 0 < s.re) (hs : s ≠ 1) :
         show HasDerivAt (fun w => (fract t : ℂ) * (t : ℂ) ^ (-(w + 1))) (F'val w t) w
         have ht_ne : ((t : ℝ) : ℂ) ≠ 0 := ofReal_ne_zero.mpr (ne_of_gt ht_pos)
         have hf : HasDerivAt (fun w : ℂ => -(w + 1)) (-1 : ℂ) w := by
-          convert (hasDerivAt_id w).add (hasDerivAt_const w (1 : ℂ)) |>.neg using 1; simp
+          exact ((hasDerivAt_id w).add_const (1 : ℂ)).neg
         show HasDerivAt (fun w => (fract t : ℂ) * (↑t : ℂ) ^ (-(w + 1)))
           ((fract t : ℂ) * ((↑t : ℂ) ^ (-(w + 1)) * Complex.log (↑t : ℂ) * (-1))) w
         exact (hf.const_cpow (Or.inl ht_ne)).const_mul _

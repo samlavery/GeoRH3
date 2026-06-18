@@ -886,8 +886,7 @@ theorem truncated_tail_eq_sum (χ : DirichletCharacter ℂ N)
       (a := fun k : ℕ => (k : ℝ))
       (f := fun t : ℝ => Afloor χ t * (t : ℂ) ^ (-s - 1)) hMK
       (by intro k hk; rw [Set.mem_Ico] at hk
-          have : ((k : ℝ) + 1) = ((k + 1 : ℕ) : ℝ) := by push_cast; ring
-          rw [show ((fun k : ℕ => (k : ℝ)) (k + 1)) = (k : ℝ) + 1 from by push_cast; ring]
+          rw [show ((k + 1 : ℕ) : ℝ) = (k : ℝ) + 1 from by push_cast; ring]
           exact intervalIntegrable_cell χ hχ s hσ k (by omega))
     rw [← hkey]
     apply Finset.sum_congr rfl (fun k _ => ?_)
@@ -1270,15 +1269,14 @@ theorem meanzero_sum_tendsto (χ : DirichletCharacter ℂ N)
       have hadj := intervalIntegral.sum_integral_adjacent_intervals_Ico
         (a := fun k : ℕ => (k : ℝ)) (f := fun t : ℝ => (t : ℂ) ^ (-s - 1)) hK
         (by intro k hk; rw [Set.mem_Ico] at hk
-            rw [show ((fun k : ℕ => (k : ℝ)) (k + 1)) = (k : ℝ) + 1 from by push_cast; ring]
+            rw [show ((k + 1 : ℕ) : ℝ) = (k : ℝ) + 1 from by push_cast; ring]
             exact hcellII k (by omega))
       rw [intervalIntegral.integral_of_le (by exact_mod_cast hK : (M:ℝ) ≤ (K:ℝ))] at hadj
       rw [← hadj]
       apply Finset.sum_congr rfl (fun k hk => ?_)
       rw [Finset.mem_Ico] at hk
-      simp only
-      rw [omegaW, ← intervalIntegral.integral_of_le (by linarith : (k:ℝ) ≤ (k:ℝ)+1),
-          show ((k + 1 : ℕ) : ℝ) = (k:ℝ) + 1 from by push_cast; ring]
+      rw [omegaW, show ((k + 1 : ℕ) : ℝ) = (k:ℝ) + 1 from by push_cast; ring,
+          ← intervalIntegral.integral_of_le (by linarith : (k:ℝ) ≤ (k:ℝ)+1)]
     have hintIoiM : IntegrableOn (fun t : ℝ => (t : ℂ) ^ (-s - 1)) (Ioi (M : ℝ)) := by
       apply integrableOn_Ioi_cpow_of_lt _ (by exact_mod_cast (by omega : 0 < M) : (0:ℝ) < (M:ℝ))
       simp [Complex.sub_re, Complex.neg_re, Complex.one_re]; linarith

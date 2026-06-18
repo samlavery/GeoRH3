@@ -74,6 +74,18 @@ noncomputable def SourceMode.ofReal (μ : ℝ) : SourceMode where
 theorem SourceMode.ofReal_poleCoord (μ : ℝ) :
     (SourceMode.ofReal μ).poleCoord = 1 / 2 + Complex.I * μ := rfl
 
+/-- **Phase modulus = eigenvector energy** at a real-eigenvalue source mode. The unit-circle
+    spectral phase `e^{i·μ·t}` has modulus exactly `1` for every time `t`, equal to the conserved
+    eigenvector energy `amp² = 1` of `ofReal μ`. Both are `1`, and both hold because the rate
+    `i·μ` is imaginary (`Re = 0`): a real eigenvalue gives a unit-circle phase *and* a conserved
+    unit energy — the same σ-free reality, read once on the phase and once on the energy. -/
+theorem SourceMode.phaseModulus_eq_eigenvectorEnergy (μ t : ℝ) :
+    ‖Complex.exp (Complex.I * (μ : ℂ) * (t : ℂ))‖ = (SourceMode.ofReal μ).amp ^ 2 := by
+  have hre : (Complex.I * (μ : ℂ) * (t : ℂ)).re = 0 := by
+    simp [Complex.mul_re, Complex.mul_im]
+  rw [Complex.norm_exp, hre, Real.exp_zero]
+  simp [SourceMode.ofReal]
+
 /-- **The identification / completeness obligation** (the open analytic content): every nontrivial
     zero of `L` is the pole-coordinate of some source mode. Bundles `sourceTrace_identity`
     (`T_F = Λ_F'/Λ_F(½+iz)`) and `pole_to_sourceMode`. NOT circular: it asserts that `ρ` is

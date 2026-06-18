@@ -81,7 +81,11 @@ axis.  Concretely this is `Real.sin`. -/
 noncomputable def standingWave (t : ℝ) : ℝ := (waveC (t : ℂ)).re
 /-- The complex derivative of the carrier is `exp (I z)`. -/
 lemma waveC_deriv (z : ℂ) : deriv waveC z = Complex.exp (Complex.I * z) := by
-  convert HasDerivAt.deriv ( HasDerivAt.const_mul ( -Complex.I ) ( HasDerivAt.comp z ( Complex.hasDerivAt_exp _ ) ( HasDerivAt.const_mul Complex.I ( hasDerivAt_id _ ) ) ) ) using 1 ; norm_num [ Complex.ext_iff ]
+  have h : HasDerivAt HelixStandingWaveS.waveC (cexp (Complex.I * z)) z := by
+    have hb := (((Complex.hasDerivAt_exp (Complex.I * z)).comp z ((hasDerivAt_id z).const_mul Complex.I)).const_mul (-Complex.I))
+    refine hb.congr_deriv ?_
+    rw [show (-Complex.I * (cexp (Complex.I * z) * (Complex.I * 1))) = -(Complex.I*Complex.I) * cexp (Complex.I * z) from by ring, Complex.I_mul_I]; ring
+  exact h.deriv
 /-- The standing-wave readout is exactly `sin`. -/
 lemma standingWave_eq_sin (t : ℝ) : standingWave t = Real.sin t := by
   unfold HelixStandingWaveS.standingWave HelixStandingWaveS.waveC; norm_num [ Complex.exp_re, Complex.exp_im ] ;
@@ -105,7 +109,7 @@ theorem signFlip_of_hasDerivAt {f : ℝ → ℝ} {t₀ d : ℝ}
           have h_slope_pos : ∀ᶠ t in nhdsWithin t₀ {t₀}ᶜ, (f t - f t₀) / (t - t₀) * d > 0 := by
             have h_slope_pos : Filter.Tendsto (fun t => (f t - f t₀) / (t - t₀)) (nhdsWithin t₀ {t₀}ᶜ) (nhds d) := by
               rw [ hasDerivAt_iff_tendsto_slope ] at hderiv;
-              simpa [ div_eq_inv_mul ] using hderiv;
+              rw [show (fun t => (f t - f t₀)/(t - t₀)) = slope f t₀ from by funext t; rw [slope_def_field]]; exact hderiv
             exact h_slope_pos.mul_const d |> fun h => h.eventually ( lt_mem_nhds <| by nlinarith [ mul_self_pos.mpr hd ] );
           -- Since $d \neq 0$, we can find points $a$ and $b$ in the intervals $(t₀ - ε, t₀)$ and $(t₀, t₀ + ε)$ respectively such that $(f a - f t₀) / (a - t₀) * d > 0$ and $(f b - f t₀) / (b - t₀) * d > 0$.
           obtain ⟨a, ha₁, ha₂⟩ : ∃ a ∈ Set.Ioo (t₀ - ε) t₀, (f a - f t₀) / (a - t₀) * d > 0 := by

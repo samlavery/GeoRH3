@@ -196,9 +196,11 @@ noncomputable def helixVel (p r : ℝ) (k : ℝ) : ℝ × ℝ × ℝ :=
 -/
 theorem helix_hasDerivAt (p r k : ℝ) :
     HasDerivAt (helix p r) (helixVel p r k) k := by
-  convert HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_id k ) ) ( HasDerivAt.cos ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_id k ) ) ( HasDerivAt.sin ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.const_mul p ( hasDerivAt_id k ) ) ) using 1;
-  unfold CriticalLinePhasor.Geometry.helixVel; norm_num; ring;
-  norm_num
+  convert HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const k r ) ( hasDerivAt_id k ) ) ( HasDerivAt.cos ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const k r ) ( hasDerivAt_id k ) ) ( HasDerivAt.sin ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.const_mul p ( hasDerivAt_id k ) ) ) using 1
+  · funext x
+    simp only [CriticalLinePhasor.Geometry.helix, Pi.mul_apply, id_eq]
+  · simp only [CriticalLinePhasor.Geometry.helixVel, Pi.mul_apply, id_eq]
+    refine Prod.ext ?_ (Prod.ext ?_ ?_) <;> ring
 
 /--
 **Squared speed of the helix is constant-free of the trig terms:**
@@ -289,11 +291,30 @@ theorem arclength_closed_form (p r k : ℝ) (hr : 0 < r) :
     exacts [ fun t => CriticalLinePhasor.Geometry.arclengthClosed p r t, funext fun t => HasDerivAt.deriv ( h_deriv t ), fun t ht => HasDerivAt.differentiableAt ( h_deriv t ), Continuous.continuousOn <| by exact Continuous.sqrt <| by continuity, by simp +decide [ CriticalLinePhasor.Geometry.arclengthClosed ] ];
   intros t
   unfold arclengthClosed speed;
-  convert HasDerivAt.add ( HasDerivAt.mul ( HasDerivAt.div_const ( hasDerivAt_id t ) _ ) ( HasDerivAt.sqrt ( HasDerivAt.add ( hasDerivAt_const _ _ ) ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_pow 2 t ) ) ) _ ) ) ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( HasDerivAt.arsinh ( HasDerivAt.div_const ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_id t ) ) _ ) ) ) using 1 <;> norm_num ; ring;
-  · field_simp;
-    rw [ Real.sq_sqrt <| by positivity, Real.sq_sqrt <| by positivity ] ; ring;
-    rw [ show p ^ 2 + r ^ 2 + r ^ 2 * Real.pi ^ 2 * t ^ 2 * 4 = ( p ^ 2 + r ^ 2 ) * ( ( p ^ 2 + r ^ 2 * Real.pi ^ 2 * t ^ 2 * 4 + r ^ 2 ) / ( p ^ 2 + r ^ 2 ) ) by rw [ mul_div_cancel₀ _ ( by positivity ) ] ; ring ] ; rw [ Real.sqrt_mul ( by positivity ) ] ; ring;
-  · positivity
+  have hne : p ^ 2 + r ^ 2 + 4 * Real.pi ^ 2 * r ^ 2 * t ^ 2 ≠ 0 := by positivity
+  convert HasDerivAt.add ( HasDerivAt.mul ( HasDerivAt.div_const ( hasDerivAt_id t ) (2:ℝ) ) ( HasDerivAt.sqrt ( HasDerivAt.add ( hasDerivAt_const t (p^2 + r^2) ) ( HasDerivAt.mul ( hasDerivAt_const t (4 * Real.pi^2 * r^2) ) ( hasDerivAt_pow 2 t ) ) ) hne ) ) ( HasDerivAt.mul ( hasDerivAt_const t ((p^2+r^2)/(4*Real.pi*r)) ) ( HasDerivAt.arsinh ( HasDerivAt.div_const ( HasDerivAt.mul ( hasDerivAt_const t (2*Real.pi*r) ) ( hasDerivAt_id t ) ) (Real.sqrt (p^2+r^2)) ) ) ) using 1
+  case e'_4 => rfl
+  case e'_5 => rfl
+  case e'_8 => funext x; simp only [Pi.add_apply, Pi.mul_apply, id_eq]
+  case e'_9 =>
+    simp only [Pi.add_apply, Pi.mul_apply, id_eq, smul_eq_mul]
+    norm_num
+    have hD : (0:ℝ) < p^2 + r^2 := by positivity
+    have hDA : (0:ℝ) < p^2 + r^2 + 4*Real.pi^2*r^2*t^2 := lt_of_le_of_ne (by positivity) (Ne.symm hne)
+    have hnest : Real.sqrt (1 + (2*Real.pi*r*t/Real.sqrt (p^2+r^2))^2) = Real.sqrt (p^2+r^2+4*Real.pi^2*r^2*t^2) / Real.sqrt (p^2+r^2) := by
+      rw [ ← Real.sqrt_div' _ (by positivity), div_pow, Real.sq_sqrt hD.le ]
+      congr 1
+      field_simp
+      ring
+    rw [ hnest ]
+    have hsq : (2 * Real.pi * r * t)^2 = 4 * Real.pi^2 * r^2 * t^2 := by ring
+    rw [ hsq, eq_comm ]
+    have hs1 : Real.sqrt (p^2+r^2) ≠ 0 := by positivity
+    have hs2 : Real.sqrt (p^2+r^2+4*Real.pi^2*r^2*t^2) ≠ 0 := by positivity
+    rw [ inv_div ]
+    field_simp
+    rw [ show p ^ 2 + r ^ 2 + r ^ 2 * 4 * Real.pi ^ 2 * t ^ 2 = p ^ 2 + r ^ 2 + 4 * Real.pi ^ 2 * r ^ 2 * t ^ 2 by ring, Real.sq_sqrt hDA.le ]
+    ring
 
 /-- The fixed geometric integer spacing `Δ = π/3`. -/
 noncomputable def Delta : ℝ := Real.pi / 3
@@ -392,6 +413,7 @@ theorem euler_factor_vertical_line (ell : ℕ) (hell : 0 < ell) (σ y : ℝ) :
     1 - (ell : ℂ) ^ (-((σ : ℂ) + (y : ℂ) * I)) =
       1 - (((ell : ℝ) ^ (-σ) : ℝ) : ℂ) * Complex.exp (-(y * Real.log ell) * I) := by
   convert congr_arg ( fun x : ℂ => 1 - x ) ( CriticalLinePhasor.cpow_vertical_line_phasor ( ell : ℝ ) ( by positivity ) σ y ) using 1
+  norm_num
 
 end CriticalLinePhasor.Geometry
 
@@ -462,7 +484,7 @@ theorem simple_zero_forces_sign_change (f : ℝ → ℝ) (x₀ L : ℝ)
     have := Metric.tendsto_nhdsWithin_nhds.1 ( show Filter.Tendsto ( fun y => ( f y - f x₀ ) / ( y - x₀ ) ) ( nhdsWithin x₀ { x₀ } ᶜ ) ( nhds L ) from ?_ );
     · exact Exists.elim ( this ( |L| ) ( abs_pos.mpr hL ) ) fun δ hδ => ⟨ δ, hδ.1, fun y hy hy' => by cases abs_cases L <;> nlinarith [ abs_lt.mp ( hδ.2 hy' hy ) ] ⟩;
     · rw [ hasDerivAt_iff_tendsto_slope ] at hf;
-      simpa [ div_eq_inv_mul ] using hf;
+      convert hf using 2 with y; rw [ slope_def_field ];
   refine ⟨δ, hδ_pos, ?_⟩
   intro y hy z hz
   have hy_abs : |y - x₀| < δ := by
@@ -647,6 +669,76 @@ theorem symPair_eq_zero_iff (c : ℝ) (hc : 1 < c) (s : ℂ) :
     ring_nf; norm_num [ mul_div, mul_assoc, mul_comm, mul_left_comm, ne_of_gt, Real.log_pos hc ];
     exact Or.inl ( Complex.cos_eq_zero_iff.mpr ⟨ k, by ring ⟩ )
 
+/-! ### The full two-channel object (augmenting `symPair`)
+
+`symPair c s = c^(-s) + c^(-(1-s))` is a **single number's** positive/negative phasor pair — the
+building block.  The real object is the **full channel**: a weight/character `w : ℕ → ℂ` (e.g. a
+Dirichlet character `χ`; the alternating *eta* sign is only the **trivial**-character case) collects,
+as it climbs, *all* of its phasors into a **positive channel** `∑ₙ w(n)·n^(-s)` and a **negative
+channel** `∑ₙ w(n)·n^(-(1-s))`.  Each channel holds every phasor with its magnitude `|w(n)|·n^(-Re s)`
+and spin (from `n^(-s)`).  **Vanishing is when the entirety of the phasors sums to zero** — i.e. the
+two channel sums (the two numbers being compared) cancel: `symChannel = 0 ↔ posChannel = -negChannel`.
+This is **not** a two-phasor model: each channel is a full sum.
+
+**Honesty — the single-pair forcing does NOT survive summation.**  `symPair_zero_re_eq_half` holds
+because *one* pair's two magnitudes `c^(-σ), c^(-(1-σ))` are strictly monotone in `σ`, so they balance
+at exactly `σ = 1/2`.  A channel **sum** has magnitude `‖∑ₙ …‖`, which is *not* monotone in `σ`, so the
+channel does **not** inherit that forcing.  "The channel cancels ⟹ `Re s = 1/2`" is exactly the open
+(G)RH content and is deliberately **neither proved nor faked** here. -/
+
+/-- **The positive channel** `∑_{1≤n≤N} w(n)·n^(-s)`: every collected phasor `n^(-s)`, weighted. -/
+noncomputable def posChannel (w : ℕ → ℂ) (N : ℕ) (s : ℂ) : ℂ :=
+  ∑ n ∈ Finset.Icc 1 N, w n * (n : ℂ) ^ (-s)
+
+/-- **The negative channel** `∑_{1≤n≤N} w(n)·n^(-(1-s))`: the `s ↦ 1-s` reflection of each phasor. -/
+noncomputable def negChannel (w : ℕ → ℂ) (N : ℕ) (s : ℂ) : ℂ :=
+  ∑ n ∈ Finset.Icc 1 N, w n * (n : ℂ) ^ (-(1 - s))
+
+/-- **The full symmetric channel** `∑_{1≤n≤N} w(n)·symPair n s`: the entirety of the positive and
+negative channel phasors, built from the per-number pairs `symPair`.  Augments `symPair` (one
+number) to the whole weight/character `w`. -/
+noncomputable def symChannel (w : ℕ → ℂ) (N : ℕ) (s : ℂ) : ℂ :=
+  ∑ n ∈ Finset.Icc 1 N, w n * symPair (n : ℝ) s
+
+/-- **The channel splits into its two channels**: `symChannel = posChannel + negChannel`. -/
+theorem symChannel_eq_pos_add_neg (w : ℕ → ℂ) (N : ℕ) (s : ℂ) :
+    symChannel w N s = posChannel w N s + negChannel w N s := by
+  unfold symChannel posChannel negChannel
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl (fun n _ => ?_)
+  unfold symPair
+  push_cast
+  ring
+
+/-- **Vanishing = the two channels cancel.**  The full channel sums to zero exactly when the positive
+and negative channel sums are negatives of each other (the two compared numbers cancel). -/
+theorem symChannel_eq_zero_iff (w : ℕ → ℂ) (N : ℕ) (s : ℂ) :
+    symChannel w N s = 0 ↔ posChannel w N s = -(negChannel w N s) := by
+  rw [symChannel_eq_pos_add_neg, add_eq_zero_iff_eq_neg]
+
+/-- **Per-number pair on the critical line is real**: at `s = 1/2 + i y`,
+`n^(-s) + n^(-(1-s)) = 2·n^(-1/2)·cos(y·log n)` — the positive and negative phasor of one number,
+equal magnitude `n^(-1/2)`, opposite spin, adding to a real cosine. -/
+theorem symPair_natCast_critical_line (n : ℕ) (hn : 0 < n) (y : ℝ) :
+    symPair (n : ℝ) ((1 / 2 : ℂ) + (y : ℂ) * I)
+      = ((2 * ((n : ℝ) ^ (-(1 / 2 : ℝ))) * Real.cos (y * Real.log n) : ℝ) : ℂ) := by
+  rcases Nat.lt_or_ge n 2 with hlt | hge
+  · interval_cases n
+    norm_num [symPair, Complex.one_cpow, Real.log_one, Real.cos_zero, Real.one_rpow]
+  · have hc : (1 : ℝ) < (n : ℝ) := by exact_mod_cast (hge : 1 < n)
+    rw [symPair_critical_line (n : ℝ) hc y]
+
+/-- **The channel on the critical line is a weighted real-cosine sum**: at `s = 1/2 + i y`,
+`symChannel w N (1/2+iy) = ∑_{1≤n≤N} w(n)·2·n^(-1/2)·cos(y·log n)` — the positive/negative phasors of
+every number collapsing, per number, to a real cosine of shrinking amplitude `2n^(-1/2)`. -/
+theorem symChannel_critical_line (w : ℕ → ℂ) (N : ℕ) (y : ℝ) :
+    symChannel w N ((1 / 2 : ℂ) + (y : ℂ) * I)
+      = ∑ n ∈ Finset.Icc 1 N,
+          w n * ((2 * ((n : ℝ) ^ (-(1 / 2 : ℝ))) * Real.cos (y * Real.log n) : ℝ) : ℂ) := by
+  unfold symChannel
+  refine Finset.sum_congr rfl (fun n hn => ?_)
+  rw [symPair_natCast_critical_line n (Finset.mem_Icc.mp hn).1 y]
+
 end CriticalLinePhasor.NoOffLineZeros
 /-!
 ## Fractional geometric offset and the explicit-formula residue harmonic
@@ -773,9 +865,18 @@ theorem residueHarmonic_phasor (x γ : ℝ) (hx : 0 < x) :
       norm_cast ; norm_num [ Real.cos_arctan, Real.sin_arctan ] ; ring ; norm_num [ hx.le ] ; ring;
       rw [ show ( 1 / 4 + γ ^ 2 ) = ( 1 + γ ^ 2 * 4 ) / 4 by ring, Real.sqrt_div' ] <;> norm_num ; ring ; norm_num [ hx.le ] ; ring;
       exact ⟨ mul_inv_cancel₀ <| ne_of_gt <| Real.sqrt_pos.mpr <| by positivity, mul_div_cancel_right₀ _ <| ne_of_gt <| Real.sqrt_pos.mpr <| by positivity ⟩;
-  convert congr_arg ( fun z => -z / ( 1 / 2 + ( γ : ℂ ) * Complex.I ) ) h_cpow_def using 1;
-  rw [ h_rho_def ] ; ring ; norm_num [ Complex.exp_ne_zero ] ; ring;
-  norm_num [ Complex.exp_add, Complex.exp_sub, Complex.exp_neg ] ; ring
+  convert congr_arg ( fun z => -z / ( 1 / 2 + ( γ : ℂ ) * Complex.I ) ) h_cpow_def using 1
+  case e'_2 => rfl
+  case e'_3 =>
+    have hsq : (√(γ^2+1/4) : ℂ) ≠ 0 := by
+      rw [ Complex.ofReal_ne_zero ]; exact ne_of_gt (Real.sqrt_pos.mpr (by positivity))
+    rw [ h_rho_def, eq_div_iff (mul_ne_zero hsq (Complex.exp_ne_zero _)) ]
+    rw [ Complex.ofReal_div ]
+    rw [ ← Complex.exp_add ]
+    rw [ show (↑(γ * Real.log x - Real.arctan (2*γ) + π) : ℂ) * Complex.I + (↑(Real.arctan (2*γ)) : ℂ) * Complex.I = (↑(γ * Real.log x) : ℂ) * Complex.I + π * Complex.I from by push_cast; ring ]
+    rw [ Complex.exp_add, Complex.exp_pi_mul_I ]
+    field_simp
+    ring
 
 /-
 **Magnitude of the residue harmonic** `‖−x^ρ/ρ‖ = √x/√(γ²+1/4)`.
@@ -814,7 +915,7 @@ theorem residue_logDeriv_simple_zero
     · have h_slope : Filter.Tendsto (fun s => (f s - f ρ) / (s - ρ)) (nhdsWithin ρ {ρ}ᶜ) (nhds (f' ρ)) := by
         have := hderiv.self_of_nhds;
         rw [ hasDerivAt_iff_tendsto_slope ] at this;
-        simpa [ div_eq_inv_mul ] using this;
+        convert this using 2 with s; rw [ slope_def_field ];
       simpa [ hf0 ] using h_slope.inv₀ hf'0;
   grind
 
@@ -920,14 +1021,14 @@ theorem etaTrivial_eq_tsum {s : ℂ} (hs : 1 < s.re) :
       have h_pseries : Summable (fun k : ℕ => (1 : ℂ) / ((k + 1 : ℂ) ^ s)) := by
         have := summable_one_div_nat_cpow.2 hs;
         exact_mod_cast this.comp_injective Nat.succ_injective;
-      convert h_pseries.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) |> Summable.mul_left 2 using 2 ; norm_num ; ring;
+      refine ( h_pseries.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) |> Summable.mul_left 2 ).congr fun x => ?_ ; norm_num ; ring;
     · have := summable_nat_add_iff 1 |>.2 <| Real.summable_one_div_nat_rpow.2 hs;
       convert this.of_norm_bounded _;
       · infer_instance;
       · intro n; have := Complex.norm_cpow_eq_rpow_re_of_pos ( Nat.cast_add_one_pos n ) s; aesop;
     · refine' .of_norm _;
-      convert summable_nat_add_iff 1 |>.2 <| Real.summable_one_div_nat_rpow.2 hs using 1;
-      ext; rw [ ← Complex.norm_cpow_eq_rpow_re_of_pos ( by positivity ) ] ; norm_num;
+      refine ( summable_nat_add_iff 1 |>.2 <| Real.summable_one_div_nat_rpow.2 hs ).congr fun n => ?_
+      rw [ ← Complex.norm_cpow_eq_rpow_re_of_pos ( by positivity ) ] ; norm_num;
   -- Simplify the expression $\sum' k : ℕ, (2 : ℂ) / ((2 * (k + 1) : ℂ) ^ s)$ to $2^{1-s} \sum' k : ℕ, (1 : ℂ) / ((k + 1) : ℂ) ^ s$.
   have h_simplify : ∑' k : ℕ, (2 : ℂ) / ((2 * (k + 1) : ℂ) ^ s) = 2 ^ (1 - s) * ∑' k : ℕ, (1 : ℂ) / ((k + 1) : ℂ) ^ s := by
     rw [ ← tsum_mul_left ] ; refine' tsum_congr fun k => _ ; rw [ Complex.cpow_sub ] <;> norm_num ; ring;
@@ -1216,7 +1317,8 @@ theorem numberSite_mem_helix (p r : ℝ) (n : ℕ) :
 scales the loop radius linearly. -/
 theorem numberSite_radius (p r : ℝ) (n : ℕ) :
     Real.sqrt ((numberSite p r n).1 ^ 2 + (numberSite p r n).2.1 ^ 2) = |r * (n : ℝ)| := by
-  convert CriticalLinePhasor.Geometry.helix_cyl_radius p r n using 1
+  unfold CriticalLinePhasor.HelixExhaustion.numberSite
+  exact CriticalLinePhasor.Geometry.helix_cyl_radius p r n
 
 /-- The helix is **injective in its parameter** whenever the pitch is non-degenerate
 (`p ≠ 0`), since the height coordinate is `p·k`. -/
@@ -1228,6 +1330,8 @@ theorem helix_injective (p r : ℝ) (hp : p ≠ 0) : Function.Injective (helix p
 theorem numberSite_injective (p r : ℝ) (hp : p ≠ 0) :
     Function.Injective (numberSite p r) := by
       convert helix_injective p r hp |> Function.Injective.comp <| Nat.cast_injective using 1
+      funext n
+      rfl
 
 /-- **The helix lattice**: the set of all number-sites living on the helix. -/
 noncomputable def helixLattice (p r : ℝ) : Set (ℝ × ℝ × ℝ) := Set.range (numberSite p r)
@@ -1320,12 +1424,13 @@ theorem phasor_summable {s : ℂ} (hs : 1 < s.re) :
 phasor carrier built from the phasor data equals the analytic carrier `L(s,χ)`. -/
 theorem regCarrier_eq_LFunction {s : ℂ} (hs : 1 < s.re) :
     regCarrier χ s = LFunction χ s := by
-      convert CriticalLinePhasor.DirichletCarrier.dirichletCarrier_eq_tsum χ hs |> Eq.symm
+      unfold CriticalLinePhasor.DirichletPhasorCarrier.regCarrier CriticalLinePhasor.DirichletPhasorCarrier.phasorTerm
+      exact (CriticalLinePhasor.DirichletCarrier.dirichletCarrier_eq_tsum χ hs).symm
 
 /-- **The finite carrier converges to the regularized carrier.** -/
 theorem finiteCarrier_tendsto {s : ℂ} (hs : 1 < s.re) :
     Filter.Tendsto (finiteCarrier χ s) Filter.atTop (nhds (regCarrier χ s)) := by
-      convert ( phasor_summable χ hs |> Summable.hasSum |> HasSum.tendsto_sum_nat ) using 1
+      exact ( phasor_summable χ hs |> Summable.hasSum |> HasSum.tendsto_sum_nat )
 
 /-- **The finite carrier converges to the analytic carrier `L(s,χ)`.**  This is the
 generation statement: the partial phasor sums `G_{χ,N}` converge to `F_χ = L(·,χ)`. -/
@@ -1361,15 +1466,27 @@ theorem etaTwist_eq_tsum {s : ℂ} (hs : 1 < s.re) :
     rw [ ← tsum_even_add_odd ];
     · rw [ eq_comm, ← tsum_even_add_odd ];
       · norm_num [ pow_add, pow_mul, neg_div, tsum_neg, tsum_mul_left ] ; ring;
-      · convert h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) using 2 ; norm_num;
-        rw [ div_eq_mul_inv, Complex.cpow_neg ];
-      · convert h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 2 ) from fun a b h => by simpa using h ) using 2 ; norm_num ; ring;
-        rw [ Complex.cpow_neg ];
-    · convert h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) using 2 ; norm_num [ Complex.cpow_neg ] ; ring;
-    · have := h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 2 ) from fun a b h => by simpa using h );
-      convert this.neg using 2
-      · norm_num [Complex.cpow_neg, pow_succ, pow_mul]
+      · refine ( h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) ).congr fun k => ?_
+        simp only [Function.comp]
+        push_cast
+        rw [ div_eq_mul_inv, Complex.cpow_neg ]
+      · refine ( h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 2 ) from fun a b h => by simpa using h ) ).congr fun k => ?_
+        simp only [Function.comp]
+        push_cast
+        rw [ div_eq_mul_inv, Complex.cpow_neg ]
         ring
+    · refine ( h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) ).congr fun k => ?_
+      simp only [Function.comp]
+      push_cast
+      rw [ div_eq_mul_inv, Complex.cpow_neg, pow_mul ]
+      norm_num
+    · refine ( h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 2 ) from fun a b h => by simpa using h ) ).neg.congr fun k => ?_
+      simp only [Function.comp]
+      push_cast
+      rw [ div_eq_mul_inv, Complex.cpow_neg ]
+      rw [ show 2 * k + 1 = 2 * k + 1 from rfl, pow_succ, pow_mul ]
+      norm_num
+      ring
   have h_even : ∑' n : ℕ, χ (2 * n + 2 : ZMod q) / (2 * n + 2 : ℂ) ^ s = (2 : ℂ) ^ (-(s : ℂ)) * χ (2 : ZMod q) * ∑' n : ℕ, χ (n + 1 : ZMod q) / (n + 1 : ℂ) ^ s := by
     rw [ ← tsum_mul_left ] ; refine' tsum_congr fun n => _ ; ring;
     rw [ show ( 2 + n * 2 : ℂ ) = 2 * ( 1 + n ) by ring, Complex.cpow_def_of_ne_zero, Complex.cpow_def_of_ne_zero ] <;> norm_num ; ring;
@@ -1464,7 +1581,8 @@ The fiber phasor is the critical-line value of the weighted phasor term:
 -/
 theorem fiberPhasor_eq_cpow (n : ℕ) (hn : 0 < n) (y : ℝ) :
     fiberPhasor χ n y = χ (n : ZMod q) * (n : ℂ) ^ (-((1 / 2 : ℂ) + (y : ℂ) * Complex.I)) := by
-  convert CriticalLinePhasor.DirichletCarrier.dirichlet_term_phasor_critical χ y n hn |> Eq.symm using 1
+  rw [ CriticalLinePhasor.DirichletCarrier.dirichlet_term_phasor_critical χ y n hn ]
+  unfold CriticalLinePhasor.FiberHarmonic.fiberPhasor; push_cast; ring_nf
 
 /-
 **Fiber harmonic theorem (derivative form).**  Each fiber `v_n` satisfies
@@ -1473,8 +1591,24 @@ theorem fiberPhasor_eq_cpow (n : ℕ) (hn : 0 < n) (y : ℝ) :
 theorem fiberPhasor_hasDerivAt (n : ℕ) (y : ℝ) :
     HasDerivAt (fun y : ℝ => fiberPhasor χ n y)
       ((-Real.log n : ℂ) * Complex.I * fiberPhasor χ n y) y := by
-  unfold CriticalLinePhasor.FiberHarmonic.fiberPhasor;
-  convert HasDerivAt.const_mul _ ( HasDerivAt.comp y ( Complex.hasDerivAt_exp _ ) <| HasDerivAt.mul ( HasDerivAt.neg <| HasDerivAt.mul ( hasDerivAt_id _ |> HasDerivAt.ofReal_comp ) <| hasDerivAt_const _ _ ) <| hasDerivAt_const _ _ ) using 1 ; norm_num ; ring
+  have hb : HasDerivAt (fun y : ℝ => (y : ℂ)) 1 y := (hasDerivAt_id y).ofReal_comp
+  have hg : HasDerivAt (fun y : ℝ => -((y : ℂ) * (Real.log n : ℂ)) * Complex.I)
+      (-(Real.log n : ℂ) * Complex.I) y := by
+    have key : HasDerivAt (fun y : ℝ => (y : ℂ) * (-(Real.log n : ℂ) * Complex.I))
+        (1 * (-(Real.log n : ℂ) * Complex.I)) y := hb.mul_const _
+    refine key.congr_deriv ?_ |>.congr_of_eventuallyEq ?_
+    · ring
+    · filter_upwards with t; ring
+  have h := ( ( Complex.hasDerivAt_exp _ ).comp y hg ).const_mul ( (χ (n : ZMod q)) * (((n : ℝ) ^ (-(1/2 : ℝ)) : ℝ) : ℂ) )
+  have h2 : HasDerivAt (fun y : ℝ => fiberPhasor χ n y)
+      ((χ (n : ZMod q)) * (((n : ℝ) ^ (-(1/2 : ℝ)) : ℝ) : ℂ) *
+        (Complex.exp (-((y : ℂ) * (Real.log n : ℂ)) * Complex.I) * (-(Real.log n : ℂ) * Complex.I))) y := by
+    refine h.congr_of_eventuallyEq ?_
+    filter_upwards with t
+    simp only [fiberPhasor, Function.comp]
+  refine h2.congr_deriv ?_
+  unfold CriticalLinePhasor.FiberHarmonic.fiberPhasor
+  ring
 
 /-
 **Fiber harmonic eigenvalue equation.**  For the vertical-flow operator `A = i·d/dy`,
@@ -1499,9 +1633,14 @@ carrier is the `-i`-scaled log-weighted sum of the fibers:
 theorem fiberCarrierFinite_hasDerivAt (N : ℕ) (y : ℝ) :
     HasDerivAt (fun y : ℝ => fiberCarrierFinite χ N y)
       (-Complex.I * ∑ n ∈ Finset.range N, (Real.log n : ℂ) * fiberPhasor χ n y) y := by
-  convert HasDerivAt.sum fun n hn => CriticalLinePhasor.FiberHarmonic.fiberPhasor_hasDerivAt χ n y using 1;
-  rotate_right;
-  exacts [ Finset.range N, by ext; simp +decide [ CriticalLinePhasor.FiberHarmonic.fiberCarrierFinite ], by rw [ Finset.mul_sum _ _ _ ] ; exact Finset.sum_congr rfl fun _ _ => by ring ]
+  have hsum : HasDerivAt (∑ n ∈ Finset.range N, fun y : ℝ => fiberPhasor χ n y)
+      (∑ n ∈ Finset.range N, ((-Real.log n : ℂ) * Complex.I * fiberPhasor χ n y)) y :=
+    HasDerivAt.sum fun n _ => CriticalLinePhasor.FiberHarmonic.fiberPhasor_hasDerivAt χ n y
+  refine hsum.congr_of_eventuallyEq ?_ |>.congr_deriv ?_
+  · filter_upwards with t
+    simp only [CriticalLinePhasor.FiberHarmonic.fiberCarrierFinite, Finset.sum_apply]
+  · rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun _ _ => by ring
 
 /-- **The carrier on the critical line**, `G_χ(y) := L(1/2 + i y, χ)`. -/
 noncomputable def carrier (y : ℝ) : ℂ :=
