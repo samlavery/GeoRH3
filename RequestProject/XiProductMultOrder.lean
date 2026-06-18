@@ -164,7 +164,7 @@ theorem xiProductMult_eq_factor_mul_rest
         exact (one_add_xiWeierstrassTerm_differentiable hρp_ne).differentiableOn
       have := DifferentiableOn.finset_prod (u := s)
         (f := fun p x => 1 + xiWeierstrassTerm p.val.1.val x) h_each
-      convert this using 1
+      convert this using 1 <;> try rfl
       funext x
       rw [Finset.prod_fn]
     exact (h_diffOn.analyticOnNhd h_open) ρ (Set.mem_univ ρ)

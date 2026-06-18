@@ -872,11 +872,12 @@ theorem residueHarmonic_phasor (x γ : ℝ) (hx : 0 < x) :
       rw [ Complex.ofReal_ne_zero ]; exact ne_of_gt (Real.sqrt_pos.mpr (by positivity))
     rw [ h_rho_def, eq_div_iff (mul_ne_zero hsq (Complex.exp_ne_zero _)) ]
     rw [ Complex.ofReal_div ]
+    rw [ mul_mul_mul_comm ]
     rw [ ← Complex.exp_add ]
     rw [ show (↑(γ * Real.log x - Real.arctan (2*γ) + π) : ℂ) * Complex.I + (↑(Real.arctan (2*γ)) : ℂ) * Complex.I = (↑(γ * Real.log x) : ℂ) * Complex.I + π * Complex.I from by push_cast; ring ]
     rw [ Complex.exp_add, Complex.exp_pi_mul_I ]
     field_simp
-    ring
+    rw [ mul_div_assoc, div_self (by rw [ Complex.ofReal_ne_zero ]; exact ne_of_gt (Real.sqrt_pos.mpr (by positivity))), mul_one ]
 
 /-
 **Magnitude of the residue harmonic** `‖−x^ρ/ρ‖ = √x/√(γ²+1/4)`.
@@ -1775,7 +1776,7 @@ theorem completedCarrier_eq (y : ℝ) :
     completedCarrier χ y
       = gammaFactor χ ((1 / 2 : ℂ) + (y : ℂ) * Complex.I)
         * LFunction χ ((1 / 2 : ℂ) + (y : ℂ) * Complex.I) := by
-  convert CriticalLinePhasor.Tate.completedLFunction_eq_gammaFactor_mul χ _ using 1 ; norm_num
+  rw [ CriticalLinePhasor.Tate.completedCarrier, CriticalLinePhasor.Tate.completedLFunction_eq_gammaFactor_mul χ (by simp) ]
 
 /-
 **The Tate-completed carrier has exactly the critical-line zeros of `L`.**
@@ -1784,8 +1785,7 @@ Tate-completed carrier does not change the zeros on the critical line.
 -/
 theorem completedCarrier_eq_zero_iff (y : ℝ) :
     completedCarrier χ y = 0 ↔ LFunction χ ((1 / 2 : ℂ) + (y : ℂ) * Complex.I) = 0 := by
-  convert CriticalLinePhasor.Tate.completedLFunction_eq_zero_iff χ _;
-  norm_num
+  rw [ CriticalLinePhasor.Tate.completedCarrier, CriticalLinePhasor.Tate.completedLFunction_eq_zero_iff χ (by simp) ]
 
 /-- **Tate's functional equation for primitive characters.**  The completed Dirichlet
 `L`-function satisfies
@@ -2392,7 +2392,7 @@ theorem nontrivialZero_represented_by_sourceFiberCrossing
             sign_flip := ⟨by norm_num, by norm_num⟩ }, ?_, ?_, ?_, ?_, ?_⟩
   · rfl
   · exact NTZ_imp_fiberEval_zero χ C ρ hρ
-  · simpa using congrFun (carrier_radial_drift_zero C hC) ρ.im
+  · exact congrFun (carrier_radial_drift_zero C hC) ρ.im
   · exact ⟨0, by simp [amplitudeLedger]⟩
   · exact ⟨by norm_num, by norm_num⟩
 
@@ -2772,7 +2772,10 @@ noncomputable def standingReadoutAt (ρ : ℂ) : ℝ → ℝ :=
 -/
 theorem fiberEval_differentiableAt (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ) :
     DifferentiableAt ℂ (FiberEval χ C) ρ := by
-  convert DifferentiableAt.mul ( DifferentiableAt.cpow ( differentiableAt_const _ ) ( differentiableAt_id.neg ) _ ) ( DirichletCharacter.differentiable_LFunction hχ|>.differentiableAt ) using 1 ; aesop
+  unfold CriticalLinePhasor.CarrierFiberDecomposition.FiberEval
+  refine DifferentiableAt.mul ( DifferentiableAt.cpow ( differentiableAt_const _ ) ( differentiableAt_id.neg ) ?_ ) ( (DirichletCharacter.differentiable_LFunction hχ).differentiableAt )
+  rw [Complex.ofReal_mem_slitPlane]
+  positivity
 
 /-
 **Real-analysis sign-change lemma.**  A real function with value `0` and strictly positive
@@ -2786,7 +2789,7 @@ theorem sign_change_of_hasDerivAt_pos {R : ℝ → ℝ} {c d : ℝ}
   obtain ⟨δ, hδ_pos, hδ⟩ : ∃ δ > 0, ∀ x, 0 < |x - c| ∧ |x - c| < δ → (R x - R c) / (x - c) > 0 := by
     rw [ hasDerivAt_iff_tendsto_slope ] at hd;
     have := Metric.tendsto_nhdsWithin_nhds.mp hd d hpos;
-    obtain ⟨ δ, hδ₁, hδ₂ ⟩ := this; exact ⟨ δ, hδ₁, fun x hx => by have := hδ₂ ( show x ≠ c from by aesop ) ( by simpa [ abs_mul, abs_div ] using hx.2 ) ; rw [ slope_def_field ] at this; linarith [ abs_lt.mp this ] ⟩ ;
+    obtain ⟨ δ, hδ₁, hδ₂ ⟩ := this; exact ⟨ δ, hδ₁, fun x hx => by have := hδ₂ ( show x ≠ c from by aesop ) ( by simpa [ Real.dist_eq, abs_mul, abs_div ] using hx.2 ) ; rw [ slope_def_field ] at this; linarith [ abs_lt.mp this ] ⟩ ;
   refine' ⟨ δ / 2, half_pos hδ_pos, _ ⟩;
   have := hδ ( c - δ / 2 ) ⟨ by rw [ abs_of_neg ] <;> linarith, by rw [ abs_of_neg ] <;> linarith ⟩ ; have := hδ ( c + δ / 2 ) ⟨ by rw [ abs_of_pos ] <;> linarith, by rw [ abs_of_pos ] <;> linarith ⟩ ; simp_all +decide [ div_pos_iff ] ;
   cases ‹0 < R ( c - δ / 2 ) ∧ δ / 2 < 0 ∨ R ( c - δ / 2 ) < 0› <;> nlinarith
@@ -2810,9 +2813,20 @@ theorem standingReadoutAt_hasDerivAt_one (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ
     (hsimple : deriv (FiberEval χ C) ρ ≠ 0) :
     HasDerivAt (standingReadoutAt χ C ρ) 1 ρ.im := by
   have hF : HasDerivAt (fun y : ℝ => (FiberEval χ C) ((ρ.re : ℂ) + (y : ℂ) * I) / (deriv (FiberEval χ C) ρ * I)) 1 ρ.im := by
-    convert HasDerivAt.div_const ( HasDerivAt.comp ρ.im ( fiberEval_differentiableAt χ C hC hχ _ |> DifferentiableAt.hasDerivAt ) ( HasDerivAt.add ( hasDerivAt_const _ _ ) ( HasDerivAt.mul ( hasDerivAt_id _ |> HasDerivAt.ofReal_comp ) ( hasDerivAt_const _ _ ) ) ) ) _ using 1 ; norm_num [ Complex.ext_iff, hsimple ];
+    have hg : HasDerivAt (fun y : ℝ => (ρ.re : ℂ) + (y : ℂ) * I) I ρ.im := by
+      have h1 : HasDerivAt (fun y : ℝ => (y : ℂ) * I) I ρ.im := by
+        simpa using (HasDerivAt.ofReal_comp (hasDerivAt_id ρ.im)).mul_const I
+      simpa using h1.const_add (ρ.re : ℂ)
+    have hfe : HasDerivAt (FiberEval χ C) (deriv (FiberEval χ C) ρ) ((ρ.re : ℂ) + (ρ.im : ℂ) * I) := by
+      rw [Complex.re_add_im]
+      exact (fiberEval_differentiableAt χ C hC hχ ρ).hasDerivAt
+    have hcomp := hfe.comp ρ.im hg
+    have hb : deriv (FiberEval χ C) ρ * I ≠ 0 := mul_ne_zero hsimple Complex.I_ne_zero
+    have hd := hcomp.div_const (deriv (FiberEval χ C) ρ * I)
+    rw [div_self hb] at hd
+    exact hd
   rw [ hasDerivAt_iff_tendsto_slope_zero ] at *;
-  convert Complex.continuous_re.continuousAt.tendsto.comp hF using 2 ; norm_num [ standingReadoutAt ]
+  convert Complex.continuous_re.continuousAt.tendsto.comp hF using 2 <;> norm_num [ standingReadoutAt ]
 
 /-- **Sign flip of the standing readout at a simple zero.**  If `ρ` is a nontrivial zero
 (`ρ ∈ NTZ χ`) that is simple (`deriv (FiberEval χ C) ρ ≠ 0`), then the real standing readout
@@ -2840,9 +2854,13 @@ zero of `L(·,χ)` (`deriv (LFunction χ) ρ ≠ 0`).
 theorem fiberEval_deriv_eq_at_zero (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ)
     (hL : LFunction χ ρ = 0) :
     deriv (FiberEval χ C) ρ = (C : ℂ) ^ (-ρ) * deriv (LFunction χ) ρ := by
-  convert HasDerivAt.deriv ( HasDerivAt.mul ( hasDerivAt_deriv_iff.mpr _ ) ( ( differentiable_LFunction hχ ρ ).hasDerivAt ) ) using 1;
-  · rw [ hL, MulZeroClass.mul_zero, zero_add ];
-  · exact DifferentiableAt.cpow ( differentiableAt_const _ ) ( differentiableAt_id.neg ) ( by norm_num; positivity )
+  have hcpow : HasDerivAt (fun s : ℂ => (C : ℂ) ^ (-s)) (deriv (fun s : ℂ => (C : ℂ) ^ (-s)) ρ) ρ :=
+    (DifferentiableAt.cpow (differentiableAt_const _) (differentiableAt_id.neg) (by rw [Complex.ofReal_mem_slitPlane]; positivity)).hasDerivAt
+  have hL' : HasDerivAt (LFunction χ) (deriv (LFunction χ) ρ) ρ := (differentiable_LFunction hχ ρ).hasDerivAt
+  have hmul := hcpow.mul hL'
+  rw [hL, mul_zero, zero_add] at hmul
+  have : HasDerivAt (FiberEval χ C) ((C : ℂ) ^ (-ρ) * deriv (LFunction χ) ρ) ρ := hmul
+  exact this.deriv
 
 /-- **Sign flip from a simple `L`-zero.**  Restatement of the sign-flip theorem with the
 transversality phrased directly as `ρ` being a *simple zero of `L(·,χ)`*
@@ -3044,8 +3062,7 @@ theorem projectedNoDrift_imp_re_half (ρ : ℂ) (h : ProjectedNoDriftEvent χ C 
     have h2 : HasDerivAt (fun y : ℝ => a ^ 2 + y ^ 2) (2 * y₀) y₀ := by
       simpa using (hasDerivAt_pow 2 y₀).const_add (a ^ 2)
     have := h1.div h2 hD
-    convert this using 1
-    field_simp; ring
+    exact this.congr_deriv (by rw [div_eq_div_iff (pow_ne_zero 2 hD) (pow_ne_zero 2 hD)]; ring)
   have hnorm_eq : ∀ y : ℝ, a ^ 2 + y ^ 2 ≠ 0 → ‖projectedReadoutLine ρ y‖ = Real.sqrt (G y) := by
     intro y hy2
     have hns : Complex.normSq (projectedReadoutLine ρ y) = G y := by
@@ -3067,8 +3084,7 @@ theorem projectedNoDrift_imp_re_half (ρ : ℂ) (h : ProjectedNoDriftEvent χ C 
   have hsqrt : HasDerivAt (fun y => Real.sqrt (G y))
       ((2 * y₀ * (2 * a - 1) / (a ^ 2 + y₀ ^ 2) ^ 2) / (2 * Real.sqrt (G y₀))) y₀ := by
     have := (Real.hasDerivAt_sqrt (ne_of_gt hGpos)).comp y₀ hGderiv
-    convert this using 1
-    field_simp
+    exact this.congr_deriv (by ring)
   have heq : (fun y => ‖projectedReadoutLine ρ y‖) =ᶠ[nhds y₀] (fun y => Real.sqrt (G y)) := by
     have hopen : ∀ᶠ y in nhds y₀, a ^ 2 + y ^ 2 ≠ 0 := by
       have hcont : ContinuousAt (fun y : ℝ => a ^ 2 + y ^ 2) y₀ := by fun_prop

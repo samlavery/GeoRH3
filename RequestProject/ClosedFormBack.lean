@@ -1765,7 +1765,10 @@ theorem completedCarrier_eq (y : ℝ) :
     completedCarrier χ y
       = gammaFactor χ ((1 / 2 : ℂ) + (y : ℂ) * Complex.I)
         * LFunction χ ((1 / 2 : ℂ) + (y : ℂ) * Complex.I) := by
-  convert CriticalLinePhasor.Tate.completedLFunction_eq_gammaFactor_mul χ _ using 1 ; norm_num
+  have hre : (0:ℝ) < ((1 / 2 : ℂ) + (y : ℂ) * Complex.I).re := by
+    simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im]
+  rw [completedCarrier]
+  exact CriticalLinePhasor.Tate.completedLFunction_eq_gammaFactor_mul χ hre
 
 /-
 **The Tate-completed carrier has exactly the critical-line zeros of `L`.**
@@ -1774,8 +1777,10 @@ Tate-completed carrier does not change the zeros on the critical line.
 -/
 theorem completedCarrier_eq_zero_iff (y : ℝ) :
     completedCarrier χ y = 0 ↔ LFunction χ ((1 / 2 : ℂ) + (y : ℂ) * Complex.I) = 0 := by
-  convert CriticalLinePhasor.Tate.completedLFunction_eq_zero_iff χ _;
-  norm_num
+  have hre : (0:ℝ) < ((1 / 2 : ℂ) + (y : ℂ) * Complex.I).re := by
+    simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im]
+  rw [completedCarrier]
+  exact CriticalLinePhasor.Tate.completedLFunction_eq_zero_iff χ hre
 
 /-- **Tate's functional equation for primitive characters.**  The completed Dirichlet
 `L`-function satisfies

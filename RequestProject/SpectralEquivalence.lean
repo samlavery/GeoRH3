@@ -71,13 +71,15 @@ theorem inner_definite (f : ι →₀ ℂ) (h : (inner ℂ f f : ℂ) = 0) : f =
   ext i; by_cases hi : i ∈ f.support <;> simp_all +decide ;
 theorem inner_add_left (f g h : ι →₀ ℂ) :
     (inner ℂ (f + g) h : ℂ) = inner ℂ f h + inner ℂ g h := by
-  convert Finsupp.sum_add_index' _ _ <;> simp +decide [ add_mul ]
+  rw [inner_def, inner_def, inner_def]
+  exact Finsupp.sum_add_index' (fun i => by simp) (fun i b₁ b₂ => by simp [map_add, add_mul])
 theorem inner_smul_left (f g : ι →₀ ℂ) (r : ℂ) :
     (inner ℂ (r • f) g : ℂ) = (starRingEnd ℂ) r * inner ℂ f g := by
   apply Eq.symm; exact (by
     have h_support : (r • f).support ⊆ f.support := Finsupp.support_smul
     have h_eq : (inner ℂ (r • f) g : ℂ) = ∑ i ∈ f.support, (starRingEnd ℂ) (r * f i) * g i := by
       convert inner_eq_sum_of_subset ( r • f ) g h_support using 1
+      exact Finset.sum_congr rfl (fun i _ => by rw [Finsupp.smul_apply, smul_eq_mul])
     have h_eq' : (inner ℂ f g : ℂ) = ∑ i ∈ f.support, (starRingEnd ℂ) (f i) * g i := by
       convert inner_eq_sum_of_subset f g ( Finset.Subset.refl _ ) using 1
     simp_all +decide [ mul_assoc, Finset.mul_sum _ _ _ ]
@@ -114,15 +116,17 @@ theorem diagOp_apply (d : ι → ℝ) (f : ι →₀ ℂ) (i : ι) :
 The diagonal operator is symmetric (self-adjoint): its diagonal entries `d i` are real.
 -/
 theorem diagOp_symmetric (d : ι → ℝ) : (diagOp d).IsSymmetric := by
-  intro f g;
-  convert inner_eq_sum_of_subset ( diagOp d f ) g ?_ using 1;
-  convert inner_eq_sum_of_subset f ( diagOp d g ) _ |> Eq.symm using 1;
-  convert inner_eq_sum_of_subset f ( diagOp d g ) _ |> Eq.symm using 1;
-  any_goals exact f.support;
-  · simp +decide [ diagOp_apply, mul_assoc, mul_comm, mul_left_comm ];
-  · exact Finset.Subset.refl _;
-  · exact Finset.Subset.refl _;
-  · intro i hi; contrapose! hi; simp_all +decide [ diagOp_apply ] ;
+  intro f g
+  have hsub : (diagOp d f).support ⊆ f.support := by
+    intro i hi
+    rw [Finsupp.mem_support_iff, diagOp_apply] at hi
+    rw [Finsupp.mem_support_iff]
+    intro hf; exact hi (by rw [hf, mul_zero])
+  rw [inner_eq_sum_of_subset (diagOp d f) g hsub,
+      inner_eq_sum_of_subset f (diagOp d g) (Finset.Subset.refl _)]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  rw [diagOp_apply, diagOp_apply, map_mul, Complex.conj_ofReal]
+  ring
 /-
 Every diagonal entry `d i` (as a complex number) is an eigenvalue of `diagOp d`, with
 eigenvector `single i 1`.

@@ -59,7 +59,8 @@ theorem hasDerivAt_amplitudeDefectEnvelope (β t : ℝ) :
   have hinner : HasDerivAt (fun β' => (β' - 1 / 2) * t) (1 * t) β :=
     ((hasDerivAt_id β).sub_const (1 / 2)).mul_const t
   rw [one_mul] at hinner
-  convert (Real.hasDerivAt_cosh ((β - 1 / 2) * t)).comp β hinner |>.sub_const 1 using 1; ring
+  convert (Real.hasDerivAt_cosh ((β - 1 / 2) * t)).comp β hinner |>.sub_const 1 using 1 <;>
+    first | rfl | ring
 
 /-- Derivative of the odd defect envelope in β: `t · cosh((β−1/2)t)`. -/
 theorem hasDerivAt_oddDefectEnvelope (β t : ℝ) :
@@ -69,7 +70,8 @@ theorem hasDerivAt_oddDefectEnvelope (β t : ℝ) :
   have hinner : HasDerivAt (fun β' => (β' - 1 / 2) * t) (1 * t) β :=
     ((hasDerivAt_id β).sub_const (1 / 2)).mul_const t
   rw [one_mul] at hinner
-  convert (Real.hasDerivAt_sinh ((β - 1 / 2) * t)).comp β hinner using 1; ring
+  convert (Real.hasDerivAt_sinh ((β - 1 / 2) * t)).comp β hinner using 1 <;>
+    first | rfl | ring
 
 /-- At β = CoshBalance, the even envelope has **zero derivative** (sinh(0) = 0).
 The even/cosine channel is silent to first order off the critical line. -/
@@ -203,8 +205,7 @@ theorem theta_centeredExcess_eq_twoC_add_twoiS (β γ : ℝ)
           from MeasureTheory.integral_mul_const Complex.I _]
     · exact congrArg₂ (· + ·) integral_ofReal (congr_arg₂ (· * ·) integral_ofReal rfl)
     · exact hfi.ofReal
-    · exact MeasureTheory.Integrable.mul_const
-        (by simpa only [← Complex.ofReal_mul] using hgi.ofReal) _
+    · exact MeasureTheory.Integrable.mul_const hgi.ofReal _
   -- Integrability: derive from hint1/hint2 via re/im extraction.
   -- a(t) = Re(F(t)) and b(t) = Im(F(t)), so IntegrableOn a/b from IntegrableOn F.
   have hFint : IntegrableOn F (Set.Ioi 0) := hint1.sub hint2

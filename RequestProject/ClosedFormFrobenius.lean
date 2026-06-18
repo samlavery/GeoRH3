@@ -196,9 +196,11 @@ noncomputable def helixVel (p r : ℝ) (k : ℝ) : ℝ × ℝ × ℝ :=
 -/
 theorem helix_hasDerivAt (p r k : ℝ) :
     HasDerivAt (helix p r) (helixVel p r k) k := by
-  convert HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_id k ) ) ( HasDerivAt.cos ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_id k ) ) ( HasDerivAt.sin ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.const_mul p ( hasDerivAt_id k ) ) ) using 1;
-  unfold CriticalLinePhasor.Geometry.helixVel; norm_num; ring;
-  norm_num
+  convert HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const k r ) ( hasDerivAt_id k ) ) ( HasDerivAt.cos ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.prodMk ( HasDerivAt.mul ( HasDerivAt.mul ( hasDerivAt_const k r ) ( hasDerivAt_id k ) ) ( HasDerivAt.sin ( HasDerivAt.const_mul ( 2 * Real.pi ) ( hasDerivAt_id k ) ) ) ) ( HasDerivAt.const_mul p ( hasDerivAt_id k ) ) ) using 1
+  · funext x
+    simp only [CriticalLinePhasor.Geometry.helix, Pi.mul_apply, id_eq]
+  · simp only [CriticalLinePhasor.Geometry.helixVel, Pi.mul_apply, id_eq]
+    refine Prod.ext ?_ (Prod.ext ?_ ?_) <;> ring
 
 /--
 **Squared speed of the helix is constant-free of the trig terms:**
@@ -289,11 +291,22 @@ theorem arclength_closed_form (p r k : ℝ) (hr : 0 < r) :
     exacts [ fun t => CriticalLinePhasor.Geometry.arclengthClosed p r t, funext fun t => HasDerivAt.deriv ( h_deriv t ), fun t ht => HasDerivAt.differentiableAt ( h_deriv t ), Continuous.continuousOn <| by exact Continuous.sqrt <| by continuity, by simp +decide [ CriticalLinePhasor.Geometry.arclengthClosed ] ];
   intros t
   unfold arclengthClosed speed;
-  convert HasDerivAt.add ( HasDerivAt.mul ( HasDerivAt.div_const ( hasDerivAt_id t ) _ ) ( HasDerivAt.sqrt ( HasDerivAt.add ( hasDerivAt_const _ _ ) ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_pow 2 t ) ) ) _ ) ) ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( HasDerivAt.arsinh ( HasDerivAt.div_const ( HasDerivAt.mul ( hasDerivAt_const _ _ ) ( hasDerivAt_id t ) ) _ ) ) ) using 1 <;> norm_num ; ring;
-  · field_simp;
-    rw [ Real.sq_sqrt <| by positivity, Real.sq_sqrt <| by positivity ] ; ring;
-    rw [ show p ^ 2 + r ^ 2 + r ^ 2 * Real.pi ^ 2 * t ^ 2 * 4 = ( p ^ 2 + r ^ 2 ) * ( ( p ^ 2 + r ^ 2 * Real.pi ^ 2 * t ^ 2 * 4 + r ^ 2 ) / ( p ^ 2 + r ^ 2 ) ) by rw [ mul_div_cancel₀ _ ( by positivity ) ] ; ring ] ; rw [ Real.sqrt_mul ( by positivity ) ] ; ring;
-  · positivity
+  have hinner : (p^2 + r^2 + 4 * Real.pi^2 * r^2 * t^2) ≠ 0 := by positivity
+  have hbuilt := ( HasDerivAt.add ( HasDerivAt.mul ( HasDerivAt.div_const ( hasDerivAt_id t ) 2 ) ( HasDerivAt.sqrt ( HasDerivAt.add ( hasDerivAt_const t (p^2+r^2) ) ( HasDerivAt.mul ( hasDerivAt_const t (4 * Real.pi^2 * r^2) ) ( hasDerivAt_pow 2 t ) ) ) hinner ) ) ( HasDerivAt.mul ( hasDerivAt_const t ((p^2+r^2)/(4*Real.pi*r)) ) ( HasDerivAt.arsinh ( HasDerivAt.div_const ( HasDerivAt.mul ( hasDerivAt_const t (2*Real.pi*r) ) ( hasDerivAt_id t ) ) (Real.sqrt (p^2+r^2)) ) ) ) )
+  refine hbuilt.congr_deriv ?_
+  simp only [Pi.add_apply, Pi.mul_apply, id_eq]
+  have hpr : (0:ℝ) < p^2 + r^2 := by positivity
+  have hB : Real.sqrt (1 + (2*Real.pi*r*t/Real.sqrt (p^2+r^2))^2)
+      = Real.sqrt (p^2+r^2+(2*Real.pi*r*t)^2)/Real.sqrt (p^2+r^2) := by
+    rw [eq_div_iff (by positivity : Real.sqrt (p^2+r^2) ≠ 0), ← Real.sqrt_mul (by positivity)]
+    congr 1
+    field_simp
+    rw [Real.sq_sqrt hpr.le]
+  rw [hB, smul_eq_mul]
+  field_simp
+  rw [show (p ^ 2 + r ^ 2 + 2 ^ 2 * r ^ 2 * Real.pi ^ 2 * t ^ 2) = (p ^ 2 + r ^ 2 + r ^ 2 * 4 * Real.pi ^ 2 * t ^ 2) by ring]
+  rw [Real.sq_sqrt (by positivity : (0:ℝ) ≤ p ^ 2 + r ^ 2 + r ^ 2 * 4 * Real.pi ^ 2 * t ^ 2)]
+  ring
 
 /-- The fixed geometric integer spacing `Δ = π/3`. -/
 noncomputable def Delta : ℝ := Real.pi / 3
@@ -392,6 +405,8 @@ theorem euler_factor_vertical_line (ell : ℕ) (hell : 0 < ell) (σ y : ℝ) :
     1 - (ell : ℂ) ^ (-((σ : ℂ) + (y : ℂ) * I)) =
       1 - (((ell : ℝ) ^ (-σ) : ℝ) : ℂ) * Complex.exp (-(y * Real.log ell) * I) := by
   convert congr_arg ( fun x : ℂ => 1 - x ) ( CriticalLinePhasor.cpow_vertical_line_phasor ( ell : ℝ ) ( by positivity ) σ y ) using 1
+  push_cast
+  rfl
 
 end CriticalLinePhasor.Geometry
 
@@ -461,8 +476,10 @@ theorem simple_zero_forces_sign_change (f : ℝ → ℝ) (x₀ L : ℝ)
   obtain ⟨δ, hδ_pos, hδ⟩ : ∃ δ > 0, ∀ y, abs (y - x₀) < δ → y ≠ x₀ → (f y - f x₀) / (y - x₀) * L > 0 := by
     have := Metric.tendsto_nhdsWithin_nhds.1 ( show Filter.Tendsto ( fun y => ( f y - f x₀ ) / ( y - x₀ ) ) ( nhdsWithin x₀ { x₀ } ᶜ ) ( nhds L ) from ?_ );
     · exact Exists.elim ( this ( |L| ) ( abs_pos.mpr hL ) ) fun δ hδ => ⟨ δ, hδ.1, fun y hy hy' => by cases abs_cases L <;> nlinarith [ abs_lt.mp ( hδ.2 hy' hy ) ] ⟩;
-    · rw [ hasDerivAt_iff_tendsto_slope ] at hf;
-      simpa [ div_eq_inv_mul ] using hf;
+    · rw [ hasDerivAt_iff_tendsto_slope ] at hf
+      refine hf.congr ?_
+      intro y
+      rw [slope_def_field]
   refine ⟨δ, hδ_pos, ?_⟩
   intro y hy z hz
   have hy_abs : |y - x₀| < δ := by
@@ -773,9 +790,20 @@ theorem residueHarmonic_phasor (x γ : ℝ) (hx : 0 < x) :
       norm_cast ; norm_num [ Real.cos_arctan, Real.sin_arctan ] ; ring ; norm_num [ hx.le ] ; ring;
       rw [ show ( 1 / 4 + γ ^ 2 ) = ( 1 + γ ^ 2 * 4 ) / 4 by ring, Real.sqrt_div' ] <;> norm_num ; ring ; norm_num [ hx.le ] ; ring;
       exact ⟨ mul_inv_cancel₀ <| ne_of_gt <| Real.sqrt_pos.mpr <| by positivity, mul_div_cancel_right₀ _ <| ne_of_gt <| Real.sqrt_pos.mpr <| by positivity ⟩;
-  convert congr_arg ( fun z => -z / ( 1 / 2 + ( γ : ℂ ) * Complex.I ) ) h_cpow_def using 1;
-  rw [ h_rho_def ] ; ring ; norm_num [ Complex.exp_ne_zero ] ; ring;
-  norm_num [ Complex.exp_add, Complex.exp_sub, Complex.exp_neg ] ; ring
+  unfold CriticalLinePhasor.Residue.residueHarmonic
+  rw [h_cpow_def, h_rho_def]
+  have e1 : Complex.exp ((↑(γ * Real.log x - Real.arctan (2 * γ) + Real.pi) : ℂ) * Complex.I)
+      = Complex.exp ((↑(γ * Real.log x) : ℂ) * Complex.I)
+        * (Complex.exp ((↑(Real.arctan (2 * γ)) : ℂ) * Complex.I))⁻¹ * (-1) := by
+    rw [← Complex.exp_neg, ← Complex.exp_add,
+        show ((-1) : ℂ) = Complex.exp (↑Real.pi * Complex.I) from by rw [Complex.exp_pi_mul_I],
+        ← Complex.exp_add]
+    push_cast
+    ring_nf
+  rw [Complex.ofReal_div, e1]
+  have hsqrt : (↑(Real.sqrt (γ ^ 2 + 1 / 4)) : ℂ) ≠ 0 := by norm_num; positivity
+  have hexp : Complex.exp ((↑(Real.arctan (2 * γ)) : ℂ) * Complex.I) ≠ 0 := Complex.exp_ne_zero _
+  field_simp
 
 /-
 **Magnitude of the residue harmonic** `‖−x^ρ/ρ‖ = √x/√(γ²+1/4)`.
@@ -812,9 +840,11 @@ theorem residue_logDeriv_simple_zero
       · exact tendsto_nhdsWithin_of_tendsto_nhds ( ContinuousAt.cpow continuousAt_const continuousAt_id <| Or.inl <| by norm_num; linarith );
       · exact Filter.tendsto_id.mono_left inf_le_left;
     · have h_slope : Filter.Tendsto (fun s => (f s - f ρ) / (s - ρ)) (nhdsWithin ρ {ρ}ᶜ) (nhds (f' ρ)) := by
-        have := hderiv.self_of_nhds;
-        rw [ hasDerivAt_iff_tendsto_slope ] at this;
-        simpa [ div_eq_inv_mul ] using this;
+        have hthis := hderiv.self_of_nhds;
+        rw [ hasDerivAt_iff_tendsto_slope ] at hthis;
+        refine hthis.congr ?_
+        intro s
+        rw [slope_def_field]
       simpa [ hf0 ] using h_slope.inv₀ hf'0;
   grind
 
@@ -920,14 +950,17 @@ theorem etaTrivial_eq_tsum {s : ℂ} (hs : 1 < s.re) :
       have h_pseries : Summable (fun k : ℕ => (1 : ℂ) / ((k + 1 : ℂ) ^ s)) := by
         have := summable_one_div_nat_cpow.2 hs;
         exact_mod_cast this.comp_injective Nat.succ_injective;
-      convert h_pseries.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) |> Summable.mul_left 2 using 2 ; norm_num ; ring;
+      convert h_pseries.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) |> Summable.mul_left 2 using 2 with x
+      · rfl
+      · norm_num; ring
     · have := summable_nat_add_iff 1 |>.2 <| Real.summable_one_div_nat_rpow.2 hs;
       convert this.of_norm_bounded _;
       · infer_instance;
       · intro n; have := Complex.norm_cpow_eq_rpow_re_of_pos ( Nat.cast_add_one_pos n ) s; aesop;
     · refine' .of_norm _;
-      convert summable_nat_add_iff 1 |>.2 <| Real.summable_one_div_nat_rpow.2 hs using 1;
-      ext; rw [ ← Complex.norm_cpow_eq_rpow_re_of_pos ( by positivity ) ] ; norm_num;
+      convert summable_nat_add_iff 1 |>.2 <| Real.summable_one_div_nat_rpow.2 hs using 2 with n <;>
+        try rfl
+      rw [ ← Complex.norm_cpow_eq_rpow_re_of_pos ( by positivity ) ] ; norm_num
   -- Simplify the expression $\sum' k : ℕ, (2 : ℂ) / ((2 * (k + 1) : ℂ) ^ s)$ to $2^{1-s} \sum' k : ℕ, (1 : ℂ) / ((k + 1) : ℂ) ^ s$.
   have h_simplify : ∑' k : ℕ, (2 : ℂ) / ((2 * (k + 1) : ℂ) ^ s) = 2 ^ (1 - s) * ∑' k : ℕ, (1 : ℂ) / ((k + 1) : ℂ) ^ s := by
     rw [ ← tsum_mul_left ] ; refine' tsum_congr fun k => _ ; rw [ Complex.cpow_sub ] <;> norm_num ; ring;
@@ -1216,7 +1249,8 @@ theorem numberSite_mem_helix (p r : ℝ) (n : ℕ) :
 scales the loop radius linearly. -/
 theorem numberSite_radius (p r : ℝ) (n : ℕ) :
     Real.sqrt ((numberSite p r n).1 ^ 2 + (numberSite p r n).2.1 ^ 2) = |r * (n : ℝ)| := by
-  convert CriticalLinePhasor.Geometry.helix_cyl_radius p r n using 1
+  unfold CriticalLinePhasor.HelixExhaustion.numberSite
+  exact CriticalLinePhasor.Geometry.helix_cyl_radius p r n
 
 /-- The helix is **injective in its parameter** whenever the pitch is non-degenerate
 (`p ≠ 0`), since the height coordinate is `p·k`. -/
@@ -1227,7 +1261,7 @@ theorem helix_injective (p r : ℝ) (hp : p ≠ 0) : Function.Injective (helix p
 /-- **Distinct numbers occupy distinct helix sites** (for non-degenerate pitch). -/
 theorem numberSite_injective (p r : ℝ) (hp : p ≠ 0) :
     Function.Injective (numberSite p r) := by
-      convert helix_injective p r hp |> Function.Injective.comp <| Nat.cast_injective using 1
+      exact (helix_injective p r hp).comp Nat.cast_injective
 
 /-- **The helix lattice**: the set of all number-sites living on the helix. -/
 noncomputable def helixLattice (p r : ℝ) : Set (ℝ × ℝ × ℝ) := Set.range (numberSite p r)
@@ -1320,12 +1354,12 @@ theorem phasor_summable {s : ℂ} (hs : 1 < s.re) :
 phasor carrier built from the phasor data equals the analytic carrier `L(s,χ)`. -/
 theorem regCarrier_eq_LFunction {s : ℂ} (hs : 1 < s.re) :
     regCarrier χ s = LFunction χ s := by
-      convert CriticalLinePhasor.DirichletCarrier.dirichletCarrier_eq_tsum χ hs |> Eq.symm
+      rw [CriticalLinePhasor.DirichletCarrier.dirichletCarrier_eq_tsum χ hs]; rfl
 
 /-- **The finite carrier converges to the regularized carrier.** -/
 theorem finiteCarrier_tendsto {s : ℂ} (hs : 1 < s.re) :
     Filter.Tendsto (finiteCarrier χ s) Filter.atTop (nhds (regCarrier χ s)) := by
-      convert ( phasor_summable χ hs |> Summable.hasSum |> HasSum.tendsto_sum_nat ) using 1
+      exact ( phasor_summable χ hs |> Summable.hasSum |> HasSum.tendsto_sum_nat )
 
 /-- **The finite carrier converges to the analytic carrier `L(s,χ)`.**  This is the
 generation statement: the partial phasor sums `G_{χ,N}` converge to `F_χ = L(·,χ)`. -/
@@ -1361,13 +1395,21 @@ theorem etaTwist_eq_tsum {s : ℂ} (hs : 1 < s.re) :
     rw [ ← tsum_even_add_odd ];
     · rw [ eq_comm, ← tsum_even_add_odd ];
       · norm_num [ pow_add, pow_mul, neg_div, tsum_neg, tsum_mul_left ] ; ring;
-      · convert h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) using 2 ; norm_num;
-        rw [ div_eq_mul_inv, Complex.cpow_neg ];
-      · convert h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 2 ) from fun a b h => by simpa using h ) using 2 ; norm_num ; ring;
-        rw [ Complex.cpow_neg ];
-    · convert h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) using 2 ; norm_num [ Complex.cpow_neg ] ; ring;
-    · have := h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 2 ) from fun a b h => by simpa using h );
-      convert this.neg using 2 ; norm_num [ Complex.cpow_neg ] ; ring;
+      · convert h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) using 2 with x <;> try rfl
+        norm_num
+        rw [ div_eq_mul_inv, Complex.cpow_neg ]
+      · convert h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 2 ) from fun a b h => by simpa using h ) using 2 with x <;> try rfl
+        norm_num
+        rw [ Complex.cpow_neg ] ; ring
+    · convert h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 1 ) from fun a b h => by simpa using h ) using 2 with x <;> try rfl
+      norm_num [ Complex.cpow_neg ] ; ring
+    · have hcomp := h_summable.comp_injective ( show Function.Injective ( fun k : ℕ => 2 * k + 2 ) from fun a b h => by simpa using h );
+      convert hcomp.neg using 2 with x <;> try rfl
+      rw [Odd.neg_one_pow (show _root_.Odd (2 * x + 1) from ⟨x, by ring⟩)]
+      simp only [Function.comp]
+      rw [Complex.cpow_neg]
+      push_cast
+      ring
   have h_even : ∑' n : ℕ, χ (2 * n + 2 : ZMod q) / (2 * n + 2 : ℂ) ^ s = (2 : ℂ) ^ (-(s : ℂ)) * χ (2 : ZMod q) * ∑' n : ℕ, χ (n + 1 : ZMod q) / (n + 1 : ℂ) ^ s := by
     rw [ ← tsum_mul_left ] ; refine' tsum_congr fun n => _ ; ring;
     rw [ show ( 2 + n * 2 : ℂ ) = 2 * ( 1 + n ) by ring, Complex.cpow_def_of_ne_zero, Complex.cpow_def_of_ne_zero ] <;> norm_num ; ring;
@@ -1462,7 +1504,8 @@ The fiber phasor is the critical-line value of the weighted phasor term:
 -/
 theorem fiberPhasor_eq_cpow (n : ℕ) (hn : 0 < n) (y : ℝ) :
     fiberPhasor χ n y = χ (n : ZMod q) * (n : ℂ) ^ (-((1 / 2 : ℂ) + (y : ℂ) * Complex.I)) := by
-  convert CriticalLinePhasor.DirichletCarrier.dirichlet_term_phasor_critical χ y n hn |> Eq.symm using 1
+  rw [CriticalLinePhasor.DirichletCarrier.dirichlet_term_phasor_critical χ y n hn]
+  rfl
 
 /-
 **Fiber harmonic theorem (derivative form).**  Each fiber `v_n` satisfies
@@ -1472,7 +1515,8 @@ theorem fiberPhasor_hasDerivAt (n : ℕ) (y : ℝ) :
     HasDerivAt (fun y : ℝ => fiberPhasor χ n y)
       ((-Real.log n : ℂ) * Complex.I * fiberPhasor χ n y) y := by
   unfold CriticalLinePhasor.FiberHarmonic.fiberPhasor;
-  convert HasDerivAt.const_mul _ ( HasDerivAt.comp y ( Complex.hasDerivAt_exp _ ) <| HasDerivAt.mul ( HasDerivAt.neg <| HasDerivAt.mul ( hasDerivAt_id _ |> HasDerivAt.ofReal_comp ) <| hasDerivAt_const _ _ ) <| hasDerivAt_const _ _ ) using 1 ; norm_num ; ring
+  convert HasDerivAt.const_mul (χ (n : ZMod q) * (((n : ℝ) ^ (-(1 / 2 : ℝ)) : ℝ) : ℂ)) ( HasDerivAt.comp y ( Complex.hasDerivAt_exp _ ) <| HasDerivAt.mul ( HasDerivAt.neg <| HasDerivAt.mul ( hasDerivAt_id _ |> HasDerivAt.ofReal_comp ) <| hasDerivAt_const y ((Real.log n : ℝ) : ℂ) ) <| hasDerivAt_const y Complex.I ) using 1 <;> try rfl
+  simp only [Function.comp, Pi.mul_apply, Pi.neg_apply, id_eq]; push_cast; ring
 
 /-
 **Fiber harmonic eigenvalue equation.**  For the vertical-flow operator `A = i·d/dy`,
@@ -1497,9 +1541,12 @@ carrier is the `-i`-scaled log-weighted sum of the fibers:
 theorem fiberCarrierFinite_hasDerivAt (N : ℕ) (y : ℝ) :
     HasDerivAt (fun y : ℝ => fiberCarrierFinite χ N y)
       (-Complex.I * ∑ n ∈ Finset.range N, (Real.log n : ℂ) * fiberPhasor χ n y) y := by
-  convert HasDerivAt.sum fun n hn => CriticalLinePhasor.FiberHarmonic.fiberPhasor_hasDerivAt χ n y using 1;
-  rotate_right;
-  exacts [ Finset.range N, by ext; simp +decide [ CriticalLinePhasor.FiberHarmonic.fiberCarrierFinite ], by rw [ Finset.mul_sum _ _ _ ] ; exact Finset.sum_congr rfl fun _ _ => by ring ]
+  convert HasDerivAt.sum (u := Finset.range N) fun n (hn : n ∈ Finset.range N) => CriticalLinePhasor.FiberHarmonic.fiberPhasor_hasDerivAt χ n y using 1 <;>
+    try rfl
+  · funext y'
+    rw [CriticalLinePhasor.FiberHarmonic.fiberCarrierFinite, Finset.sum_apply]
+  · rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun _ _ => by ring
 
 /-- **The carrier on the critical line**, `G_χ(y) := L(1/2 + i y, χ)`. -/
 noncomputable def carrier (y : ℝ) : ℂ :=
@@ -1634,7 +1681,8 @@ theorem completedCarrier_eq (y : ℝ) :
     completedCarrier χ y
       = gammaFactor χ ((1 / 2 : ℂ) + (y : ℂ) * Complex.I)
         * LFunction χ ((1 / 2 : ℂ) + (y : ℂ) * Complex.I) := by
-  convert CriticalLinePhasor.Tate.completedLFunction_eq_gammaFactor_mul χ _ using 1 ; norm_num
+  unfold CriticalLinePhasor.Tate.completedCarrier
+  rw [CriticalLinePhasor.Tate.completedLFunction_eq_gammaFactor_mul χ (by simp)]
 
 /-
 **The Tate-completed carrier has exactly the critical-line zeros of `L`.**
@@ -1643,8 +1691,8 @@ Tate-completed carrier does not change the zeros on the critical line.
 -/
 theorem completedCarrier_eq_zero_iff (y : ℝ) :
     completedCarrier χ y = 0 ↔ LFunction χ ((1 / 2 : ℂ) + (y : ℂ) * Complex.I) = 0 := by
-  convert CriticalLinePhasor.Tate.completedLFunction_eq_zero_iff χ _;
-  norm_num
+  unfold CriticalLinePhasor.Tate.completedCarrier
+  exact CriticalLinePhasor.Tate.completedLFunction_eq_zero_iff χ (by simp)
 
 /-- **Tate's functional equation for primitive characters.**  The completed Dirichlet
 `L`-function satisfies
@@ -2251,7 +2299,8 @@ theorem nontrivialZero_represented_by_sourceFiberCrossing
             sign_flip := ⟨by norm_num, by norm_num⟩ }, ?_, ?_, ?_, ?_, ?_⟩
   · rfl
   · exact NTZ_imp_fiberEval_zero χ C ρ hρ
-  · simpa using congrFun (carrier_radial_drift_zero C hC) ρ.im
+  · show radial_drift (Carrier C) ρ.im = 0
+    simpa using congrFun (carrier_radial_drift_zero C hC) ρ.im
   · exact ⟨0, by simp [amplitudeLedger]⟩
   · exact ⟨by norm_num, by norm_num⟩
 
@@ -2631,7 +2680,11 @@ noncomputable def standingReadoutAt (ρ : ℂ) : ℝ → ℝ :=
 -/
 theorem fiberEval_differentiableAt (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ) :
     DifferentiableAt ℂ (FiberEval χ C) ρ := by
-  convert DifferentiableAt.mul ( DifferentiableAt.cpow ( differentiableAt_const _ ) ( differentiableAt_id.neg ) _ ) ( DirichletCharacter.differentiable_LFunction hχ|>.differentiableAt ) using 1 ; aesop
+  unfold CriticalLinePhasor.CarrierFiberDecomposition.FiberEval
+  apply DifferentiableAt.mul
+  · apply DifferentiableAt.const_cpow (differentiableAt_id.neg)
+    exact Or.inl (by exact_mod_cast hC.ne')
+  · exact (DirichletCharacter.differentiable_LFunction hχ).differentiableAt
 
 /-
 **Real-analysis sign-change lemma.**  A real function with value `0` and strictly positive
@@ -2645,7 +2698,7 @@ theorem sign_change_of_hasDerivAt_pos {R : ℝ → ℝ} {c d : ℝ}
   obtain ⟨δ, hδ_pos, hδ⟩ : ∃ δ > 0, ∀ x, 0 < |x - c| ∧ |x - c| < δ → (R x - R c) / (x - c) > 0 := by
     rw [ hasDerivAt_iff_tendsto_slope ] at hd;
     have := Metric.tendsto_nhdsWithin_nhds.mp hd d hpos;
-    obtain ⟨ δ, hδ₁, hδ₂ ⟩ := this; exact ⟨ δ, hδ₁, fun x hx => by have := hδ₂ ( show x ≠ c from by aesop ) ( by simpa [ abs_mul, abs_div ] using hx.2 ) ; rw [ slope_def_field ] at this; linarith [ abs_lt.mp this ] ⟩ ;
+    obtain ⟨ δ, hδ₁, hδ₂ ⟩ := this; exact ⟨ δ, hδ₁, fun x hx => by have := hδ₂ ( show x ≠ c from by aesop ) ( by simpa [ Real.dist_eq, abs_mul, abs_div ] using hx.2 ) ; rw [ slope_def_field ] at this; linarith [ abs_lt.mp this ] ⟩ ;
   refine' ⟨ δ / 2, half_pos hδ_pos, _ ⟩;
   have := hδ ( c - δ / 2 ) ⟨ by rw [ abs_of_neg ] <;> linarith, by rw [ abs_of_neg ] <;> linarith ⟩ ; have := hδ ( c + δ / 2 ) ⟨ by rw [ abs_of_pos ] <;> linarith, by rw [ abs_of_pos ] <;> linarith ⟩ ; simp_all +decide [ div_pos_iff ] ;
   cases ‹0 < R ( c - δ / 2 ) ∧ δ / 2 < 0 ∨ R ( c - δ / 2 ) < 0› <;> nlinarith
@@ -2668,10 +2721,24 @@ parts gives derivative `Re 1 = 1`.
 theorem standingReadoutAt_hasDerivAt_one (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ)
     (hsimple : deriv (FiberEval χ C) ρ ≠ 0) :
     HasDerivAt (standingReadoutAt χ C ρ) 1 ρ.im := by
+  have hb : deriv (FiberEval χ C) ρ * I ≠ 0 := mul_ne_zero hsimple Complex.I_ne_zero
+  have hre : (ρ.re : ℂ) + (ρ.im : ℂ) * I = ρ := Complex.re_add_im ρ
+  have hinner : HasDerivAt (fun y : ℝ => ((ρ.re : ℂ) + (y : ℂ) * I)) Complex.I ρ.im := by
+    have h1 : HasDerivAt (fun y : ℝ => (y : ℂ) * I) Complex.I ρ.im := by
+      simpa using (HasDerivAt.ofReal_comp (hasDerivAt_id ρ.im)).mul_const I
+    exact h1.const_add (ρ.re : ℂ)
+  have hcomp : HasDerivAt (fun y : ℝ => (FiberEval χ C) ((ρ.re : ℂ) + (y : ℂ) * I)) (deriv (FiberEval χ C) ρ * I) ρ.im := by
+    have hd := ((fiberEval_differentiableAt χ C hC hχ ((ρ.re : ℂ) + (ρ.im : ℂ) * I)).hasDerivAt)
+    have hcc := hd.comp ρ.im hinner
+    rw [hre] at hd hcc
+    exact hcc
   have hF : HasDerivAt (fun y : ℝ => (FiberEval χ C) ((ρ.re : ℂ) + (y : ℂ) * I) / (deriv (FiberEval χ C) ρ * I)) 1 ρ.im := by
-    convert HasDerivAt.div_const ( HasDerivAt.comp ρ.im ( fiberEval_differentiableAt χ C hC hχ _ |> DifferentiableAt.hasDerivAt ) ( HasDerivAt.add ( hasDerivAt_const _ _ ) ( HasDerivAt.mul ( hasDerivAt_id _ |> HasDerivAt.ofReal_comp ) ( hasDerivAt_const _ _ ) ) ) ) _ using 1 ; norm_num [ Complex.ext_iff, hsimple ];
-  rw [ hasDerivAt_iff_tendsto_slope_zero ] at *;
-  convert Complex.continuous_re.continuousAt.tendsto.comp hF using 2 ; norm_num [ standingReadoutAt ]
+    refine (hcomp.div_const (deriv (FiberEval χ C) ρ * I)).congr_deriv ?_
+    field_simp
+  rw [ hasDerivAt_iff_tendsto_slope_zero ] at *
+  convert Complex.continuous_re.continuousAt.tendsto.comp hF using 2 with t
+  · simp [standingReadoutAt]
+  · simp
 
 /-- **Sign flip of the standing readout at a simple zero.**  If `ρ` is a nontrivial zero
 (`ρ ∈ NTZ χ`) that is simple (`deriv (FiberEval χ C) ρ ≠ 0`), then the real standing readout
@@ -2699,9 +2766,15 @@ zero of `L(·,χ)` (`deriv (LFunction χ) ρ ≠ 0`).
 theorem fiberEval_deriv_eq_at_zero (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ)
     (hL : LFunction χ ρ = 0) :
     deriv (FiberEval χ C) ρ = (C : ℂ) ^ (-ρ) * deriv (LFunction χ) ρ := by
-  convert HasDerivAt.deriv ( HasDerivAt.mul ( hasDerivAt_deriv_iff.mpr _ ) ( ( differentiable_LFunction hχ ρ ).hasDerivAt ) ) using 1;
-  · rw [ hL, MulZeroClass.mul_zero, zero_add ];
-  · exact DifferentiableAt.cpow ( differentiableAt_const _ ) ( differentiableAt_id.neg ) ( by norm_num; positivity )
+  have hcar : DifferentiableAt ℂ (fun s : ℂ => (C : ℂ) ^ (-s)) ρ := by
+    apply DifferentiableAt.const_cpow (differentiableAt_id.neg)
+    exact Or.inl (by exact_mod_cast hC.ne')
+  have hLd : HasDerivAt (LFunction χ) (deriv (LFunction χ) ρ) ρ := (differentiable_LFunction hχ ρ).hasDerivAt
+  have hmul := (hcar.hasDerivAt).mul hLd
+  rw [hL] at hmul
+  have hfe : FiberEval χ C = (fun s : ℂ => (C : ℂ) ^ (-s)) * LFunction χ := rfl
+  rw [hfe, hmul.deriv]
+  ring
 
 /-- **Sign flip from a simple `L`-zero.**  Restatement of the sign-flip theorem with the
 transversality phrased directly as `ρ` being a *simple zero of `L(·,χ)`*
@@ -2903,7 +2976,7 @@ theorem projectedNoDrift_imp_re_half (ρ : ℂ) (h : ProjectedNoDriftEvent χ C 
     have h2 : HasDerivAt (fun y : ℝ => a ^ 2 + y ^ 2) (2 * y₀) y₀ := by
       simpa using (hasDerivAt_pow 2 y₀).const_add (a ^ 2)
     have := h1.div h2 hD
-    convert this using 1
+    convert this using 1 <;> try rfl
     field_simp; ring
   have hnorm_eq : ∀ y : ℝ, a ^ 2 + y ^ 2 ≠ 0 → ‖projectedReadoutLine ρ y‖ = Real.sqrt (G y) := by
     intro y hy2
@@ -2926,8 +2999,8 @@ theorem projectedNoDrift_imp_re_half (ρ : ℂ) (h : ProjectedNoDriftEvent χ C 
   have hsqrt : HasDerivAt (fun y => Real.sqrt (G y))
       ((2 * y₀ * (2 * a - 1) / (a ^ 2 + y₀ ^ 2) ^ 2) / (2 * Real.sqrt (G y₀))) y₀ := by
     have := (Real.hasDerivAt_sqrt (ne_of_gt hGpos)).comp y₀ hGderiv
-    convert this using 1
-    field_simp
+    convert this using 1 <;> try rfl
+    rw [div_eq_inv_mul]; ring
   have heq : (fun y => ‖projectedReadoutLine ρ y‖) =ᶠ[nhds y₀] (fun y => Real.sqrt (G y)) := by
     have hopen : ∀ᶠ y in nhds y₀, a ^ 2 + y ^ 2 ≠ 0 := by
       have hcont : ContinuousAt (fun y : ℝ => a ^ 2 + y ^ 2) y₀ := by fun_prop
@@ -3100,9 +3173,15 @@ The spectral wave has derivative `i γ · exp(i γ t)`.
 -/
 theorem spectralWave_hasDerivAt (γ : ℝ) (t : ℝ) :
     HasDerivAt (spectralWave γ) ((γ : ℂ) * Complex.I * spectralWave γ t) t := by
-      convert HasDerivAt.comp t ( Complex.hasDerivAt_exp _ ) ( HasDerivAt.const_mul ( γ * Complex.I ) ( hasDerivAt_id t |> HasDerivAt.ofReal_comp ) ) using 1 ; norm_num ; ring!;
-      · exact funext fun x => by unfold CriticalLinePhasor.FrobeniusEigenstate.spectralWave; norm_num [ mul_assoc, mul_comm, mul_left_comm ] ;
-      · unfold CriticalLinePhasor.FrobeniusEigenstate.spectralWave; norm_num; ring;
+      convert HasDerivAt.comp t ( Complex.hasDerivAt_exp _ ) ( HasDerivAt.const_mul ( γ * Complex.I ) ( hasDerivAt_id t |> HasDerivAt.ofReal_comp ) ) using 1 <;> try rfl
+      · funext x
+        unfold CriticalLinePhasor.FrobeniusEigenstate.spectralWave
+        simp only [Function.comp, id_eq]
+        ring_nf
+      · unfold CriticalLinePhasor.FrobeniusEigenstate.spectralWave
+        simp only [Function.comp, id_eq]
+        push_cast
+        ring
 
 /-
 **Spectral eigenstate.**  The spectral wave is an eigenstate of the generator
@@ -3414,8 +3493,8 @@ Dirichlet character, `E_χ(1/2 + i y) ≠ 0`.
 -/
 theorem etaFactor_ne_zero (y : ℝ) :
     etaFactor χ ((1 / 2 : ℂ) + (y : ℂ) * I) ≠ 0 := by
-  convert CriticalLinePhasor.DirichletPhasorCarrier.etaTwist_factor_ne_zero_critical χ _ _ using 1;
-  norm_num
+  unfold CriticalLinePhasor.FiberClosedForm.etaFactor
+  exact CriticalLinePhasor.DirichletPhasorCarrier.etaTwist_factor_ne_zero_critical χ _ (by simp)
 
 /-
 **Faithful closed-form readout.**  The carrier `G_χ(y) = L(1/2 + i y, χ)` vanishes exactly
@@ -3424,8 +3503,8 @@ when its closed-form phasor representation does:
 -/
 theorem carrier_eq_zero_iff_closedForm (y : ℝ) :
     carrier χ y = 0 ↔ etaTwistClosed χ ((1 / 2 : ℂ) + (y : ℂ) * I) = 0 := by
-  convert ( CriticalLinePhasor.DirichletPhasorCarrier.etaTwistClosed_eq_zero_iff_critical χ ( 1 / 2 + y * Complex.I ) ?_ |> Iff.symm ) using 1;
-  norm_num
+  unfold CriticalLinePhasor.FiberHarmonic.carrier
+  exact (CriticalLinePhasor.DirichletPhasorCarrier.etaTwistClosed_eq_zero_iff_critical χ ((1 / 2 : ℂ) + (y : ℂ) * I) (by simp)).symm
 
 /-
 **Closed form as the alternating fiber-phasor series.**  In the absolutely convergent

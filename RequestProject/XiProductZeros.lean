@@ -49,7 +49,7 @@ theorem xiProduct_differentiable : Differentiable ℂ xiProduct := by
       exact (one_add_xiWeierstrassTerm_differentiable hρ_ne).differentiableOn
     have := DifferentiableOn.finset_prod (u := s)
       (f := fun ρ => fun x => 1 + xiWeierstrassTerm ρ.val x) h_each
-    convert this using 1
+    convert this using 1 <;> try rfl
     funext x
     rw [Finset.prod_fn]
   exact (h_diffOn z h_univ_mem).differentiableAt (h_open.mem_nhds h_univ_mem)

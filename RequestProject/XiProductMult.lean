@@ -205,7 +205,7 @@ theorem xiProductMult_differentiable : Differentiable ℂ xiProductMult := by
       exact (one_add_xiWeierstrassTerm_differentiable hρ_ne).differentiableOn
     have := DifferentiableOn.finset_prod (u := s)
       (f := fun p => fun x => 1 + xiWeierstrassTerm p.1.val x) h_each
-    convert this using 1
+    convert this using 1 <;> try rfl
     funext x
     rw [Finset.prod_fn]
   exact (h_diffOn z (Set.mem_univ z)).differentiableAt

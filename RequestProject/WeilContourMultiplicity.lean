@@ -117,7 +117,7 @@ theorem logDeriv_pole_of_order {f : ℂ → ℂ} {w : ℂ} {n : ℕ}
     have h_pow : HasDerivAt (fun y : ℂ => (y - w)^n)
         ((n : ℂ) * (z - w)^(n-1) * 1) z := by
       have := h_sub_z.pow (n := n)
-      simpa using this
+      exact this
     have h_pow' : HasDerivAt (fun y : ℂ => (y - w)^n) ((n : ℂ) * (z - w)^(n-1)) z := by
       convert h_pow using 1; ring
     -- Product rule.
@@ -287,7 +287,7 @@ theorem weilIntegrand_sphere_decomposition_from_factorization_of_order
   have h_sub_hd : HasDerivAt (fun w : ℂ => w - ρ) 1 z := (hasDerivAt_id z).sub_const ρ
   have h_pow_hd : HasDerivAt (fun w : ℂ => (w - ρ)^n) ((n : ℂ) * (z - ρ)^(n-1) * 1) z := by
     have := h_sub_hd.pow (n := n)
-    simpa using this
+    exact this
   have h_pow_hd' : HasDerivAt (fun w : ℂ => (w - ρ)^n) ((n : ℂ) * (z - ρ)^(n-1)) z := by
     convert h_pow_hd using 1; ring
   have h_prod_hd : HasDerivAt (fun w : ℂ => (w - ρ)^n * g w)

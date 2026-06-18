@@ -195,7 +195,7 @@ theorem amplitudeDefect_monotone_in_offset {r : ℝ} (hr : 1 < r) {β₁ β₂ :
   by_contra h_contra;
   -- Since $D_{β₁}(r) \leq D_{β₂}(r)$, we have $(r^{β₁/2} - r^{(1-β₁)/2})² \leq (r^{β₂/2} - r^{(1-β₂)/2})²$.
   have h_sq_le : (r ^ (β₁ / 2) - r ^ ((1 - β₁) / 2)) ^ 2 ≤ (r ^ (β₂ / 2) - r ^ ((1 - β₂) / 2)) ^ 2 := by
-    convert le_of_not_gt h_contra using 1;
+    convert le_of_not_gt h_contra using 1 <;> try rfl
     · exact Eq.symm ( amplitudeDefect_eq_sq ( by linarith ) _ );
     · rw [ amplitudeDefect_eq_sq ( by positivity ) ];
   -- Since $r > 1$, we can take the square root of both sides of the inequality.

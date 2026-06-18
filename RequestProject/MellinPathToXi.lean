@@ -844,7 +844,7 @@ theorem integrable_I_theta_integrand (s : ℂ) :
           Filter.tendsto_id.const_mul_atTop (by norm_num : (0:ℝ) < 2)
         have h3 : Filter.Tendsto (fun t : ℝ => Real.exp (2 * t) / (2 * t))
             Filter.atTop Filter.atTop := by
-          simpa using h1.comp h2
+          simpa [Function.comp_def] using h1.comp h2
         -- exp(2t)/t = 2 · (exp(2t)/(2t))
         have h_eq : (fun t : ℝ => Real.exp (2 * t) / t) =ᶠ[Filter.atTop]
             (fun t : ℝ => 2 * (Real.exp (2 * t) / (2 * t))) := by

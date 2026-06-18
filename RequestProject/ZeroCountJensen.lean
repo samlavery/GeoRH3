@@ -172,9 +172,7 @@ theorem summable_nat_succ_div_eight_pow :
   have h1 : Summable (fun k : ℕ => (k : ℝ) * (1 / 8 : ℝ) ^ k) := by
     have := summable_pow_mul_geometric_of_norm_lt_one (R := ℝ) 1
       (show ‖(1 / 8 : ℝ)‖ < 1 by rw [Real.norm_eq_abs]; norm_num)
-    convert this using 1
-    funext k
-    simp [pow_one]
+    exact this.congr (fun k => by simp [pow_one])
   have h2 : Summable (fun k : ℕ => (1 / 8 : ℝ) ^ k) :=
     summable_geometric_of_lt_one (by norm_num) (by norm_num)
   have h_sum : Summable (fun k : ℕ => (k : ℝ) * (1 / 8) ^ k + (1 / 8 : ℝ) ^ k) :=

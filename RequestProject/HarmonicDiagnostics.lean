@@ -691,7 +691,7 @@ theorem offline_zero_evenChannelExcess_pos
 def totalEvenChannelExcess (β : ℝ) (ps : Finset ℕ) : ℝ :=
   ∑ p ∈ ps, evenChannelExcess β p
 
-  theorem totalEvenChannelExcess_nonneg (β : ℝ) (ps : Finset ℕ) :
+theorem totalEvenChannelExcess_nonneg (β : ℝ) (ps : Finset ℕ) :
     0 ≤ totalEvenChannelExcess β ps := by
   unfold totalEvenChannelExcess
   exact Finset.sum_nonneg (fun p _ => evenChannelExcess_nonneg β p)

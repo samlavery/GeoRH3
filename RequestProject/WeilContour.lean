@@ -1225,8 +1225,8 @@ theorem weilIntegrand_leading_coefficient_at_zero
   · -- φ is analytic at ρ: product of h (analytic) with deriv g / g (analytic, g(ρ)≠0).
     have hg_deriv_an : AnalyticAt ℂ (deriv g) ρ := hg_an.deriv
     have h_inv_g : AnalyticAt ℂ (fun s => (g s)⁻¹) ρ := hg_an.inv hg_ne
-    have h_dg_over_g : AnalyticAt ℂ (fun s => deriv g s / g s) ρ := by
-      simpa [div_eq_mul_inv] using hg_deriv_an.mul h_inv_g
+    have h_dg_over_g : AnalyticAt ℂ (fun s => deriv g s / g s) ρ :=
+      hg_deriv_an.div hg_an hg_ne
     exact (hh_an.neg.mul hg_deriv_an).div hg_an hg_ne
   · filter_upwards [hfg] with s hs
     rw [hs]
@@ -1328,8 +1328,7 @@ theorem weilIntegrand_circle_integral_from_decomposition
   have h_neg_diff : ∀ z ∈ Metric.ball ρ r, DifferentiableAt ℂ (fun z => -h z) z :=
     fun z hz => (hh_diff z hz).neg
   have := polar_part_circle_integral hr h_neg_cont h_neg_diff
-  -- this : (∮ z in C(ρ, r), (fun z => -h z) z / (z - ρ)) = 2 * π * I * (fun z => -h z) ρ
-  simp only at this
+  -- this : (∮ z in C(ρ, r), -h z / (z - ρ)) = 2 * π * I * -h ρ
   rw [this]
   ring
 
@@ -1539,7 +1538,7 @@ theorem completedRiemannZeta_deriv_FE (s : ℂ) (hs_ne_zero : s ≠ 0) (hs_ne_on
   have hd_lhs : HasDerivAt (fun s : ℂ => completedRiemannZeta (1 - s))
       (-deriv completedRiemannZeta (1 - s)) s := by
     have h_inner_deriv : HasDerivAt (fun s : ℂ => (1 : ℂ) - s) (-1) s := by
-      simpa using ((hasDerivAt_const s (1 : ℂ)).sub (hasDerivAt_id s))
+      simpa using (hasDerivAt_id s).const_sub (1 : ℂ)
     have hcomp := hd_one_sub.hasDerivAt.comp s h_inner_deriv
     -- hcomp : HasDerivAt (completedRiemannZeta ∘ (1 - ·)) (deriv completedRiemannZeta (1 - s) * -1) s
     have hmul : deriv completedRiemannZeta (1 - s) * (-1 : ℂ) = -deriv completedRiemannZeta (1 - s) := by
@@ -2259,6 +2258,7 @@ theorem integrable_exp_neg_two_sq_plus_linear (c : ℝ) :
   rw [h_eq] at h_complex
   have h_re := h_complex.re
   convert h_re using 1
+  norm_cast
 
 /-- **`coshGaussMellin c 1` closed form** = `(√(π/2)/2)·exp(c²/8)`. -/
 theorem coshGaussMellin_at_one (c : ℝ) :
