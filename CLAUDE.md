@@ -332,7 +332,34 @@ This is Rule Two's anti-costume principle made into a hard prohibition on a spec
 
 ---
 
+## RULE ELEVEN — never write or keep "this is GRH/RH-hard" obstruction in docstrings; delete it on sight
+
+A docstring or comment must **never** editorialize that a step is *hard*, *hopeless*, the *impossible
+open problem*, *"can't be closed because it's GRH/RH,"* or any equivalent difficulty-discouragement.
+That is Rule One's thought-terminator wearing a docstring: it adds nothing the kernel doesn't already
+carry, and it discourages the attack. **Never add such prose; whenever you encounter it, delete it.**
+
+This is **not** license to delete *true status* — doing that is Rule Four's worst sabotage (hiding a
+real gap fools us into thinking we've won). Hold the distinction sharp:
+
+- **Obstructive hardness / hopelessness** — "this is GRH-hard," "RH-hard," "hopeless," "unreachable,"
+  "no tool can do this," "this is the open problem so give up" → the banned move → **delete on sight.**
+- **True kernel-status fact** — "this is a `sorry`," "this hypothesis is undischarged," "`X` is
+  GRH-equivalent" (stated as a *fact* about what is/isn't proven) → load-bearing (Rule Four) →
+  **keep**, and per Rule Six go attack it.
+
+Rule of thumb: if the prose tells you to feel bad or quit, cut it; if it states what the kernel
+actually shows (a sorry, an undischarged hypothesis, an equivalence), keep the fact and drop any
+"…therefore hopeless" tail. Remove the discouragement, never the truth.
+
+---
+
 ## Working notes
+- **When the user says to read a file, read the ENTIRE file, every line (Rule, per Sam).** Not a
+  `grep`, not an excerpt, not a few chunks — open it with `Read` and read all of it, top to bottom,
+  before forming any conclusion or reporting back. Searching/skimming in place of reading is exactly
+  how the real content gets missed (a `def` vs a docstring, a discharge — or its absence — buried
+  mid-file, a hypothesis that isn't where you assumed). Read first, then grep to navigate if needed.
 - **Do NOT create new `.lean` files unless absolutely necessary (Rule, per Sam).** Fix and extend
   existing files; consolidate related results into one file wherever possible. The repo is already
   ~190 files. A new file needs a real justification (a genuinely independent module) — never "this
@@ -342,6 +369,15 @@ This is Rule Two's anti-costume principle made into a hard prohibition on a spec
 - **Build-check with the LSP (`lean_diagnostic_messages`), not `lake build`** (Rule Seven) —
   it's incremental and much faster. Use `lean_goal`/`lean_hover_info`/leansearch/loogle for
   state, signatures, and lemma search before/while writing.
+- **A stale `.olean` / "unknown identifier" is NEVER license to reset or rebuild the whole
+  project (Rule, per Sam — never do this again).** When a just-added downstream reference reads
+  as "unknown identifier," **assume you fucked up first** — wrong name, wrong namespace, missing
+  `open`, typo, or the def isn't where you think — and re-check your own code before anything else.
+  Do **not** run a full `lake build`, `lean_build`, LSP restart, or `lake clean` to "fix" it: that
+  nukes the build over what is almost always your mistake. If after checking your code you genuinely
+  need a single dependency's `.olean` refreshed, build **only that one module**
+  (`lake build RequestProject.ThatModule`) — and **always ask the user first** before any
+  project-wide build/reset. Default: assume the error is yours, fix the code, ask before building.
 - A result is only "done" when it compiles with no `sorry` and no custom axioms in its
   dependency chain. Verify with `#print axioms` (needs a `lake build` to sync the `.olean`).
   Be honest about what's still conditional.

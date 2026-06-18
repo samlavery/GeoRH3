@@ -300,6 +300,61 @@ def offlineWitnesses : Set ℂ :=
 -- § 3. Amplitude and Harmonic Definitions (in ZetaDefs namespace to avoid clashes)
 -- ════════════════════════════════════════════════════════════════════════════
 end ZD
+
+/-! ## Typed landing of the 3D→2D→1D chain in Mathlib's zero set
+
+The chain above (`ZetaZero2D.to1D`) lands a strip coordinate with `Re = 1/2` (the inherited
+midpoint, Rule Five — free, downward). Here we complete the log/1D step into Mathlib's
+`ZD.NontrivialZeros`: the conversion `ZetaZero2D → ZD.ZetaZero` is total **once the source
+actually vanishes at the produced height** (`hz`). The `Re = 1/2` is carried downward by the
+projection; the membership in the genuine zero set is exactly the production datum `hz`. -/
+
+/-- **The log/1D step, typed.** A 2D zero whose log-unwrapped phase `w = exp(iy)` sits at a
+genuine zeta vanishing (`hz`) converts to a typed `ZD.ZetaZero` on the critical line. -/
+noncomputable def ZetaZero2D.toZetaZero (z2 : ZetaZero2D) (y : ℝ)
+    (h : z2.w = Complex.exp (Complex.I * (y : ℂ)))
+    (hz : riemannZeta (z2.to1D y h) = 0) : ZD.ZetaZero :=
+  ⟨z2.to1D y h, by
+    have hre : (z2.to1D y h).re = 1 / 2 := z2.to1D_re y h
+    refine ⟨?_, ?_, hz⟩ <;> rw [hre] <;> norm_num⟩
+
+/-- The chain's typed output is on the critical line. -/
+theorem ZetaZero2D.toZetaZero_re (z2 : ZetaZero2D) (y : ℝ)
+    (h : z2.w = Complex.exp (Complex.I * (y : ℂ)))
+    (hz : riemannZeta (z2.to1D y h) = 0) :
+    (z2.toZetaZero y h hz).val.re = 1 / 2 := z2.to1D_re y h
+
+/-- The chain's typed output has ordinate `y` (the log-unwrapped 2D phase). -/
+theorem ZetaZero2D.toZetaZero_im (z2 : ZetaZero2D) (y : ℝ)
+    (h : z2.w = Complex.exp (Complex.I * (y : ℂ)))
+    (hz : riemannZeta (z2.to1D y h) = 0) :
+    (z2.toZetaZero y h hz).val.im = y := rfl
+
+/-- **Full downward conversion chain.** A source crossing at height `y` whose fiber genuinely
+vanishes on the line (`hz`) flows `HelixPoint → ZetaZero3D → (Möbius, ‖w‖ = 1) ZetaZero2D →
+(log) ZD.ZetaZero`, producing a Mathlib nontrivial zero with `Re = 1/2`. The Möbius stage puts
+the height on the unit circle, the log stage unwraps the ordinate `y`, and `Re = 1/2` is the
+inherited midpoint. The single input is `hz` — that the source actually vanishes there. -/
+noncomputable def chainProducedZetaZero (n : ℕ) (y : ℝ) (hy : 0 < Real.exp y)
+    (hz : riemannZeta ((1 / 2 : ℂ) + (y : ℂ) * Complex.I) = 0) : ZD.ZetaZero :=
+  let z2 : ZetaZero2D :=
+    ⟨⟨⟨Real.exp y, hy⟩, n⟩, Complex.exp (Complex.I * (y : ℂ)), by rw [Complex.norm_exp]; simp⟩
+  z2.toZetaZero y rfl (by
+    have heq : z2.to1D y rfl = (1 / 2 : ℂ) + (y : ℂ) * Complex.I := by
+      apply Complex.ext
+      · rw [ZetaZero2D.to1D_re z2 y rfl]; simp [Complex.add_re, Complex.mul_re]
+      · rw [ZetaZero2D.to1D_im z2 y rfl]; simp [Complex.add_im, Complex.mul_im]
+    rw [heq]; exact hz)
+
+/-- **Unconditional on-line output.** The produced zero sits on the critical line: applying the
+log to the unit-circle 2D phase `e^{iy}` gives the pure-imaginary ordinate `iy` (no real part),
+so the strip readout has `Re = 1/2` (the inherited midpoint). No hypothesis beyond the
+production `hz`. -/
+theorem chainProducedZetaZero_re (n : ℕ) (y : ℝ) (hy : 0 < Real.exp y)
+    (hz : riemannZeta ((1 / 2 : ℂ) + (y : ℂ) * Complex.I) = 0) :
+    (chainProducedZetaZero n y hy hz).val.re = 1 / 2 :=
+  ZetaZero2D.to1D_re _ y rfl
+
 namespace ZetaDefs
 def ClassicalNontrivialZero (ρ : ℂ) : Prop :=
   ρ ∈ ZD.NontrivialZeros

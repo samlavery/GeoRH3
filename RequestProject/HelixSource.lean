@@ -116,7 +116,14 @@ theorem grh_of_sourceComplete (χ : DirichletCharacter ℂ N) (h : SourceComplet
 --     SourceComplete χ ↔ GRHSpectral.GRH χ :=
 --   ⟨grh_of_sourceComplete χ, sourceComplete_of_grh χ⟩
 
-/-! ## The regularized source trace and the trace-identity target -/
+/-! ## The regularized source trace and the trace-identity target (DEPRECATED PATH)
+
+This resolvent / partial-fraction source-trace route (`sourceTrace = L′/L` over the on-line
+source-mode pole-coords) is **deprecated** — retained for reference, no longer the active
+approach.  It is still honest and GRH-equivalent, and `→ GRH` is fully wired
+(`grh_of_traceIdentity`).  The active route is the spectral / characteristic-determinant
+(Frobenius-eigenphase) trace identity, which realizes the nontrivial zeros as the spectrum of
+the spin/Frobenius operator (`det(1 − T·Frob)`) rather than as poles of this partial fraction. -/
 
 /-- **The regularized source trace** of a source-mode family — the Hadamard-regularized resolvent
     sum `T_F(s) = ∑ₙ [1/(s − poleCoordₙ) + 1/poleCoordₙ]`. The counterterms `1/poleCoordₙ` make the
@@ -125,11 +132,15 @@ theorem grh_of_sourceComplete (χ : DirichletCharacter ℂ N) (h : SourceComplet
 noncomputable def sourceTrace (modes : ℕ → SourceMode) (s : ℂ) : ℂ :=
   ∑' n, ((s - (modes n).poleCoord)⁻¹ + (modes n).poleCoord⁻¹)
 
-/-- **The trace-identity target** (the open analytic content, σ-free): the source trace equals the
+/-- **DEPRECATED PATH** (superseded by the spectral / characteristic-determinant Frobenius route).
+    The resolvent / partial-fraction source-trace identity: the source trace equals the
     log-derivative `L'/L` of the channel `χ` (so `−sourceTrace` is the von Mangoldt prime field
-    `−L'/L`). Proving this — the construction faithfully reproducing `Λ_F'/Λ_F` — is your
-    `sourceTrace_identity`. With the pole-matching it yields the capture below, hence `SourceComplete`,
-    hence GRH. It mentions no `σ`, `ρ`, or critical line.
+    `−L'/L`), with the on-line source-mode pole-coords as its poles. Still honest and
+    GRH-equivalent — `SourceTraceIdentity ⟺ {nontrivial zeros} = {on-line pole-coords}` — and
+    `→ GRH` is wired (`grh_of_traceIdentity`, via pole-matching + `SourceComplete`). But it is **no
+    longer the active route**: the current approach realizes the zeros as the *spectrum* of the
+    spin/Frobenius operator (characteristic determinant `det(1 − T·Frob)`), not as poles of this
+    partial fraction. Retained for reference. σ-free: mentions no `σ`, `ρ`, or critical line.
 
     Sign: each pole-coord `cₙ` gives `sourceTrace` residue `+1`, matching the residue `+n` of `L'/L`
     at a zero of multiplicity `n` (`LFunction_logDeriv_residue_eq_order`). -/
