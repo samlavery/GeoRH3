@@ -295,13 +295,17 @@ On the critical line (σ = 1/2), the Li term has nonneg real part.
 -/
 theorem li_helix_nonneg_on_line (gamma : ℝ) (n : ℕ) :
     0 ≤ (li_helix_term (1/2) gamma n).re := by
-  convert sub_nonneg_of_le _;
-  · infer_instance;
-  · convert Complex.re_le_norm ( ( moebius_helix ( 1 / 2 ) gamma ) ^ n ) using 1 ; norm_num [ moebius_unit_iff ];
-    by_cases h : gamma = 0 <;> simp_all +decide [ moebius_unit_iff ];
-    · unfold moebius_helix; norm_num [ Complex.normSq, Complex.norm_def ] ;
-    · rw [ moebius_unit_iff _ _ h |>.2 ] ; norm_num;
-      norm_num
+  have hw : ‖moebius_helix (1/2) gamma‖ = 1 := by
+    rcases eq_or_ne gamma 0 with h | h
+    · subst h; unfold moebius_helix; norm_num [Complex.norm_def, Complex.normSq]
+    · exact (moebius_unit_iff (1/2) gamma h).mpr rfl
+  have hre : (li_helix_term (1/2) gamma n).re = 1 - ((moebius_helix (1/2) gamma) ^ n).re := by
+    simp [li_helix_term, Complex.sub_re, Complex.one_re]
+  rw [hre]
+  have h1 : ((moebius_helix (1/2) gamma) ^ n).re ≤ ‖(moebius_helix (1/2) gamma) ^ n‖ :=
+    Complex.re_le_norm _
+  rw [norm_pow, hw, one_pow] at h1
+  linarith
 
 /-
 The doubling formula: `Re(z²) = 2·Re(z)² - ‖z‖²`.

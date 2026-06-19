@@ -1,14 +1,16 @@
 # Fdb version 4
-["bibtex proof_bridge"] 1781799673.40218 "proof_bridge.aux" "proof_bridge.bbl" "proof_bridge" 1781804882.33532 0
+["bibtex proof_bridge"] 1781832514.49324 "proof_bridge.aux" "proof_bridge.bbl" "proof_bridge" 1781832724.32029 0
   "./proof_bridge_refs.bib" 1781799179.87057 3621 67db7851f33350fcf2e0593293abb9e2 ""
   "/usr/local/texlive/2025/texmf-dist/bibtex/bst/base/alpha.bst" 1292289607 23907 a5f93555796fb564b924339521f10a7c ""
-  "proof_bridge.aux" 1781804882.03411 4620 54b93f0fd8234fb3d0a088a87958d9d4 "pdflatex"
+  "proof_bridge.aux" 1781832724.08239 4599 ada5f2e31a614a5a24c9cf88c899cf51 "pdflatex"
   (generated)
   "proof_bridge.bbl"
   "proof_bridge.blg"
   (rewritten before read)
-["pdflatex"] 1781804881.35626 "proof_bridge.tex" "proof_bridge.pdf" "proof_bridge" 1781804882.33551 0
+["pdflatex"] 1781832723.4954 "proof_bridge.tex" "proof_bridge.pdf" "proof_bridge" 1781832724.32049 0
+  "/usr/local/texlive/2025/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1136849721 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
+  "/usr/local/texlive/2025/texmf-dist/fonts/tfm/jknappen/ec/tcrm1095.tfm" 1136768653 1536 02c06700a42be0f5a28664c7273f82e7 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex8.tfm" 1246382020 988 bdf658c3bfc2d96d3c8b02cfc1c94c20 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1246382020 916 f87d7c45f9c908e672703b83b72241a3 ""
@@ -54,6 +56,7 @@
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb" 1248133631 32626 4f5c1b83753b1dd3a97d1b399a005b4b ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb" 1248133631 37944 359e864bd06cde3b1cf57bb20757fb06 ""
   "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb" 1248133631 34694 ad62b13721ee8eda1dcc8993c8bd7041 ""
+  "/usr/local/texlive/2025/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb" 1215737283 145929 f25e56369a345c4ff583b067cd87ce8e ""
   "/usr/local/texlive/2025/texmf-dist/tex/context/base/mkii/supp-pdf.mkii" 1461363279 71627 94eb9990bed73c364d7f53f960cc8c5b ""
   "/usr/local/texlive/2025/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty" 1576625341 40635 c40361e206be584d448876bba8a64a3b ""
   "/usr/local/texlive/2025/texmf-dist/tex/generic/bitset/bitset.sty" 1576016050 33961 6b5c75130e435b2bfdb9f480a09a39f9 ""
@@ -111,11 +114,11 @@
   "/usr/local/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1754517785 5528033 0c358b2aae4aa21399659c485f38b4ac ""
   "/usr/local/texlive/2025/texmf-var/web2c/pdftex/pdflatex.fmt" 1754517884 3605723 c8836b071b1f39837a33ea9724b955a5 ""
   "/usr/local/texlive/2025/texmf.cnf" 1754517775.9948 577 418a7058ec8e006d8704f60ecd22c938 ""
-  "proof_bridge.aux" 1781804882.03411 4620 54b93f0fd8234fb3d0a088a87958d9d4 "pdflatex"
-  "proof_bridge.bbl" 1781799673.48608 2788 18a5d68ad46132265b51579d469a70a6 "bibtex proof_bridge"
-  "proof_bridge.out" 1781804882.03518 5961 b13c87f3f9d785c7372034a14d52d1f5 "pdflatex"
-  "proof_bridge.tex" 1781804868.15159 101814 13e52a938c12e1b5cdbd5b6c2198b0e1 ""
-  "proof_bridge.toc" 1781804882.03552 2511 163386a1b41d5bcef20b5daa8ec7f5bd "pdflatex"
+  "proof_bridge.aux" 1781832724.08239 4599 ada5f2e31a614a5a24c9cf88c899cf51 "pdflatex"
+  "proof_bridge.bbl" 1781832514.59893 2788 18a5d68ad46132265b51579d469a70a6 "bibtex proof_bridge"
+  "proof_bridge.out" 1781832724.08309 5845 c9fed808cb21a3dec8e8b19daac44679 "pdflatex"
+  "proof_bridge.tex" 1781832698.39576 106676 cb504a76d5bfdba29f10be7fa0c30202 ""
+  "proof_bridge.toc" 1781832724.08338 2490 f2da177611a870c571dd4de0e07dd326 "pdflatex"
   (generated)
   "proof_bridge.aux"
   "proof_bridge.log"

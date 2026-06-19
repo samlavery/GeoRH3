@@ -89,9 +89,9 @@ theorem logDeriv_difference_meromorphicOrderAt_nonneg (z : ℂ) :
     obtain ⟨gP, hgP_an, hgP_ne, hP_punct⟩ :=
       ZD.WeilPositivity.Contour.logDeriv_pole_of_order h_P_anal h_P_order hn
     have h_log_gξ : AnalyticAt ℂ (fun w => deriv gξ w / gξ w) z := by
-      simpa [logDeriv] using (hgξ_an.deriv.div hgξ_an hgξ_ne)
+      exact hgξ_an.deriv.div hgξ_an hgξ_ne
     have h_log_gP : AnalyticAt ℂ (fun w => deriv gP w / gP w) z := by
-      simpa [logDeriv] using (hgP_an.deriv.div hgP_an hgP_ne)
+      exact hgP_an.deriv.div hgP_an hgP_ne
     have h_punct :
         (fun w => logDeriv riemannXi w - logDeriv xiProductMult w) =ᶠ[nhdsWithin z {z}ᶜ]
           (fun w => deriv gξ w / gξ w - deriv gP w / gP w) := by
@@ -183,7 +183,9 @@ private theorem ratio_eventuallyEq_xiOverP_of_notMem_NontrivialZeros {z : ℂ}
         {w | (fun w => riemannXi w / xiProductMult w) w = xiOverP w} ∈
           codiscreteWithin (Set.univ : Set ℂ) := xiOverP_eq_ratio_codiscretely
     rw [mem_codiscreteWithin_iff_forall_mem_nhdsNE] at h_mem
-    simpa only [Set.compl_univ, Set.union_empty] using h_mem z (Set.mem_univ z)
+    have h := h_mem z (Set.mem_univ z)
+    simp only [Set.compl_univ, Set.union_empty] at h
+    exact h
   exact (h_ratio_nf.eventuallyEq_nhdsNE_iff_eventuallyEq_nhds
     (xiOverP_analyticAt z).meromorphicNFAt).1 h_punct
 
@@ -216,7 +218,9 @@ private theorem diff_eventuallyEq_xiHadamardD_of_notMem_NontrivialZeros {z : ℂ
         {w | (fun w => logDeriv riemannXi w - logDeriv xiProductMult w) w = xiHadamardD w} ∈
           codiscreteWithin (Set.univ : Set ℂ) := xiHadamardD_eq_diff_codiscretely
     rw [mem_codiscreteWithin_iff_forall_mem_nhdsNE] at h_mem
-    simpa only [Set.compl_univ, Set.union_empty] using h_mem z (Set.mem_univ z)
+    have h := h_mem z (Set.mem_univ z)
+    simp only [Set.compl_univ, Set.union_empty] at h
+    exact h
   exact (h_diff_nf.eventuallyEq_nhdsNE_iff_eventuallyEq_nhds
     (xiHadamardD_analyticAt z).meromorphicNFAt).1 h_punct
 

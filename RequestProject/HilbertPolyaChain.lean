@@ -12,9 +12,10 @@ import RequestProject.HelixGramOperator
 import RequestProject.GeometricProjectionHolds
 import RequestProject.AllHelix
 import RequestProject.SimpleZeros
-import RequestProject.ClosedFormResolventBridge
+import RequestProject.ClosedForm
+import RequestProject.HelixResolventCapture
 import RequestProject.XiPartialFraction
-import RequestProject.RiemannHypothesisBridge
+import RequestProject.LFunctionPhasor
 
 /-!
 
@@ -658,85 +659,6 @@ theorem spectral_harmonic_NTZ_correspondence {N : ℕ} [NeZero N]
   · intro _ _ _ _ hT _ hmu
     exact hilbert_polya_on_critical_line hT hmu
 
-/-! ## Closed-form resolvent trace induction -/
-
-/-- The closed-form trace ledger is wired into the Hilbert-Polya program layer:
-the trace is the negative log-derivative of the closed-form pair, every indexed
-closed-form event is on the half-unit line, exhaustion sends every NTZ zero to
-one of those events, and therefore no off-line NTZ zero remains. -/
-theorem closedForm_resolvent_induction_program {c : ℝ} (hc : 1 < c)
-    (I : ClosedFormResolventBridge.ClosedFormZeroInduction c) :
-    (∀ s : ℂ,
-      ClosedFormResolventBridge.closedFormResolventTrace c s =
-        -logDeriv (ClosedFormResolventBridge.closedFormPair c) s) ∧
-    (∀ n : ℕ, (I.event n).re = 1 / 2) ∧
-    (∀ ρ : ℂ, ρ ∈ ZD.NontrivialZeros → ρ.re = 1 / 2) ∧
-    ¬ ∃ ρ : ℂ, ρ ∈ ZD.NontrivialZeros ∧ ρ.re ≠ 1 / 2 := by
-  refine ⟨?_, ?_, ?_, ?_⟩
-  · intro s
-    exact ClosedFormResolventBridge.closedFormResolventTrace_eq_neg_logDeriv c s
-  · intro n
-    exact ClosedFormResolventBridge.closedForm_inducted_events_re_half hc I n
-  · exact ClosedFormResolventBridge.zeta_zeros_re_half_of_closedForm_induction hc I
-  · exact ClosedFormResolventBridge.no_offline_zeta_zeros_of_closedForm_induction hc I
-
-/-- Closed-form measured-event exhaustion closes Mathlib's principal-channel
-`RiemannHypothesis`: the exact closed-form ledger puts every measured event on
-the midpoint line, and exhaustion says every zeta nontrivial zero is one of
-those measured events. -/
-theorem RiemannHypothesis_of_closedForm_induction {c : ℝ} (hc : 1 < c)
-    (I : ClosedFormResolventBridge.ClosedFormZeroInduction c) :
-    RiemannHypothesis :=
-  RHBridge.no_offline_zeros_implies_rh
-    (by
-      intro ρ hρ
-      rw [CoshBalance_eq_half]
-      exact ClosedFormResolventBridge.zeta_zeros_re_half_of_closedForm_induction hc I ρ hρ)
-
-/-- Canonical closed-form resolvent program with the hypothesis-bearing pieces
-pushed behind the bridge.  The public surface is unconditional: the canonical
-closed-form zero ledger is exactly the integer event range, every canonical
-closed-form zero lies on the midpoint line, produced eta carrier zeros are
-zeta nontrivial zeros, produced Dirichlet carrier zeros are `L`-function
-nontrivial zeros, and the promoted resolvent trace is the all-zero atomic
-Cauchy transform. -/
-theorem canonicalClosedForm_resolvent_program :
-    (∀ s : ℂ,
-      ClosedFormResolventBridge.closedFormResolventTrace
-        ClosedFormResolventBridge.canonicalClosedFormBase s =
-        -logDeriv
-          (ClosedFormResolventBridge.closedFormPair
-            ClosedFormResolventBridge.canonicalClosedFormBase) s) ∧
-    ClosedFormResolventBridge.CanonicalClosedFormZeroLedger =
-      Set.range ClosedFormResolventBridge.canonicalClosedFormIntegerEvent ∧
-    (∀ s : ℂ, s ∈ ClosedFormResolventBridge.CanonicalClosedFormZeroLedger →
-      s.re = 1 / 2) ∧
-    (∀ z : ClosedFormResolventBridge.EtaProducedZero,
-      ClosedFormResolventBridge.EtaProducedZero.toComplex z ∈ ZD.NontrivialZeros) ∧
-    (∀ {N : ℕ} [NeZero N] {χ : DirichletCharacter ℂ N}
-      (z : ClosedFormResolventBridge.DirichletProducedZero χ),
-      ClosedFormResolventBridge.DirichletProducedZero.toComplex z ∈
-        GRHSpectral.NontrivialZeros χ) ∧
-    (∀ {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) (z : ℂ),
-      MeasureTheory.Integrable (fun t : ℝ => (1 : ℂ) / ((t : ℂ) - z))
-        (CriticalLinePhasor.Resolvent.zeroMeasure χ) →
-      CriticalLinePhasor.Resolvent.resolventTrace χ z
-        = ∫ t, (1 : ℂ) / ((t : ℂ) - z)
-            ∂(CriticalLinePhasor.Resolvent.zeroMeasure χ)) := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩
-  · intro s
-    exact ClosedFormResolventBridge.closedFormResolventTrace_eq_neg_logDeriv
-      ClosedFormResolventBridge.canonicalClosedFormBase s
-  · exact ClosedFormResolventBridge.canonicalClosedFormZeroLedger_eq_range_integer
-  · intro s hs
-    exact ClosedFormResolventBridge.canonicalClosedFormZeroLedger_re_half hs
-  · intro z
-    exact ClosedFormResolventBridge.EtaProducedZero.mem_nontrivialZeros z
-  · intro N _ χ z
-    exact ClosedFormResolventBridge.DirichletProducedZero.mem_nontrivialZeros z
-  · intro N _ χ z hint
-    exact ClosedFormResolventBridge.carrierResolventTrace_eq_integral χ z hint
-
 /-! ## Hilbert-Polya resolvent trace identification
 
 The resolvent trace `dualResolventTrace χ s = ∑ mult_ρ · (1/(s-ρ) + 1/ρ)` sums over
@@ -892,6 +814,103 @@ theorem producedNTZ_set :
     have hz := (HelixStandingWave.zeta_zero_on_line_iff_standingWave_node _).mpr hn
     refine ⟨by simp [producedNTZ], by simp [producedNTZ]; norm_num, ?_⟩
     exact hz
+
+/-! ## Helix supremacy — the single Hilbert–Pólya seam (3-D), the one open conjectural input
+
+Hilbert–Pólya here lives in **3-D**. The Gram operator `T = B*B` (von-Neumann `T*T`, symmetric
+*unconditionally* — `gramOp_isSelfAdjoint`) acts in the 3-D helix space; at a phasor-cancellation event
+the phasor's **absolute energy equals the eigenvalue energy** (`SourceMode.phaseModulus_eq_eigenvectorEnergy`:
+`‖e^{iμt}‖ = amp² = 1`, the unit circle). A 3-D zero is that cancellation; its eigenvalue `μ` is **real**
+because `T` is self-adjoint (`symmetric_eigenvalue_real`: no complex eigenvalues). To reach the *named*
+1-D `riemannZeta` zero you **project down** — `spectralZero μ = ½ + iμ` is the 3-D→1-D projection.
+
+This is a valid Hilbert–Pólya **extension, not a violation**. On-line-ness is established *upstream* in
+3-D by self-adjoint reality and **inherited downward** to the 1-D strip (Rule Five): `spectralZero_re`
+gives `Re = ½ − Im μ`, and `Im μ = 0` forces `Re = ½` (`hilbert_polya_on_critical_line`). The `½` is the
+*output* of "the 3-D spectrum is real," never written by hand — the genuine σ-free direction
+(`SourceMode.ofReal`), **not** the circular `rate := ρ − ½` costume (`sourceComplete_attempt`, which builds
+the mode *from* the zero). Here `μ` is `T`'s eigenvalue, built from the helix geometry, independent of `ρ`.
+
+So the on-line forcing is **earned in 3-D**; the lone open input is the **projection completeness** — that
+every 1-D nontrivial zero is `spectralZero μ` for a (real) 3-D eigenvalue `μ`, i.e. the 3-D spectrum
+projects *onto* ζ's zeros. The route to *derive* it is the resolvent-trace / characteristic-determinant
+identity (the operator's resolvent trace ≡ `−L'/L`: `flowVonMangoldtTrace_eq_neg_logDeriv` already gives it
+for `Re s > 1`, Hadamard continues it into the strip), whose pole-matching forces spectrum = zeros. It is
+(at least) RH-strength — it asserts the spectrum exhausts the *ordinates* — so never describe it as "≈ RH". -/
+
+/-- **Helix supremacy** (the Hilbert–Pólya seam): every nontrivial zero of `L(·, χ₁) = ζ` is the
+spectral image `spectralZero μ` of an eigenvalue `μ` of the symmetric operator `T`. The 1-D zeros
+are the spectral shadows of the self-adjoint 3-D operator; that `T`'s spectrum *exhausts* the zeros
+is the open content. NOT positivity, NOT projection-faithfulness, NOT a planted `½`. -/
+def HelixSupremacy {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+    (T : E →ₗ[ℂ] E) : Prop :=
+  ∀ ρ ∈ GRHSpectral.NontrivialZeros (1 : DirichletCharacter ℂ 1),
+    ∃ mu : ℂ, Module.End.HasEigenvalue T mu ∧ ρ = spectralZero mu
+
+/-- **GRH (χ = 1) from helix supremacy.** If the symmetric Gram operator `T`'s spectrum exhausts the
+nontrivial zeros of `L(·, χ₁) = ζ`, every such zero has `Re = 1/2`. The bridge is the Hilbert–Pólya
+reality principle `hilbert_polya_on_critical_line`: a symmetric `T` has only real eigenvalues (no
+complex eigenvalue, so no off-line drift), so `spectralZero μ` lands at `Re = 1/2`. `hT :
+T.IsSymmetric` is supplied unconditionally by the Gram / von-Neumann `T*T` self-adjointness; the sole
+conjectural input is `HelixSupremacy T` (the identification). The conclusion is *definitionally*
+`GRHSpectral.GRH (1)`. -/
+theorem GRH_of_helixSupremacy {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+    {T : E →ₗ[ℂ] E} (hT : T.IsSymmetric) (h : HelixSupremacy T) :
+    GRHSpectral.GRH (1 : DirichletCharacter ℂ 1) := by
+  intro ρ hρ
+  obtain ⟨mu, hmu, rfl⟩ := h ρ hρ
+  exact hilbert_polya_on_critical_line hT hmu
+
+/-- **Mathlib `RiemannHypothesis` from helix supremacy** — the single seam landed on the canonical
+headline type the `#print axioms` arbiter checks. Composes `GRH_of_helixSupremacy` with the kept
+bridge `HelixStandingWave.RH_of_GRH_modOne` (GRH for the mod-1 character — whose L-function *is* ζ —
+delivers `RiemannHypothesis`). **No `RHBridge`** (retired). The only non-standard input in this
+theorem's axiom footprint is `HelixSupremacy T`; `hT` is the unconditional Gram self-adjointness. -/
+theorem RiemannHypothesis_of_helixSupremacy {E : Type*} [NormedAddCommGroup E]
+    [InnerProductSpace ℂ E] {T : E →ₗ[ℂ] E} (hT : T.IsSymmetric) (h : HelixSupremacy T) :
+    RiemannHypothesis :=
+  HelixStandingWave.RH_of_GRH_modOne (GRH_of_helixSupremacy hT h)
+
+/-! ## The phasor channel ↔ `L` ↔ the seam — the strip extension wired into Hilbert–Pólya
+
+`CriticalLinePhasor.LFunctionPhasor` proves the aggregated phasor channel **is** the L-function
+throughout `Re s > 0`: `dirichlet_strip_tendsto_LFunction` (non-principal χ) and `eta_strip_tendsto`
+(ζ, via the alternating η = `(1−2^{1−s})·ζ`). So the geometric phasor channel and the analytic `L`
+are the *same object* in the strip — the channel reads `L` all the way down to `Re > 0`, no strip
+boundary. (Kernel-honest caveat: this is the *representation*; the on-line forcing is the seam below.)
+
+The immediate consequence — at every nontrivial zero the phasor channel **cancels to `0`** — is "off
+the line the phasors won't cancel; at the zeros they do," now tied to the *actual* `L`-zeros. The full
+chain: phasor channel `= L` (strip extension) → channel cancels at the zeros → those cancellation
+points are `spectralZero μ` of eigenvalues of the self-adjoint Gram operator (`HelixSupremacy`) →
+`Im μ = 0` (no complex eigenvalues, `symmetric_eigenvalue_real`) → `Re = ½`
+(`hilbert_polya_on_critical_line`). The strip extension *earns the representation* the seam stands on;
+`HelixSupremacy` (those cancellation points are the self-adjoint spectrum) + reality close the line. -/
+
+/-- **Non-principal: the phasor channel cancels at every nontrivial zero.** Via the verified strip
+extension (`dirichlet_strip_tendsto_LFunction`, the channel `= LFunction χ` on `Re > 0`): at a zero
+`ρ ∈ NontrivialZeros χ` the channel tends to `LFunction χ ρ = 0`. So the seam's target zeros are
+exactly the aggregated-phasor cancellation points. -/
+theorem nontrivialZero_phasorChannel_tendsto_zero {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q)
+    (hχ : χ ≠ 1) {ρ : ℂ} (hρ : ρ ∈ GRHSpectral.NontrivialZeros χ) :
+    Filter.Tendsto (fun N : ℕ => ∑ n ∈ Finset.range N, (χ (n : ZMod q)) * (n : ℂ) ^ (-ρ))
+      Filter.atTop (nhds 0) := by
+  obtain ⟨hre, _, hzero⟩ := hρ
+  have h := CriticalLinePhasor.LFunctionPhasor.dirichlet_strip_tendsto_LFunction χ hχ hre
+  rwa [hzero] at h
+
+/-- **ζ: the alternating (eta) phasor channel cancels at every nontrivial zero.** The trivial
+character has no bucket cancellation, so it rides the eta mechanism (`eta_strip_tendsto`): at a
+nontrivial `ζ`-zero `ρ` (hence `ρ ≠ 1`), the alternating channel tends to
+`(1 − 2^{1−ρ}) · riemannZeta ρ = 0`. -/
+theorem zeta_nontrivialZero_etaChannel_tendsto_zero {ρ : ℂ}
+    (hre : 0 < ρ.re) (hlt : ρ.re < 1) (hzero : riemannZeta ρ = 0) :
+    Filter.Tendsto (fun N : ℕ => ∑ n ∈ Finset.range N, (-1 : ℂ) ^ (n + 1) * (n : ℂ) ^ (-ρ))
+      Filter.atTop (nhds 0) := by
+  have hne : ρ ≠ 1 := by rintro rfl; simp at hlt
+  have h := CriticalLinePhasor.LFunctionPhasor.eta_strip_tendsto hre hne
+  rw [hzero, mul_zero] at h
+  exact h
 
 /-! ## GRH for χ = 1 via induction on crossings
 
@@ -1064,27 +1083,11 @@ theorem zetaXiHadamardTrace_eq_logDeriv :
   obtain ⟨A, hA⟩ := zeta_hadamard_discharge_shifted_xi_traceIdentity
   exact ⟨A, fun z hz => by simpa [zetaXiHadamardTrace] using hA z hz⟩
 
-/-- Direct ξ-trace receiver capstone.  Once the discharged ξ trace is realized
-as a self-adjoint receiver and its zero-side principal parts are the singular
-support, the principal channel closes through the harmonic receiver theorem. -/
-theorem RiemannHypothesis_of_zetaXiHadamardTraceReceiver
-    {A : ℂ}
-    (hsa : HelixLimit.IsSelfAdjointReceiver (zetaXiHadamardTrace A))
-    (hres : ∀ ρ ∈ ZD.NontrivialZeros,
-      HelixLimit.poleParam ρ ∈ HelixLimit.SingularSupport (zetaXiHadamardTrace A)) :
-    RiemannHypothesis := by
-  apply RHBridge.no_offline_zeros_implies_rh
-  intro ρ hρ
-  rw [CoshBalance_eq_half]
-  have him : (HelixLimit.poleParam ρ).im = 0 :=
-    HelixLimit.real_absorption_of_selfAdjoint hsa
-      (HelixLimit.poleParam ρ) (hres ρ hρ)
-  rw [HelixLimit.poleParam_im] at him
-  linarith
-
-/-- Bare `L` trace-identity adapter.  This is intentionally named as an
-adapter: the full chain uses the closed-form theorem below, where the trace
-identity is supplied by `ClosedFormResolventBridge`. -/
+/-- **Self-adjoint trace-identity readout** (the channel-clean right-path capstone). If a continuous
+functional `φ` of a self-adjoint operator's resolvent reads as `−L'/L(½+i·)`, then GRH for `χ` — by
+the resolvent-capture / spectral-reality route (`HelixLimit.grh_of_selfAdjoint_resolventReadout`), no
+positivity. The trace identity `htrace` is the open input; the phasor channel `L = ∑ₙ phasorTerm`
+(`CriticalLinePhasor.LFunctionPhasor.LSeries_phasor_representation`) is what supplies it. -/
 theorem grh_of_selfAdjoint_traceIdentity_readout {N : ℕ} [NeZero N]
     (χ : DirichletCharacter ℂ N)
     {A : Type*} [CStarAlgebra A] [StarModule ℂ A] {a : A} (ha : IsSelfAdjoint a)
@@ -1093,32 +1096,6 @@ theorem grh_of_selfAdjoint_traceIdentity_readout {N : ℕ} [NeZero N]
         = -logDeriv (DirichletCharacter.LFunction χ) (1 / 2 + Complex.I * z)) :
     GRHSpectral.GRH χ :=
   HelixLimit.grh_of_selfAdjoint_resolventReadout ha hφ htrace
-
-/-- Closed-form self-adjoint readout capstone.  The trace identity is not a
-free socket here: it is generated by the closed-form resolvent bridge. -/
-theorem grh_of_selfAdjoint_readout {N : ℕ} [NeZero N]
-    (χ : DirichletCharacter ℂ N) (c : ℝ)
-    {A : Type*} [CStarAlgebra A] [StarModule ℂ A] {a : A} (ha : IsSelfAdjoint a)
-    {φ : A → ℂ} (hφ : Continuous φ)
-    (hreadout : ∀ z : ℂ,
-      φ (resolvent a z) =
-        ClosedFormResolventBridge.closedFormResolventTrace c (1 / 2 + Complex.I * z))
-    (hL : ClosedFormResolventBridge.closedFormPair c = DirichletCharacter.LFunction χ) :
-    GRHSpectral.GRH χ :=
-  grh_of_selfAdjoint_traceIdentity_readout χ ha hφ
-    (ClosedFormResolventBridge.traceIdentity_of_closedForm_resolventReadout χ c hreadout hL)
-
-/-- Compatibility alias for the closed-form self-adjoint readout capstone. -/
-theorem grh_of_selfAdjoint_closedForm_readout {N : ℕ} [NeZero N]
-    (χ : DirichletCharacter ℂ N) (c : ℝ)
-    {A : Type*} [CStarAlgebra A] [StarModule ℂ A] {a : A} (ha : IsSelfAdjoint a)
-    {φ : A → ℂ} (hφ : Continuous φ)
-    (hreadout : ∀ z : ℂ,
-      φ (resolvent a z) =
-        ClosedFormResolventBridge.closedFormResolventTrace c (1 / 2 + Complex.I * z))
-    (hL : ClosedFormResolventBridge.closedFormPair c = DirichletCharacter.LFunction χ) :
-    GRHSpectral.GRH χ :=
-  grh_of_selfAdjoint_readout χ c ha hφ hreadout hL
 
 
 
@@ -1141,34 +1118,17 @@ theorem hp_correspondence_of {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N
   -- self-adjoint → real eigenvalue → spectralZero(real μ).re = 1/2.
   exact heq ▸ hilbert_polya_on_critical_line hT hmu
 
-/-- **GRH by Hilbert-Polya — unconditional closure package.** This is the
-R1-R11/R12 HP closure data for every channel, with no additional proposition
-socket. -/
-def GRH_by_HP :=
-  fun (M : ℕ) [NeZero M] (χ : DirichletCharacter ℂ M) => GRH_for_char_by_crossing_induction χ
-def RH_by_HPb :=
-  fun (M : ℕ) [NeZero M] (χ : DirichletCharacter ℂ M) => GRH_Full_by_Char χ
-
-/-- **RH by Hilbert-Polya — unconditional principal-channel closure package.** -/
-def RH_by_HP := GRH_for_chi1_by_crossing_induction
-
+/-- **`GRH (1) → RiemannHypothesis`** — the genuine GRH→RH bridge for the principal channel
+(via `HelixStandingWave.RH_of_GRH_modOne`). The one headline-typed theorem kept in this file;
+it is referenced downstream by `HelixRHAssembly`. -/
 theorem RH_by_GRH (h : GRHSpectral.GRH (1 : DirichletCharacter ℂ 1)) : RiemannHypothesis :=
-  --apply GRH_Full_by_Char (1 : DirichletCharacter ℂ 1)
-    HelixStandingWave.RH_of_GRH_modOne h
+  HelixStandingWave.RH_of_GRH_modOne h
 
 
-/-- **Mathlib RH instantiated from the HP principal channel.** This is the
-same bridge as `RH_by_GRH`, with the target named as Mathlib's literal
-`RiemannHypothesis`. -/
-theorem RiemannHypothesis_by_HP_of_GRH
-    (h : GRHSpectral.GRH (1 : DirichletCharacter ℂ 1)) :
-    RiemannHypothesis :=
-  RH_by_GRH h
-
-
-/-- Principal-channel trace-identity adapter.  The full chain uses
-`RH_of_selfAdjoint_readout`, where the identity is supplied by the closed-form
-bridge. -/
+/-- **Principal-channel `RiemannHypothesis` from the self-adjoint trace-identity readout.** Composes
+`grh_of_selfAdjoint_traceIdentity_readout` (the channel-clean resolvent-capture capstone) with the
+`GRH(1) → RH` bridge `RH_by_GRH`. The open input is the trace identity `htrace`; no closed-form pair,
+no positivity. -/
 theorem RH_of_selfAdjoint_traceIdentity_readout
     {A : Type*} [CStarAlgebra A] [StarModule ℂ A] {a : A} (ha : IsSelfAdjoint a)
     {φ : A → ℂ} (hφ : Continuous φ)
@@ -1179,33 +1139,6 @@ theorem RH_of_selfAdjoint_traceIdentity_readout
   RH_by_GRH
     (grh_of_selfAdjoint_traceIdentity_readout
       (1 : DirichletCharacter ℂ 1) ha hφ htrace)
-
-/-- Principal-channel closed-form self-adjoint readout capstone. -/
-theorem RH_of_selfAdjoint_readout
-    (c : ℝ)
-    {A : Type*} [CStarAlgebra A] [StarModule ℂ A] {a : A} (ha : IsSelfAdjoint a)
-    {φ : A → ℂ} (hφ : Continuous φ)
-    (hreadout : ∀ z : ℂ,
-      φ (resolvent a z) =
-        ClosedFormResolventBridge.closedFormResolventTrace c (1 / 2 + Complex.I * z))
-    (hL : ClosedFormResolventBridge.closedFormPair c =
-      DirichletCharacter.LFunction (1 : DirichletCharacter ℂ 1)) :
-    RiemannHypothesis :=
-  RH_by_GRH
-    (grh_of_selfAdjoint_readout (1 : DirichletCharacter ℂ 1) c ha hφ hreadout hL)
-
-/-- Compatibility alias for the principal-channel closed-form readout capstone. -/
-theorem RH_of_selfAdjoint_closedForm_readout
-    (c : ℝ)
-    {A : Type*} [CStarAlgebra A] [StarModule ℂ A] {a : A} (ha : IsSelfAdjoint a)
-    {φ : A → ℂ} (hφ : Continuous φ)
-    (hreadout : ∀ z : ℂ,
-      φ (resolvent a z) =
-        ClosedFormResolventBridge.closedFormResolventTrace c (1 / 2 + Complex.I * z))
-    (hL : ClosedFormResolventBridge.closedFormPair c =
-      DirichletCharacter.LFunction (1 : DirichletCharacter ℂ 1)) :
-    RiemannHypothesis :=
-  RH_of_selfAdjoint_readout c ha hφ hreadout hL
 
 /-! ## Node → typed on-line zero (unconditional), and the log readout
 
@@ -1231,12 +1164,6 @@ theorem nodeToZetaZero_re (n : ℕ) (y : ℝ)
     (nodeToZetaZero n y hnode).val.re = 1 / 2 :=
   chainProducedZetaZero_re n y (Real.exp_pos y) _
 
-#check GRH_by_HP
-#check RH_by_HP
-#check GRH_Full_by_Char
-#check GRHSpectral.GRH
-#print GRHSpectral.GRH
-
 /-- **The helix is drift-free and FTA-multiplicative** (non-principal channels). -/
 theorem helixDriftFreeAndFTA {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N) (hχ : χ ≠ 1) :
     (∀ (lam : ℂ) (c : ℝ), c ≠ 0 →
@@ -1254,21 +1181,3 @@ theorem helixDriftFreeAndFTA {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N
     fun θ {_} {_} hm hn => HelixMult.helixChar_mul χ θ hm hn,
     fun C hC {_} hs => HelixMult.helixSource_eq_eulerProduct χ C hC hs,
     fun {_} hs => HelixMult.helix_no_zero_re_ge_one χ hχ hs⟩
-
-#print axioms hilbertPolyaChainR1ToR11
-#print axioms crossing_forces_critical_line
-#print axioms midline_projection_unconditional
-#print axioms spectral_geometric_correspondence
-#print axioms sign_flip_forces_NTZ
-#print axioms spectral_harmonic_NTZ_correspondence
-#print axioms hilbert_polya_resolvent_identification
-#print axioms producedNTZ_set
-#print axioms producedNTZ_mobius_unitary
-#print axioms GRH_Full_by_Char
-#print axioms hilbert_polya_on_critical_line
-#print axioms GRH_for_chi1_by_crossing_induction
-#print axioms RH_by_HP
-#print axioms GRH_by_HP
-#print axioms RH_by_GRH
-#print axioms RiemannHypothesis_by_HP_of_GRH
-#print axioms helixDriftFreeAndFTA

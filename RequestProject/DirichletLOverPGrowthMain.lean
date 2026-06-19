@@ -83,7 +83,7 @@ theorem completedLFunction_proximity_bound {χ : DirichletCharacter ℂ N} (hχ 
     have := circleIntegrable_posLog_norm_meromorphicOn
       (f := DirichletCharacter.completedLFunction χ) (c := (0 : ℂ)) (R := R) hMero
     convert this using 1; funext z
-    rw [Real.posLog_def, max_comm]
+    rw [Real.posLog_def, max_comm]; rfl
   have h_sphere_bd : ∀ z ∈ Metric.sphere (0 : ℂ) |R|,
       max (Real.log ‖DirichletCharacter.completedLFunction χ z‖) 0 ≤
         C₀ * R * Real.log (R + 2) + D₀ := by
@@ -177,7 +177,7 @@ theorem LProductMult_proximity_bound {χ : DirichletCharacter ℂ N} (hχ : χ �
     have := circleIntegrable_posLog_norm_meromorphicOn (f := LProductMult χ)
       (c := (0 : ℂ)) (R := R) hMero
     convert this using 1; funext z
-    rw [Real.posLog_def, max_comm]
+    rw [Real.posLog_def, max_comm]; rfl
   have h_sphere_bd : ∀ z ∈ Metric.sphere (0 : ℂ) |R|,
       max (Real.log ‖LProductMult χ z‖) 0 ≤ C₀ * R * (Real.log (R + 2))^2 + D₀ := by
     intro z hz
@@ -514,7 +514,7 @@ theorem LOverP_pointwise_log_bound {χ : DirichletCharacter ℂ N} (hχ : χ ≠
     have := circleIntegrable_posLog_norm_meromorphicOn (f := LOverP χ)
       (c := (0:ℂ)) (R := R) hMero_xi
     convert this using 1; funext w
-    rw [Real.posLog_def, max_comm]
+    rw [Real.posLog_def, max_comm]; rfl
   have hCI_Mpos : CircleIntegrable (fun w => M * max (Real.log ‖LOverP χ w‖) 0) 0 R :=
     hCI_posLog.const_mul M
   have h_ca_mono := Real.circleAverage_mono hCI_Plog hCI_Mpos hBd

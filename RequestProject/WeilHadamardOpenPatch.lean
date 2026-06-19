@@ -62,7 +62,7 @@ theorem hadamardGoodPatch_isOpen (T δ : ℝ) : IsOpen (hadamardGoodPatch T δ) 
       IsOpen {s : ℂ | |s.im - T| < δ} := by
     have h_cont : Continuous (fun s : ℂ => |s.im - T|) :=
       (continuous_abs.comp (Complex.continuous_im.sub continuous_const))
-    simpa using h_cont.isOpen_preimage _ isOpen_Iio
+    exact h_cont.isOpen_preimage (Set.Iio δ) isOpen_Iio
   simpa [Set.setOf_and, Set.inter_assoc] using (h_re_gt.inter h_re_lt).inter h_im_band
 
 theorem hadamardGoodPatch_nonempty {T δ : ℝ} (hδ : 0 < δ) :
@@ -256,7 +256,9 @@ theorem xi_logDeriv_partial_fraction_on_open_of_logDeriv_xiOverP_const
             {w | (fun w => riemannXi w / xiProductMult w) w = xiOverP w} ∈
               codiscreteWithin (Set.univ : Set ℂ) := xiOverP_eq_ratio_codiscretely
         rw [mem_codiscreteWithin_iff_forall_mem_nhdsNE] at h_mem
-        simpa only [Set.compl_univ, Set.union_empty] using h_mem s (Set.mem_univ s)
+        have h := h_mem s (Set.mem_univ s)
+        simp only [Set.compl_univ, Set.union_empty] at h
+        exact h
       exact (h_ratio_nf.eventuallyEq_nhdsNE_iff_eventuallyEq_nhds
         (xiOverP_analyticAt s).meromorphicNFAt).1 h_punct
     -- Step 2: Therefore logDeriv(ξ/P) s = logDeriv xiOverP s.

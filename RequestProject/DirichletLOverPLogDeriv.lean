@@ -48,7 +48,9 @@ theorem ratio_eventuallyEq_LOverP_of_notMem {χ : DirichletCharacter ℂ N} (hχ
               = LOverP χ w} ∈ codiscreteWithin (Set.univ : Set ℂ) :=
       LOverP_eq_ratio_codiscretely hχ hχp
     rw [mem_codiscreteWithin_iff_forall_mem_nhdsNE] at h_mem
-    simpa only [Set.compl_univ, Set.union_empty] using h_mem z (Set.mem_univ z)
+    have h := h_mem z (Set.mem_univ z)
+    simp only [Set.compl_univ, Set.union_empty] at h
+    exact h
   exact (h_ratio_nf.eventuallyEq_nhdsNE_iff_eventuallyEq_nhds
     (LOverP_analyticAt hχ hχp z).meromorphicNFAt).1 h_punct
 

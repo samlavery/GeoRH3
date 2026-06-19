@@ -286,8 +286,7 @@ theorem hadamard_partial_fraction :
       deriv riemannXi s / riemannXi s =
         A + ∑' ρ : {ρ : ℂ // ρ ∈ NontrivialZeros},
           (xiOrderNat ρ.val : ℂ) * (1 / (s - ρ.val) + 1 / ρ.val) := by
-  simpa [riemannXi, NontrivialZeros, xiOrderNat, ZD.riemannXi, ZD.NontrivialZeros,
-    ZD.xiOrderNat] using ZD.xi_logDeriv_partial_fraction
+  exact ZD.xi_logDeriv_partial_fraction
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- §3  The Von Mangoldt Explicit Formula (unconditional)

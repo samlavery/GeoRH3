@@ -5,22 +5,22 @@
 \contentsline {subsection}{\numberline {4.1}Canonical Scale}{4}{subsection.4.1}%
 \contentsline {subsection}{\numberline {4.2}Closed-Form Geometry and Phasor Fiber}{5}{subsection.4.2}%
 \contentsline {subsection}{\numberline {4.3}Non-principal Character Channels}{6}{subsection.4.3}%
-\contentsline {subsection}{\numberline {4.4}The Principal/Zeta Channel}{7}{subsection.4.4}%
-\contentsline {subsection}{\numberline {4.5}The Midpoint as the Reflection-Self-Dual Radius of the Channel}{8}{subsection.4.5}%
-\contentsline {subsection}{\numberline {4.6}FTA and Euler Product Generation}{9}{subsection.4.6}%
-\contentsline {subsection}{\numberline {4.7}Euler-Product Discriminator}{10}{subsection.4.7}%
-\contentsline {section}{\numberline {5}Source Accumulation and Resolvent Trace}{11}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Polya Operator Normal Form}{11}{subsection.5.1}%
-\contentsline {subsection}{\numberline {5.2}Projection and Threshold Normal Forms}{13}{subsection.5.2}%
-\contentsline {subsection}{\numberline {5.3}Trace Residues and Completed Readout}{15}{subsection.5.3}%
-\contentsline {section}{\numberline {6}Standing Readout and Projection to One Dimension}{17}{section.6}%
-\contentsline {subsection}{\numberline {6.1}Phase Conventions}{18}{subsection.6.1}%
-\contentsline {section}{\numberline {7}Harmonic Cost and the Threshold Ladder}{18}{section.7}%
-\contentsline {section}{\numberline {8}Hilbert--Polya Source Infrastructure: R1--R12}{19}{section.8}%
-\contentsline {section}{\numberline {9}Source Crossings and Projection Readout}{22}{section.9}%
-\contentsline {section}{\numberline {10}Canonical Proof Spine}{26}{section.10}%
-\contentsline {subsection}{\numberline {10.1}Prime-channel production and a worked $\chi _3$ readout}{33}{subsection.10.1}%
-\contentsline {section}{\numberline {11}Mathematical Reproduction of the Computation}{40}{section.11}%
-\contentsline {subsection}{\numberline {11.1}Placed Geometric Fiber}{40}{subsection.11.1}%
-\contentsline {subsection}{\numberline {11.2}Residue Coordinates for the Geometric Tail}{41}{subsection.11.2}%
-\contentsline {subsection}{\numberline {11.3}Principal One-Dimensional Tail Error Control}{42}{subsection.11.3}%
+\contentsline {subsection}{\numberline {4.4}The Principal/Zeta Channel}{8}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Why the Channel Vanishes at the Midpoint}{9}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}FTA and Euler Product Generation}{10}{subsection.4.6}%
+\contentsline {subsection}{\numberline {4.7}Euler-Product Discriminator}{11}{subsection.4.7}%
+\contentsline {section}{\numberline {5}Source Accumulation and Resolvent Trace}{12}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Polya Operator Normal Form}{12}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Projection and Threshold Normal Forms}{14}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Trace Residues and Completed Readout}{16}{subsection.5.3}%
+\contentsline {section}{\numberline {6}Standing Readout and Projection to One Dimension}{18}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Phase Conventions}{19}{subsection.6.1}%
+\contentsline {section}{\numberline {7}Harmonic Cost and the Threshold Ladder}{19}{section.7}%
+\contentsline {section}{\numberline {8}Hilbert--Polya Source Infrastructure: R1--R12}{20}{section.8}%
+\contentsline {section}{\numberline {9}Source Crossings and Projection Readout}{23}{section.9}%
+\contentsline {section}{\numberline {10}Canonical Proof Spine}{27}{section.10}%
+\contentsline {subsection}{\numberline {10.1}Prime-channel production and a worked $\chi _3$ readout}{34}{subsection.10.1}%
+\contentsline {section}{\numberline {11}Mathematical Reproduction of the Computation}{41}{section.11}%
+\contentsline {subsection}{\numberline {11.1}Placed Geometric Fiber}{41}{subsection.11.1}%
+\contentsline {subsection}{\numberline {11.2}Residue Coordinates for the Geometric Tail}{42}{subsection.11.2}%
+\contentsline {subsection}{\numberline {11.3}Principal One-Dimensional Tail Error Control}{43}{subsection.11.3}%

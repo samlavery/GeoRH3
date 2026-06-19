@@ -115,7 +115,7 @@ theorem xiOrderNat_div_norm_sq_tail_bound :
     have h1 : Summable (fun k : ℕ => (k : ℝ) * (1/2)^k) := by
       have := summable_pow_mul_geometric_of_norm_lt_one (R := ℝ) 1
         (show ‖(1/2:ℝ)‖ < 1 by rw [Real.norm_eq_abs]; norm_num)
-      convert this using 1; funext k; simp [pow_one]
+      exact this.congr (fun k => by simp [pow_one])
     have h2 : Summable (fun k : ℕ => (1/2 : ℝ)^k) :=
       summable_geometric_of_lt_one (by norm_num) (by norm_num)
     have h_sum : Summable (fun k : ℕ => (k : ℝ) * (1/2)^k + 2 * (1/2 : ℝ)^k) :=
@@ -1264,18 +1264,15 @@ theorem circleAverage_log_eq_posLog_sub_negLog
       (fun z : ℂ => max (Real.log ‖f z‖) 0) - (fun z : ℂ => max (-(Real.log ‖f z‖)) 0) := by
     funext z
     show Real.log ‖f z‖ = max (Real.log ‖f z‖) 0 - max (-(Real.log ‖f z‖)) 0
-    have h := @Real.posLog_sub_posLog_inv ‖f z‖
-    simp only [Real.posLog_def] at h
-    have hinv : Real.log ‖f z‖⁻¹ = -(Real.log ‖f z‖) := Real.log_inv _
-    rw [hinv] at h
-    rw [max_comm 0, max_comm 0] at h
-    linarith
+    rcases le_total 0 (Real.log ‖f z‖) with hpos | hneg
+    · rw [max_eq_left hpos, max_eq_right (by linarith)]; ring
+    · rw [max_eq_right hneg, max_eq_left (by linarith)]; ring
   have h_ci_posLog :
       CircleIntegrable (fun z => max (Real.log ‖f z‖) 0) 0 R := by
     have := circleIntegrable_posLog_norm_meromorphicOn (f := f) (c := (0 : ℂ)) (R := R) hf
     convert this using 1
     funext z
-    rw [Real.posLog_def, max_comm]
+    simp [Real.posLog_def, max_comm]
   have hf_inv : MeromorphicOn (fun z => (f z)⁻¹) (Metric.sphere (0 : ℂ) |R|) := hf.inv
   have h_ci_negLog :
       CircleIntegrable (fun z => max (-(Real.log ‖f z‖)) 0) 0 R := by
@@ -1283,9 +1280,7 @@ theorem circleAverage_log_eq_posLog_sub_negLog
       (c := (0 : ℂ)) (R := R) hf_inv
     convert h_inv_pos using 1
     funext z
-    rw [Real.posLog_def, max_comm]
-    congr 1
-    rw [norm_inv, Real.log_inv]
+    simp [Real.posLog_def, norm_inv, Real.log_inv, max_comm]
   rw [h_pt]
   exact Real.circleAverage_sub h_ci_posLog h_ci_negLog
 
@@ -1305,7 +1300,7 @@ theorem riemannXi_proximity_bound :
     have := circleIntegrable_posLog_norm_meromorphicOn (f := riemannXi)
       (c := (0 : ℂ)) (R := R) hMero
     convert this using 1; funext z
-    rw [Real.posLog_def, max_comm]
+    simp [Real.posLog_def, max_comm]
   have h_sphere_bd : ∀ z ∈ Metric.sphere (0 : ℂ) |R|,
       max (Real.log ‖riemannXi z‖) 0 ≤ C₀ * R * Real.log (R + 2) + D₀ := by
     intro z hz
@@ -1392,7 +1387,7 @@ theorem xiProductMult_proximity_bound :
     have := circleIntegrable_posLog_norm_meromorphicOn (f := xiProductMult)
       (c := (0 : ℂ)) (R := R) hMero
     convert this using 1; funext z
-    rw [Real.posLog_def, max_comm]
+    simp [Real.posLog_def, max_comm]
   have h_sphere_bd : ∀ z ∈ Metric.sphere (0 : ℂ) |R|,
       max (Real.log ‖xiProductMult z‖) 0 ≤ C₀ * R * (Real.log (R + 2))^2 + D₀ := by
     intro z hz
@@ -1766,7 +1761,7 @@ theorem xiOverP_pointwise_log_bound :
     have := circleIntegrable_posLog_norm_meromorphicOn (f := xiOverP)
       (c := (0:ℂ)) (R := R) hMero_xi
     convert this using 1; funext w
-    rw [Real.posLog_def, max_comm]
+    simp [Real.posLog_def, max_comm]
   have hCI_Mpos : CircleIntegrable (fun w => M * max (Real.log ‖xiOverP w‖) 0) 0 R :=
     hCI_posLog.const_mul M
   have h_ca_mono := Real.circleAverage_mono hCI_Plog hCI_Mpos hBd

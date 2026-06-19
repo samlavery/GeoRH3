@@ -388,7 +388,7 @@ theorem standingWave_hasDerivAt (t : ℝ) :
   have h3 := (Complex.reCLM.hasFDerivAt (x := waveC (t : ℂ))).comp t hR.hasFDerivAt
   have h4 : HasFDerivAt (fun u : ℝ => (waveC (u : ℂ)).re)
       (ContinuousLinearMap.smulRight (1 : ℝ →L[ℝ] ℝ) (deriv waveC (t : ℂ)).re) t := by
-    convert h3 using 1
+    convert h3 using 1 <;> try rfl
     ext x
     simp [Complex.reCLM, hR.deriv]
   simpa using h4.hasDerivAt

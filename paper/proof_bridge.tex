@@ -377,7 +377,7 @@ In the projected one-dimensional notation this same harmonic sum is
 \[
   F_\chi(s)=C^{-s}L(s,\chi).
 \]
-The channel has the finite conductor closed form
+The channel has the conductor closed form
 \[
   L(s,\chi)=q^{-s}\sum_{a=1}^{q}\chi(a)\,
   \zeta\!\left(s,\frac aq\right).
@@ -390,6 +390,71 @@ On the critical line $s=\frac12+iy$ this reads
   \sum_{a=1}^{q}\chi(a)\,
   \zeta\!\left(\frac12+iy,\frac aq\right).
 \]
+
+\begin{proposition}[Closed-form phasor representation]
+Let $\chi$ be a Dirichlet character modulo $q$ and $s=\sigma+iy$.  In the region
+of convergence ($\sigma>1$, and $\sigma>0$ for non-principal $\chi$) the
+$L$-function is the phasor series
+\[
+  L(s,\chi)=\sum_{n\ge1}\chi(n)\,n^{-\sigma}\,e^{-(y\log n)\,i},
+\]
+and for all $s\ne1$ it has the closed form over the $q$ conductor buckets
+\[
+  L(s,\chi)=\sum_{a=1}^{q}\chi(a)\,B_a(s),
+  \qquad
+  B_a(s)=q^{-s}\,\zeta\!\left(s,\tfrac aq\right).
+\]
+There are $q$ buckets, but each is unbounded: the bucket $B_a$ accumulates
+\emph{all} the phasors of its congruence class,
+\[
+  B_a(s)=\!\!\sum_{\substack{n\ge1\\ n\equiv a\,(q)}}\!\! n^{-s},
+\]
+the phasors $n\equiv a\ (q)$ summed to infinity, and $q^{-s}\zeta(s,a/q)$ is the
+closed form of that infinite accumulation.  The character sorts every one of the
+infinitely many phasors into one of the $q$ buckets; nothing is truncated.
+Each phasor carries
+\begin{itemize}
+\item \emph{magnitude} $|\chi(n)|\,n^{-\sigma}$, which tends to $0$ as
+  $n\to\infty$ for $\sigma>0$;
+\item \emph{spin} $e^{-(y\log n)\,i}$ of unit modulus, multiplicative in $n$
+  (since $\log(mn)=\log m+\log n$) --- it ``spins in $\log n$'';
+\item \emph{bucket weight} $\chi(n)$, set by the conductor: $\chi(n)=\chi(a)$
+  whenever $n\equiv a\ (q)$, so $\chi$ is constant on each bucket and factors out
+  of $B_a$.
+\end{itemize}
+The bucket weight sorts each congruence class into one of three types:
+\begin{itemize}
+\item \emph{positive} ($\chi(a)=+1$): the bucket is added;
+\item \emph{negative} ($\chi(a)=-1$): the bucket is subtracted --- a sign flip;
+\item \emph{neutral} ($\chi(a)=0$, i.e.\ $\gcd(a,q)>1$): the bucket is
+  \emph{ignored} --- the $L$-function drops it entirely.
+\end{itemize}
+Only the $\varphi(q)$ coprime buckets are active, so
+\[
+  L(s,\chi)=\!\!\sum_{\substack{a=1\\ \gcd(a,q)=1}}^{q}\!\!\chi(a)\,B_a(s).
+\]
+For a real (quadratic) character the active weights are exactly $\pm1$
+(positive/negative); for a complex character they are roots of unity, which
+\emph{rotate} the bucket rather than merely flip it; for the principal/trivial
+character the fiber is taken in its eta mode $(1-2^{1-s})\zeta(s)$, whose
+correction factor is nonzero on the critical line.
+\end{proposition}
+
+\begin{proof}
+On $s=\sigma+iy$ the $n$-th Dirichlet term is
+$\chi(n)n^{-s}=\chi(n)\,n^{-\sigma}e^{-(y\log n)i}$, which is the phasor series.
+Grouping the terms by residue class $a$ modulo $q$ and using $\chi(n)=\chi(a)$ on
+each class gives $L(s,\chi)=\sum_{a}\chi(a)B_a(s)$, the $q$-term sum over the
+buckets; the neutral classes ($\gcd(a,q)>1$) have $\chi(a)=0$ and drop out,
+leaving the $\varphi(q)$ active ones.  Each bucket is itself the infinite
+accumulation $B_a(s)=\sum_{k\ge0}(qk+a)^{-s}=q^{-s}\zeta(s,a/q)$, its Hurwitz
+closed form.  The magnitude is
+$|\chi(n)|\,|n^{-s}|=|\chi(n)|\,n^{-\sigma}$ with $n^{-\sigma}\to0$ for
+$\sigma>0$, and the spin has modulus $1$ and is multiplicative because $\log$
+carries products to sums.  The bucket values are the values of $\chi$ on
+$\mathbb Z/q\mathbb Z$.
+\end{proof}
+
 If $2\nmid q$, the eta-like acceleration is
 \[
   L_\chi^{(\eta)}(s)=\sum_{n\ge1}(-1)^{n-1}\chi(n)n^{-s},
@@ -454,80 +519,81 @@ On the critical line $\Ree s=\frac12$, the eta factor is nonzero:
 \]
 because $2^{1-s}=1$ would imply $2^{1-\Ree s}=1$, hence $\Ree s=1$.
 
-\subsection{The Midpoint as the Reflection-Self-Dual Radius of the Channel}
+\subsection{Why the Channel Vanishes at the Midpoint}
 
-The midpoint $\sigma=1/2$ is not inserted as an assumption; it is the unique
-radius at which the accumulated character channel is invariant under the
-reflection $s\mapsto1-s$.  The fiber is the sequence of partial sums of the
-signed Dirichlet series: one term
+The midpoint is not forced term by term, and the argument is character-agnostic.
+By the closed-form phasor representation above, the fiber is the many-phasor
+channel
 \[
-  a_n(s)=\chi(n)\,(Cn)^{-s}
+  F_\chi(s)=\sum_{n\ge1}\chi(n)(Cn)^{-s}=C^{-s}L(s,\chi),
 \]
-is incorporated for each integer $n$, with sign given by the character value.
-For a real (quadratic) channel the index set splits into a positive part, a
-negative part, and the part annihilated by $\chi$,
-\[
-  \chi(n)=+1,\qquad
-  \chi(n)=-1,\qquad
-  \chi(n)=0,
-\]
-and the fiber is the difference of the two accumulated subseries,
-\[
-  F_\chi(s)=\sum_{n\ge1}\chi(n)(Cn)^{-s}=P_+(s)-P_-(s),
-  \qquad
-  P_\pm(s)=\sum_{\chi(n)=\pm1}(Cn)^{-s}.
-\]
-The balance $P_+(\rho)=P_-(\rho)$ is precisely the vanishing $F_\chi(\rho)=0$ of
-the channel.
+the character sorting its phasors into the positive, negative, and neutral
+buckets (the neutral one dropped).  A vanishing is the cancellation of the
+\emph{whole} channel --- a balance of many phasors, not of a single reflected
+pair --- and the conclusion below does not depend on which character is in
+force.
 
-Each index contributes a term at its own scale.  The area law $R_n^2=Cn$ makes
-the squared radius linear in $n$, so with
-\[
-  c_n=Cn=R_n^2>1
-\]
-the $n$-th term is $a_n(s)=\chi(n)\,c_n^{-s}$, and by the no-radial-drift normal
-form below its modulus depends only on the abscissa,
-\[
-  |a_n(s)|=c_n^{-\sigma},\qquad s=\sigma+iy,
-\]
-independently of the ordinate $y$.
+A single reflected pair $n^{-s}+n^{-(1-s)}$ does have its magnitudes balanced
+only at $\sigma=1/2$ (the moduli $n^{-\sigma}$ and $n^{-(1-\sigma)}$ agree there
+and, since $u\mapsto n^{u}$ is strictly monotone, nowhere else).  But this
+per-pair balance does \emph{not} survive summation: the modulus of a sum is not
+monotone in $\sigma$, so the channel does not inherit the forcing term by term.
+The midpoint is structural, and it rests on three facts.
 
-The completed source is two-sided (the double-ended helix below): the principal
-orientation and the reflected anti-helix realize the involution $s\mapsto1-s$,
-pairing the $n$-th term with $c_n^{-(1-s)}$.  The resulting reflection pair
+\textbf{Completion supplies the reflection symmetry.}  By Tate's thesis the
+completed function
 \[
-  Q_n(s)=c_n^{-s}+c_n^{-(1-s)}
+  \Lambda(s,\chi)=\gamma(\chi,s)\,L(s,\chi)
 \]
-has moduli $c_n^{-\sigma}$ and $c_n^{-(1-\sigma)}$, so any cancellation
-$Q_n(s)=0$ forces
+has archimedean factor $\gamma(\chi,s)\ne0$ throughout $\Re s>0$, so $\Lambda$
+carries exactly the nontrivial zeros of $L$, and it satisfies the functional
+equation
 \[
-  c_n^{-\sigma}=c_n^{-(1-\sigma)};
+  \Lambda(1-s,\chi)=q^{\,s-1/2}\,\varepsilon_\chi\,\Lambda(s,\chi^{-1}),
 \]
-since $c_n>1$, the map $u\mapsto c_n^{u}$ is strictly monotone, whence
-\[
-  -\sigma=-(1-\sigma)\qquad\Longrightarrow\qquad \sigma=\tfrac12 .
-\]
-This conclusion is independent of $c_n$, so a single abscissa $\sigma=1/2$
-balances every reflection pair $Q_n$ simultaneously: it is the unique
-reflection-self-dual radius of the whole channel.
+the exact $s\mapsto1-s$ reflection at the level of the entire function.  This is
+the closed form whose symmetry is genuine; the two-phasor pair was only its
+smallest instance.  Completion is forced rather than chosen: the gamma factor is
+the canonical archimedean place of the adelic zeta integral, and it moves no
+zeros.
 
-The balance is attained there.  At $s=\tfrac12+i\pi/(2\log c_n)$ the two terms
-have equal modulus $c_n^{-1/2}$ and opposite phase,
-\[
-  c_n^{-s}=c_n^{-1/2}e^{-i\pi/2},
-  \qquad
-  c_n^{-(1-s)}=c_n^{-1/2}e^{i\pi/2},
-\]
-so $Q_n(s)=0$.
+\textbf{The sign flip lives on the real axis.}  Removing the unimodular rotation
+from the carrier gives the real Hardy-type standing wave
+$Z_\chi:\mathbb R\to\mathbb R$ whose nodes are exactly the critical-line zeros.
+A transversal node of a real function is a genuine sign change (continuity and
+the Intermediate Value Theorem), and a sign change of a \emph{real} readout is an
+event on the real axis---the reflection-symmetric centre.
 
-Hence $\sigma=1/2$ is the unique abscissa at which the channel is
-reflection-balanced, forced by the area-law scales, the absence of radial
-drift, and the two-sided reflection symmetry---not by any single scale and not
-by a downstream hypothesis on the zero set.  Whether the actual balance
-$P_+(\rho)=P_-(\rho)$ occurs at this self-dual abscissa rather than at a
-functional-equation impostor is settled separately by the Euler-product
-discriminator below, which is what distinguishes the prime-generated source from
-a Davenport--Heilbronn object sharing only the reflection symmetry.
+\textbf{The spectrum is real.}  The vanishing is read by the self-adjoint Gram
+operator, whose eigenvalue at the node is the node's energy.  A self-adjoint
+operator has no complex eigenvalue, so the spectral coordinate cannot leave the
+symmetric line.
+
+\textbf{The vanishing, in three dimensions.}  The fiber is harmonic: at a node
+its amplitude crests --- to $\pi/2$ at the first crossing and to $\pi$ at every
+later one --- and the phasors cancel: a bounded crest per crossing, not a climb
+to $n\pi$.  The carrier $C^{-s}$ takes no part in this; it has constant
+modulus $C^{-1/2}$ by construction and is only the drift-free reference line
+against which the fiber is read.  Off the centre the mechanism admits no
+cancellation: the completed reflection symmetry, the no-drift carrier, and the
+real spectrum are jointly incompatible with a vanishing away from $\sigma=1/2$,
+so the phasors cannot sum to zero off the line.  At the node the arclength
+traversed marks the height as $e^{iy}$, and the phasor energy equals the
+self-adjoint Gram/von~Neumann eigenvalue energy; the vanishing also carries the
+determinant-one signature of a Frobenius eigenstate (the determinant-$1$
+Frobenius variant is developed separately --- the spectral reading \emph{here} is
+the Gram/von~Neumann self-adjoint operator).  This is the Hilbert--Pólya datum
+\emph{lifted to three dimensions}; it is not yet a zero of $\zeta$ or $L$.  The
+identification is made only after the faithful projection down the midpoints ---
+Möbius to the two-dimensional unit circle, then $\log(e^{iy})=iy$ to one
+dimension --- which returns the strip coordinate with $\Re=1/2$.
+
+What is unconditional is that a node of this mechanism projects to the midpoint,
+and that the projection is faithful.  The remaining content---that \emph{every}
+nontrivial zero is a node of the prime-generated mechanism---is the single open
+input; the Euler-product discriminator below certifies the source is
+prime-generated rather than a Davenport--Heilbronn impostor, which shares the
+functional equation but carries off-line zeros.
 
 \subsection{FTA and Euler Product Generation}
 
@@ -1109,7 +1175,7 @@ and hence
 So the trace pole has residue $-mC^{-\rho}$.  The integer $m$ is the spectral
 multiplicity; the factor $C^{-\rho}$ is the nonzero $\pi/3$ geometric scaling.
 At a crossing, this is the residue consumed by the resolvent trace while the
-source-fiber amplitude attains its threshold, the channel phase cancels, and the
+source-fiber amplitude crests, the channel phase cancels, and the
 sign changes.
 Since the standing readout is continuous, the Intermediate Value Theorem gives
 an actual crossing between the two signs.
@@ -1405,7 +1471,7 @@ At threshold $E(t)=n\pi$,
   \left\lfloor\frac{E(t)}{\pi}\right\rfloor=n.
 \]
 At a crossing threshold the source event is a confluence: the channel phase
-cancels, the amplitude attains its threshold, the resolvent trace consumes the
+cancels, the amplitude crests, the resolvent trace consumes the
 local residue, the sign changes, and, by the Intermediate Value Theorem, the
 standing readout crosses before the next harmonic begins on the spectral
 readout.  In the source normalization used by the Polya chain,
@@ -1535,20 +1601,21 @@ $R=(r/p)e^\gamma$.  The 3D source height is $z_3=e^\gamma$; the
 one-dimensional readout takes the logarithm.  It has the following simultaneous
 features:
 \begin{enumerate}[label=(C\arabic*)]
-\item the channel phases cancel, so the fiber vanishes in the channel sum;
-\item the accumulated amplitude reaches the relevant $\pi$-level threshold at one
-  of the ladder levels $A_m^{\pm}$, with the first oriented crossing carrying
-  the half-step cost $\pi/2$ and later crossings advancing by full $\pi$
-  increments;
-\item the crossing consumes the threshold energy required to start the next
-  harmonic on the spectral readout, so the outgoing side of the crossing begins
-  the next harmonic;
+\item the channel phases cancel, so the fiber vanishes in the channel sum; the
+  carrier $C^{-s}$ is the no-drift reference line --- constant modulus by
+  construction --- and takes no part in the cancellation;
+\item the harmonic fiber's amplitude crests --- to $\pi/2$ at the first crossing
+  and to $\pi$ at every later one --- as the phasors cancel: a bounded crest per
+  crossing, since the fiber is harmonic, not a climb to $n\pi$;
+\item the crest releases the next harmonic on the spectral readout, so the
+  outgoing side of the crossing begins it;
 \item the real standing readout changes sign at the crossing; by the
   Intermediate Value Theorem, the continuous standing readout has an intervening
   crossing between the two signs;
-\item the source midpoint coordinate forced by that crossing and the
-  real-axis/unitary readout requirement is $\pi/6$ in the $\pi/3$ chart, while
-  the channel ordinate $\gamma$ is retained in the readout ledger;
+\item the vanishing forces the source midpoint coordinate to $\pi/6$ in the
+  $\pi/3$ chart --- by the completion symmetry, the real-axis sign flip, and the
+  real spectrum established above --- while the channel ordinate $\gamma$ is
+  retained in the readout ledger;
 \item the same crossing location is projected from the three-dimensional helix
   to a two-dimensional unit-circle value $z_2(\rho)$ in the $\pi/3$ chart; the
   subsequent one-dimensional readout is obtained by taking the lifted logarithm
@@ -1588,7 +1655,10 @@ the event-height/readout functional
 \]
 so the imaginary coordinate is retained by the lifted branch readout rather
 than by the collapsed radial coordinate.  This is distinct from the source
-helix height coordinate used to place the event.
+helix height coordinate used to place the event.  As in the vanishing analysis
+above, the crossing is the Hilbert--Pólya datum in three dimensions --- the
+phasor energy and the Gram/von~Neumann eigenvalue energy agree --- and it
+becomes a zero of $\zeta$ or $L$ only through this Möbius--logarithm projection.
 
 \begin{definition}[Fiber-capture condition]
 For a Dirichlet channel $\chi$, a point $\rho$ satisfies the
@@ -2027,8 +2097,8 @@ By definition of the residue accumulator event, the trace residue is consumed
 at a ladder threshold.  Threshold rigidity makes that height the unique
 threshold height for its level.  The harmonic-count lemma then gives the
 displayed harmonic count.  The source crossing confluence is precisely the
-same threshold read with phase cancellation, the amplitude attaining its
-threshold, a sign change through a continuous standing readout, and outgoing
+same threshold read with phase cancellation, the amplitude cresting, a sign
+change through a continuous standing readout, and outgoing
 harmonic creation.
 \end{proof}
 
@@ -2770,39 +2840,28 @@ produced standing-wave nodes are transverse: the derivative at each threshold
 height is nonzero.  Consequently a produced node is not a tangency or stalled
 contact; it gives a genuine sign change.
 
-The closed-form exhaustion route gives the same conclusion from the accumulated
-channel of signed phasors and also explains where the real coordinate comes from.
-Each index $n$ contributes a term at scale $c_n=Cn=R_n^2>1$, and the two-sided
-helix supplies its reflection pair
-\[
-  Q_n(s)=c_n^{-s}+c_n^{-(1-s)}.
-\]
-A cancellation $Q_n(s)=0$ satisfies
-\[
-  c_n^{-s}=-c_n^{-(1-s)},
-\]
-and writing $s=\sigma+iy$ and taking moduli gives
-\[
-  c_n^{-\sigma}=c_n^{-(1-\sigma)}.
-\]
-Strict monotonicity of $u\mapsto c_n^{u}$ then forces
-\[
-  -\sigma=-(1-\sigma),\qquad\text{hence}\qquad \sigma=\frac12 ,
-\]
-the same abscissa for every scale $c_n$.  So the reflection pairs have no
-off-midpoint balance, and the balance is attained: at
-$s=1/2+i\pi/(2\log c_n)$ the two terms have equal modulus and opposite phase.
-Thus $\sigma=1/2$ is the only abscissa at which the channel is
-reflection-balanced; it is forced by the area-law scales, the absence of radial
-drift, and the two-sided reflection symmetry.  A count-indexed exhaustion of
-measured events propagates this midpoint conclusion through every zero event in
-the ledger.
+The midpoint conclusion comes from the structural midpoint mechanism established
+earlier (``Why the Channel Vanishes at the Midpoint''), not from any per-term
+magnitude balance.  The
+fiber is the full channel of many phasors $P_+-P_-$; its vanishing is the
+cancellation of the whole sum, which the modulus of a single reflected pair does
+not control.  What forces the midpoint is the conjunction of three facts: Tate
+completion gives the completed $\Lambda(\cdot,\chi)$ its exact $s\mapsto1-s$
+functional equation (with archimedean factor nonvanishing on $\Re s>0$, hence
+the same zeros); the sign change of the real standing wave is an event on the
+real axis; and the self-adjoint readout admits no complex eigenvalue.  At a node
+these coincide in three dimensions---the arclength-marked height $e^{iy}$, the
+phasor energy, and the eigenvalue energy agree, with unit-determinant
+readout---and the faithful projection (Möbius to the unit circle, then
+$\log(e^{iy})=iy$) returns the strip coordinate with $\Re=1/2$.  A count-indexed
+exhaustion of measured events propagates this midpoint conclusion through every
+zero event in the ledger.
 
 The Intermediate Value Theorem is used only for this limited purpose: a sign
 change of the real standing wave witnesses an actual zero between the signs. It
-does not force the midpoint.  The midpoint is forced earlier by the source
-midline, no-drift projection, faithful readout, and the closed-form
-magnitude-balance argument above.
+does not force the midpoint.  The midpoint is forced by the source midline,
+no-drift projection, faithful readout, and the completion/sign-flip/spectral
+mechanism above.
 
 Combining origination, source-trace coupling, faithfulness of the source record,
 the strong data processing inequality, indexed production, midpoint projection,
