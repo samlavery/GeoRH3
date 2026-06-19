@@ -3,7 +3,6 @@ import RequestProject.CoshBalance
 import RequestProject.GaussianClosedForm
 import RequestProject.ZetaZeroDefs
 import RequestProject.MellinPathToXi
-import RequestProject.RiemannHypothesisBridge
 
 /-!
 # Gaussian-Paired Detector Observables

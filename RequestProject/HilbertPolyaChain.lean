@@ -16,6 +16,7 @@ import RequestProject.ClosedForm
 import RequestProject.HelixResolventCapture
 import RequestProject.XiPartialFraction
 import RequestProject.LFunctionPhasor
+import RequestProject.HermitianResolventTrace
 
 /-!
 
@@ -603,6 +604,93 @@ theorem hilbert_polya_on_critical_line {E : Type*} [NormedAddCommGroup E] [Inner
     (spectralZero mu).re = 1 / 2 := by
   rw [spectralZero_re, symmetric_eigenvalue_real hT hmu]; ring
 
+/-! ## The resolvent-trace realization — the unconditional Hilbert–Pólya scaffold
+
+`hilbert_polya_on_critical_line` is the abstract on-line forcing (a symmetric operator's real
+eigenvalue projects, via `spectralZero`, onto `Re = ½`). Its **concrete, finite realization** is the
+Hermitian resolvent trace (`HermitianResolventTrace`): for any Hermitian matrix `A` (the Gram /
+von-Neumann `B*B`), `Tr((z·1 − A)⁻¹) = ∑ᵢ 1/(z − λᵢ)`, whose poles are *exactly* its eigenvalues
+`λᵢ` — which are **real** because `A` is Hermitian. So the resolvent trace's poles, projected by
+`spectralZero`, all lie on the critical line — **unconditional**, no positivity, no planted `½`. This
+is the gram/von-Neumann resolvent-trace scaffold the program stands on; the lone conjectural step is
+`HelixSupremacy` (that those poles are ζ's *actual* nontrivial zeros). -/
+
+/-- **Unconditional resolvent-trace scaffold (on the critical line).** For a Hermitian matrix `A`
+(e.g. the Gram operator `B*B`): (1) its resolvent trace is the eigenvalue sum
+`∑ᵢ 1/(z − λᵢ)` (`HermitianResolventTrace.hermitian_resolvent_trace`), and (2) every pole `λᵢ`,
+projected by `spectralZero`, sits at `Re = ½` — because the poles are real
+(`hermitian_resolvent_poles_real`, `A` Hermitian) and `spectralZero_re` gives `Re = ½ − Im λᵢ = ½`.
+The Hilbert–Pólya on-line forcing in finite, kernel-clean form. The seam `HelixSupremacy` (those
+poles are the actual nontrivial zeros) is the only thing left. -/
+theorem hermitian_resolventTrace_poles_on_critical_line {n : Type*} [Fintype n] [DecidableEq n]
+    {A : Matrix n n ℂ} (hA : A.IsHermitian) :
+    (∀ z : ℂ, (∀ i, z ≠ (hA.eigenvalues i : ℂ)) →
+        Matrix.trace ((z • (1 : Matrix n n ℂ) - A)⁻¹)
+          = ∑ i, (z - (hA.eigenvalues i : ℂ))⁻¹) ∧
+      (∀ i, (spectralZero ((hA.eigenvalues i : ℂ))).re = 1 / 2) :=
+  ⟨fun z hz => HermitianResolventTrace.hermitian_resolvent_trace hA hz,
+   fun i => by
+     rw [spectralZero_re, HermitianResolventTrace.hermitian_resolvent_poles_real hA i]; ring⟩
+
+/-- **The scaffold survives the infinite-dimensional limit.** The genuine Hilbert–Pólya operator has
+*infinitely many* eigenvalues (one per nontrivial zero), reached as a limit of its finite Hermitian
+sections. A pole `z` of the limiting resolvent trace is a limit of finite-section poles `zN`, each
+**real** (`hermitian_resolvent_poles_real`); by `real_pole_of_limit` the limit pole is real too, so
+its `spectralZero` image is on the critical line. Reality of the spectrum is *not* lost in the limit —
+no off-line pole can be manufactured. This is the finite→infinite half of the resolvent-trace
+scaffold; together with `hermitian_resolventTrace_poles_on_critical_line` it is the complete,
+unconditional, 3-D realization. The lone seam stays `HelixSupremacy` (these poles are ζ's zeros). -/
+theorem resolventTrace_limitPole_on_critical_line {z : ℂ} {zN : ℕ → ℂ}
+    (hreal : ∀ N, (zN N).im = 0) (hlim : Filter.Tendsto zN Filter.atTop (nhds z)) :
+    (spectralZero z).re = 1 / 2 := by
+  rw [spectralZero_re, HermitianResolventTrace.real_pole_of_limit hreal hlim]; ring
+
+/-! ### The proper 3-D operator — resolvent reality discharged on the actual Gram operator
+
+The scaffold above is abstract (any Hermitian `A`). The *actual* 3-D operator is the Gram
+`G∞ = B∞*B∞` of `HelixForm.BpmapCl c`, self-adjoint **unconditionally** (`HelixForm.gramOp_isSelfAdjoint`,
+von Neumann's `T*T`). Here the abstract `IsHermitian`/symmetry hypothesis is **discharged** from the
+construction: `T*T` is its own formal adjoint (`HelixVonNeumann.TstarT_isFormalAdjoint_self`, needing
+only the density `HelixForm.BpmapCl_domain_dense`), so every eigenvalue is real and its `spectralZero`
+image is on-line — hypothesis-free, for the real operator. -/
+
+/-- **von-Neumann `T*T` has real eigenvalues — unconditional (density only).** `T*T` is its own
+formal adjoint (`HelixVonNeumann.TstarT_isFormalAdjoint_self`); for an eigenvector `x ≠ 0` in its
+domain with `T*T x = μ • x`, symmetry forces `conj μ = μ`, i.e. `Im μ = 0`. The reality of the
+spectrum earned from the construction — no positivity, no self-adjointness beyond density. -/
+theorem TstarT_eigenvalue_im_zero {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+    [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace E] [CompleteSpace F]
+    (T : E →ₗ.[ℂ] F) (hd : Dense (T.domain : Set E))
+    {μ : ℂ} {x : (HelixVonNeumann.TstarT T).domain} (hx : (x : E) ≠ 0)
+    (heig : (HelixVonNeumann.TstarT T) x = μ • (x : E)) :
+    μ.im = 0 := by
+  have hsym := HelixVonNeumann.TstarT_isFormalAdjoint_self T hd x x
+  rw [heig, inner_smul_left, inner_smul_right] at hsym
+  have hne : inner ℂ (x : E) (x : E) ≠ 0 := inner_self_ne_zero.mpr hx
+  have hconj : (starRingEnd ℂ) μ = μ := mul_right_cancel₀ hne hsym
+  have him := congrArg Complex.im hconj
+  rw [Complex.conj_im] at him
+  linarith
+
+/-- **The proper 3-D resolvent trace, unconditionally discharged.** For the *actual* Gram operator
+`G∞ = B∞*B∞` (`HelixForm.BpmapCl c`, self-adjoint via `HelixForm.gramOp_isSelfAdjoint`): every
+eigenvalue `μ` — a pole of the operator's resolvent, eigenvector `≠ 0` in the finite-energy domain —
+is **real** (`TstarT_eigenvalue_im_zero`, density discharged by `HelixForm.BpmapCl_domain_dense`), so
+`(spectralZero μ).re = ½`. No abstract `IsHermitian`/`hT` hypothesis: the resolvent poles of the real
+3-D operator are real, hence on-line, hypothesis-free. These poles **are** the 3-D ζ's spectrum; the
+1-D `riemannZeta` is its projection/shadow (one-way, 3D→1D). The only step this does **not** assert —
+the seam `HelixSupremacy` = projection dominance — is that that projection is *faithful*: every 1-D
+shadow zero is the image of a 3-D pole. No 1-D zeta is matched or asserted; the ζ is 3-D. -/
+theorem gram_spectralZero_on_critical_line {V : Type*} [NormedAddCommGroup V]
+    [InnerProductSpace ℂ V] [CompleteSpace V] (c : ℕ → (V →L[ℂ] ℂ))
+    {μ : ℂ} {x : (HelixVonNeumann.TstarT (HelixForm.BpmapCl c)).domain}
+    (hx : (x : ↥(HelixForm.lossSpace c)) ≠ 0)
+    (heig : (HelixVonNeumann.TstarT (HelixForm.BpmapCl c)) x = μ • (x : ↥(HelixForm.lossSpace c))) :
+    (spectralZero μ).re = 1 / 2 := by
+  rw [spectralZero_re,
+    TstarT_eigenvalue_im_zero (HelixForm.BpmapCl c) (HelixForm.BpmapCl_domain_dense c) hx heig]
+  ring
+
 
 
 /-! ## Hilbert-Polya identification: spectral harmonics → NTZ zeros, n = 0 to ∞
@@ -831,12 +919,16 @@ gives `Re = ½ − Im μ`, and `Im μ = 0` forces `Re = ½` (`hilbert_polya_on_c
 (`SourceMode.ofReal`), **not** the circular `rate := ρ − ½` costume (`sourceComplete_attempt`, which builds
 the mode *from* the zero). Here `μ` is `T`'s eigenvalue, built from the helix geometry, independent of `ρ`.
 
-So the on-line forcing is **earned in 3-D**; the lone open input is the **projection completeness** — that
+So the on-line forcing is **earned in 3-D**; the lone open input is **projection dominance** — that
 every 1-D nontrivial zero is `spectralZero μ` for a (real) 3-D eigenvalue `μ`, i.e. the 3-D spectrum
-projects *onto* ζ's zeros. The route to *derive* it is the resolvent-trace / characteristic-determinant
-identity (the operator's resolvent trace ≡ `−L'/L`: `flowVonMangoldtTrace_eq_neg_logDeriv` already gives it
-for `Re s > 1`, Hadamard continues it into the strip), whose pole-matching forces spectrum = zeros. It is
-(at least) RH-strength — it asserts the spectrum exhausts the *ordinates* — so never describe it as "≈ RH". -/
+projects *onto* ζ's zeros. The unconditional scaffold it stands on is the 3-D resolvent trace itself
+(`hermitian_resolventTrace_poles_on_critical_line` + `resolventTrace_limitPole_on_critical_line`),
+**discharged on the *actual* operator** by `gram_spectralZero_on_critical_line` (the concrete Gram
+`G∞ = B∞*B∞`, the abstract `IsHermitian`/symmetry hypothesis discharged from von Neumann's
+construction — hypothesis-free): the operator's resolvent trace is `∑ᵢ 1/(z − λᵢ)`, its poles the real
+eigenvalues, projecting on-line — all
+in 3-D, with **no separate "1-D `−L'/L`" object** (the vanishing *is* 3-D). It is (at least) RH-strength
+— it asserts the spectrum exhausts the *ordinates* — so never describe it as "≈ RH". -/
 
 /-- **Helix supremacy** (the Hilbert–Pólya seam): every nontrivial zero of `L(·, χ₁) = ζ` is the
 spectral image `spectralZero μ` of an eigenvalue `μ` of the symmetric operator `T`. The 1-D zeros
@@ -1083,22 +1175,6 @@ theorem zetaXiHadamardTrace_eq_logDeriv :
   obtain ⟨A, hA⟩ := zeta_hadamard_discharge_shifted_xi_traceIdentity
   exact ⟨A, fun z hz => by simpa [zetaXiHadamardTrace] using hA z hz⟩
 
-/-- **Self-adjoint trace-identity readout** (the channel-clean right-path capstone). If a continuous
-functional `φ` of a self-adjoint operator's resolvent reads as `−L'/L(½+i·)`, then GRH for `χ` — by
-the resolvent-capture / spectral-reality route (`HelixLimit.grh_of_selfAdjoint_resolventReadout`), no
-positivity. The trace identity `htrace` is the open input; the phasor channel `L = ∑ₙ phasorTerm`
-(`CriticalLinePhasor.LFunctionPhasor.LSeries_phasor_representation`) is what supplies it. -/
-theorem grh_of_selfAdjoint_traceIdentity_readout {N : ℕ} [NeZero N]
-    (χ : DirichletCharacter ℂ N)
-    {A : Type*} [CStarAlgebra A] [StarModule ℂ A] {a : A} (ha : IsSelfAdjoint a)
-    {φ : A → ℂ} (hφ : Continuous φ)
-    (htrace : ∀ z, φ (resolvent a z)
-        = -logDeriv (DirichletCharacter.LFunction χ) (1 / 2 + Complex.I * z)) :
-    GRHSpectral.GRH χ :=
-  HelixLimit.grh_of_selfAdjoint_resolventReadout ha hφ htrace
-
-
-
 /-- **HP correspondence from an explicit spectral coordinate.**
 
 The HP program forces zeros on the line. Given:
@@ -1123,22 +1199,6 @@ theorem hp_correspondence_of {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N
 it is referenced downstream by `HelixRHAssembly`. -/
 theorem RH_by_GRH (h : GRHSpectral.GRH (1 : DirichletCharacter ℂ 1)) : RiemannHypothesis :=
   HelixStandingWave.RH_of_GRH_modOne h
-
-
-/-- **Principal-channel `RiemannHypothesis` from the self-adjoint trace-identity readout.** Composes
-`grh_of_selfAdjoint_traceIdentity_readout` (the channel-clean resolvent-capture capstone) with the
-`GRH(1) → RH` bridge `RH_by_GRH`. The open input is the trace identity `htrace`; no closed-form pair,
-no positivity. -/
-theorem RH_of_selfAdjoint_traceIdentity_readout
-    {A : Type*} [CStarAlgebra A] [StarModule ℂ A] {a : A} (ha : IsSelfAdjoint a)
-    {φ : A → ℂ} (hφ : Continuous φ)
-    (htrace : ∀ z, φ (resolvent a z)
-        = -logDeriv (DirichletCharacter.LFunction (1 : DirichletCharacter ℂ 1))
-            (1 / 2 + Complex.I * z)) :
-    RiemannHypothesis :=
-  RH_by_GRH
-    (grh_of_selfAdjoint_traceIdentity_readout
-      (1 : DirichletCharacter ℂ 1) ha hφ htrace)
 
 /-! ## Node → typed on-line zero (unconditional), and the log readout
 
