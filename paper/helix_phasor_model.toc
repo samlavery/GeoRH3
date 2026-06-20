@@ -1,0 +1,20 @@
+\contentsline {section}{\numberline {1}Objects and notation}{2}{section.1}%
+\contentsline {section}{\numberline {2}The $\pi /3$ helix carrier}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}The space curve and its arclength}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Uniform integer placement and the area law}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}The mod-$6$ bucket structure}{3}{subsection.2.3}%
+\contentsline {section}{\numberline {3}The log-free winding and the bridge}{3}{section.3}%
+\contentsline {subsection}{\numberline {3.1}The fundamental-theorem-of-arithmetic winding}{3}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}The bridge $\mathrm {wind}\,n\leftrightarrow n^{it}$}{4}{subsection.3.2}%
+\contentsline {section}{\numberline {4}The phasor fiber and its accumulation}{4}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Phasor decomposition}{4}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Accumulation to $L$}{5}{subsection.4.2}%
+\contentsline {section}{\numberline {5}Strip extension: accumulation onto the critical line}{5}{section.5}%
+\contentsline {section}{\numberline {6}The geometric explicit formula}{5}{section.6}%
+\contentsline {section}{\numberline {7}Projection and reality on the critical line}{6}{section.7}%
+\contentsline {subsection}{\numberline {7.1}The readout coordinate and its scaling}{6}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Reality on the line}{6}{subsection.7.2}%
+\contentsline {section}{\numberline {8}Faithfulness for every Dirichlet $L$-function and Tate completion}{7}{section.8}%
+\contentsline {section}{\numberline {9}The double-ended carrier and conjugacy}{7}{section.9}%
+\contentsline {section}{\numberline {10}The Frobenius similitude and the determinant identity}{8}{section.10}%
+\contentsline {section}{\numberline {11}Formalization}{8}{section.11}%

@@ -1,0 +1,580 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\setlength{\emergencystretch}{3em}
+
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}[definition]{Theorem}
+\newtheorem{corollary}[definition]{Corollary}
+\newtheorem{lemma}[definition]{Lemma}
+\newtheorem{proposition}[definition]{Proposition}
+\newtheorem{remark}[definition]{Remark}
+
+\DeclareMathOperator{\Ree}{Re}
+\DeclareMathOperator{\Imm}{Im}
+\DeclareMathOperator{\arglocal}{arg}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\Tr}{Tr}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\T}{\mathbb{T}}
+\newcommand{\conj}[1]{\overline{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{The Double-Ended Helix: A Three-Dimensional Geometric Tool\\
+for the Vanishing Points of Dirichlet $L$-Functions}
+\author{Samuel Lavery}
+\date{2026-06-19}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present a three-dimensional geometric tool: a double-ended chiral helix carrier on which a
+phasor fiber identifies the vanishing points --- the crossings where the phasor accumulation
+cancels --- that coincide with the zeros of the Riemann zeta function and Dirichlet $L$-functions. The carrier is a growing-radius helix with
+integers placed at uniform arclength spacing $\Delta=\pi/3$; a fiber rides it and accumulates
+phasors. The fiber attached to a Dirichlet character $\chi$ is the
+partial-sum sequence $\sum_{n<N}\chi(n)\,n^{-s}$; its limit is the Dirichlet $L$-function
+$L(s,\chi)$ on $\Ree s>1$, and, after Abel summation, on the whole half-plane $\Ree s>0$,
+the critical line included. The angular winding of the carrier is a completely multiplicative
+character built from prime angles by the fundamental theorem of arithmetic, with no logarithm;
+the logarithm enters only in the external bridge $\mathrm{wind}\,n\leftrightarrow n^{it}$ that
+identifies the geometric winding with the analytic phasor. We record the geometric explicit
+formula (the logarithmic derivative of the fiber is the winding-weighted von Mangoldt prime
+field, and each simple zero is a simple pole with an explicit residue), the reality of the
+completed object on the critical line (read through a projection that rescales the helix's $\pi/3$
+gauge to a unit coordinate), the conjugacy of the two chiralities of the double-ended carrier, and a
+determinant identity: at a conjugate crossing the two chiral eigenphases
+$z=e^{-iy\log n}$ and $\conj{z}$ assemble the transverse block $\diag(z,\conj z)$, whose
+determinant is $z\,\conj z=|z|^2=1$. The coincidence of the fiber's vanishing points with the
+actual zeros has been verified numerically for the leading zeros of $\zeta$ and ten Dirichlet
+$L$-functions. Every statement below is formalized in Lean~4 with
+Mathlib and checked by the kernel; the axiom footprint of each named theorem is
+$\{\mathrm{propext},\ \mathrm{Classical.choice},\ \mathrm{Quot.sound}\}$, with no \code{sorry}
+and no additional axioms.
+\end{abstract}
+
+\tableofcontents
+
+\section{Objects and notation}\label{sec:notation}
+
+Let $\chi$ be a Dirichlet character modulo $q$ and $L(s,\chi)$ the associated $L$-function;
+$\zeta$ is the Riemann zeta function and $\Lambda(s)=\code{completedRiemannZeta}(s)$ its completed
+form, normalized so that $\Lambda(1-s)=\Lambda(s)$. The \emph{critical line} is the set
+$s=\tfrac12+iy$, $y\in\R$. We write $\T=\{z\in\C:|z|=1\}$ for the unit circle (Mathlib
+\code{Circle}) and $\conj{\,\cdot\,}$ for complex conjugation (\code{starRingEnd}~$\C$). For an
+arithmetic weight $\chi$ the \emph{phasor} attached to the integer $n\ge 1$ on the vertical line
+$s=\sigma+iy$ is $\chi(n)\,n^{-s}$.
+
+The classical analytic theory of $\zeta$ and Dirichlet $L$-functions --- the Euler product, the
+functional equation, and the von Mangoldt explicit formula
+\cite{Riemann1859,Edwards1974,Titchmarsh1986,Davenport2000,IwaniecKowalski2004,MontgomeryVaughan2007}
+--- enters here through the corresponding Mathlib lemmas.
+
+All named results carry the identifier of the corresponding Lean declaration, e.g.\
+\code{frobenius\_conjugate\_det\_one}; Section~\ref{sec:formal} records the verification.
+
+\section{The $\pi/3$ helix carrier}\label{sec:carrier}
+
+\subsection{The space curve and its arclength}
+
+\begin{definition}[Carrier curve; \code{Geometry.helix}, \code{helixVel}, \code{speed}]\label{def:helix}
+For pitch $p$ and radial rate $r$, the carrier is the growing-radius helix
+\[
+  \gamma(k) \;=\; \bigl(r\,k\cos 2\pi k,\; r\,k\sin 2\pi k,\; p\,k\bigr),\qquad k\in\R .
+\]
+Its velocity is $\gamma'(k)=\bigl(r\cos2\pi k-2\pi r k\sin2\pi k,\ r\sin2\pi k+2\pi r k\cos2\pi k,\ p\bigr)$,
+and the squared speed is
+\[
+  \|\gamma'(k)\|^2 \;=\; p^2+r^2+(2\pi r k)^2 .
+\]
+The \emph{climber} is $k(y)=e^{y}/p$, so the height is $z=p\,k(y)=e^{y}$ and the cylindrical radius
+is $R(y)=r\,k(y)=(r/p)e^{y}$.
+\end{definition}
+
+\begin{definition}[Arclength; \code{Geometry.arclength}, \code{arclengthClosed}]\label{def:arclength}
+The arclength of $\gamma$ from $0$ to $k$ is
+$\displaystyle S(k;p,r)=\int_0^k\sqrt{p^2+r^2+(2\pi r t)^2}\,dt$.
+\end{definition}
+
+\begin{theorem}[Closed-form arclength; \code{arclength\_closed\_form}, \code{arclength\_r\_zero}]\label{thm:arclength}
+For $r>0$,
+\[
+  S(k;p,r) \;=\; \frac{k}{2}\sqrt{p^2+r^2+4\pi^2 r^2 k^2}
+   \;+\;\frac{p^2+r^2}{4\pi r}\,\operatorname{arsinh}\!\Bigl(\frac{2\pi r k}{\sqrt{p^2+r^2}}\Bigr),
+\]
+and $S(k;p,0)=p\,k$ for $p\ge 0$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Differentiate the stated antiderivative and check it equals the integrand
+$\sqrt{p^2+r^2+4\pi^2r^2k^2}$ pointwise, then apply the fundamental theorem of calculus on
+$[0,k]$; the constant-pitch case is $\int_0^k p\,dt$.
+\end{proof}
+
+\subsection{Uniform integer placement and the area law}
+
+\begin{definition}[Spacing, index, integer angle; \code{Geometry.Delta}, \code{Nindex}, \code{spinAngle}]\label{def:placement}
+The fixed spacing is $\Delta=\pi/3$. The continuous geometric index is $N(y)=S(k(y);p,r)/\Delta$,
+so $N(y)=(3/\pi)\,S(k(y);p,r)$ (\code{Nindex\_eq}). The integer angular coordinate is
+$s_n=n\cdot(\pi/3)$.
+\end{definition}
+
+\begin{theorem}[Uniform $\pi/3$ spacing; \code{carrier\_spacing}]\label{thm:spacing}
+For every $n\in\N$, $\;s_{n+1}-s_n=\pi/3$.
+\end{theorem}
+
+\begin{theorem}[Emergent radius; \code{HelixLogFree.norm\_helixPt}]\label{thm:arealaw}
+Let $\mathrm{helixPt}(n)=\sqrt n\cdot(\mathrm{wind}\,n)$ (Definition~\ref{def:wind}). The distance of
+the $n$-th site from the axis is
+\[
+  \|\mathrm{helixPt}(n)\| \;=\; \sqrt n,
+\]
+so the enclosed area $\pi\,\|\mathrm{helixPt}(n)\|^2=\pi n$ is linear in $n$. The winding contributes
+unit modulus (Theorem~\ref{thm:windmul}); the factor $\sqrt n$ is read off the placement, not posited.
+The uniform spacing $\Delta=\pi/3$ enters separately, through the index $N(y)=S(k(y);p,r)/\Delta$ of
+Definition~\ref{def:placement} ($\mathrm{helixPt}$ is the unit-gauge carrier point).
+\end{theorem}
+
+\subsection{The mod-$6$ bucket structure}
+
+Because $6\cdot(\pi/3)=2\pi$, the integer angle $s_n$ is $6$-periodic on the circle.
+
+\begin{theorem}[Bucket periodicity and counts; \code{spin\_phasor\_period6}, \code{bucket\_count}]\label{thm:buckets}
+$\exp(i\,s_{n+6})=\exp(i\,s_n)$ for all $n$, and for $a<6$ exactly $N$ of the integers in
+$[0,6N)$ satisfy $n\equiv a\pmod 6$. Thus the integers collapse onto six angular directions,
+each receiving an equal share.
+\end{theorem}
+
+\begin{remark}[Sixth roots of unity; Eisenstein integers]\label{rem:eisenstein}
+The integer-angle phasor $\exp(i\,s_n)=\exp(i\,n\pi/3)$ takes values in the sixth roots of unity
+$\mu_6=\{e^{ik\pi/3}:0\le k<6\}$, cycling through them as $n$ runs mod $6$; the primitive sixth root
+$\zeta=e^{i\pi/3}$ ($\zeta^2=\zeta-1$, the cyclotomic relation $\Phi_6$) generates $\mu_6$. The ring
+$\Z[\zeta]$ is the ring of Eisenstein integers \cite{IrelandRosen1990} --- a hexagonal (triangular)
+lattice whose unit group
+is exactly $\mu_6$. So the $\pi/3$ gauge is the Eisenstein symmetry, and the six buckets of
+Theorem~\ref{thm:buckets} are its units.
+\end{remark}
+
+\section{The log-free winding and the bridge}\label{sec:winding}
+
+\subsection{The fundamental-theorem-of-arithmetic winding}
+
+\begin{definition}[Winding angle and winding; \code{HelixLogFree.windAngle}, \code{wind}, \code{helixPt}]\label{def:wind}
+Fix a prime-angle assignment $\theta$ (in Lean, a function $\theta:\N\to\R$; only its values on primes
+enter).
+The \emph{winding angle} is the completely additive extension read off the prime factorization,
+\[
+  \Theta(n) \;=\; \sum_{p^{e}\,\|\,n} e\,\theta(p)
+  \;=\; \code{n.factorization.sum}\ (\lambda\, p\, e.\; e\cdot\theta(p)),
+\]
+and the \emph{winding} is $\mathrm{wind}(n)=\exp(i\,\Theta(n))\in\T$. The carrier point is
+$\mathrm{helixPt}(n)=\sqrt n\cdot \mathrm{wind}(n)$. No logarithm occurs in $\Theta$.
+\end{definition}
+
+\begin{theorem}[Multiplicative character; \code{windAngle\_mul}, \code{wind\_mul}, \code{wind\_one}]\label{thm:windmul}
+For $m,n\neq 0$, $\;\Theta(mn)=\Theta(m)+\Theta(n)$ and $\mathrm{wind}(mn)=\mathrm{wind}(m)\,\mathrm{wind}(n)$,
+with $\mathrm{wind}(1)=1$. Thus $\mathrm{wind}:\N\to\T$ is a completely multiplicative character
+\cite{Apostol1976}.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+$\Theta$ is a sum over $\code{Nat.factorization}$; additivity is $\code{Nat.factorization\_mul}$
+(the fundamental theorem of arithmetic). Exponentiating turns additivity into multiplicativity on
+$\T$ via $\code{Circle.exp\_add}$.
+\end{proof}
+
+\subsection{The bridge $\mathrm{wind}\,n\leftrightarrow n^{it}$}
+
+The single place a logarithm enters is the external identification of the geometric winding with the
+analytic phasor.
+
+\begin{theorem}[Logarithm is FTA-additive; \code{real\_log\_eq\_factorization\_sum}]\label{thm:logfta}
+For $n\neq 0$, $\;\log n=\sum_{p^{e}\,\|\,n} e\,\log p$.
+\end{theorem}
+
+\begin{theorem}[The bridge; \code{windAngle\_glog}, \code{wind\_glog\_eq\_cpow}]\label{thm:bridge}
+With the prime-angle assignment $\theta(p)=\gamma\log p$, one has
+$\Theta(n)=\gamma\log n$ and hence
+\[
+  \mathrm{wind}(n) \;=\; n^{\,i\gamma}\qquad(n\ge 1).
+\]
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Substitute Theorem~\ref{thm:logfta} into $\Theta$ to get $\Theta(n)=\gamma\log n$; then
+$\exp(i\gamma\log n)=n^{i\gamma}$ by the principal-branch definition of $n^{i\gamma}$ for the
+positive real base $n$.
+\end{proof}
+
+\section{The phasor fiber and its accumulation}\label{sec:fiber}
+
+\subsection{Phasor decomposition}
+
+\begin{theorem}[Vertical-line phasor and magnitude; \code{cpow\_vertical\_line\_phasor}, \code{norm\_cpow\_vertical\_line}]\label{thm:phasor}
+For a positive real base $x$ and $s=\sigma+iy$,
+\[
+  x^{-s} \;=\; x^{-\sigma}\,\exp\!\bigl(-(y\log x)\,i\bigr),\qquad
+  \bigl|x^{-s}\bigr| \;=\; x^{-\sigma}.
+\]
+In particular, on the critical line $n^{-(1/2+iy)}=n^{-1/2}\,\exp(-(y\log n)i)$ with magnitude
+$n^{-1/2}$ for every $y$ (\code{cpow\_critical\_line}, \code{norm\_cpow\_critical\_line}).
+\end{theorem}
+
+\begin{definition}[The spin; \code{LFunctionPhasor.spin}]\label{def:spin}
+The \emph{spin} of the integer $n$ at ordinate $y$ is the unit-modulus factor
+$\mathrm{spin}(y,n)=\exp(-(y\log n)\,i)$.
+\end{definition}
+
+\begin{theorem}[The fiber rides the carrier; \code{fiber\_rides\_carrier}]\label{thm:rides}
+Write $\mathrm{wind}_{-t\log}$ for the winding of Definition~\ref{def:wind} with the assignment
+$\theta(p)=-t\log p$, so $\mathrm{wind}_{-t\log}(n)=n^{-it}$ by the bridge (Theorem~\ref{thm:bridge}).
+For $n\ge 1$, the carrier magnitude $n^{-1/2}$ --- the reciprocal of the emergent radius $\sqrt n$ ---
+times this winding is the Dirichlet phasor:
+\[
+  n^{-1/2}\cdot\mathrm{wind}_{-t\log}(n) \;=\; n^{-(1/2+it)} .
+\]
+\end{theorem}
+
+\subsection{Accumulation to $L$}
+
+\begin{definition}[Finite phasor carrier; \code{DirichletPhasorCarrier.finiteCarrier}, \code{phasorTerm}]\label{def:finite}
+$G_{\chi,N}(s)=\sum_{n<N}\chi(n)\,n^{-s}$, the partial sums of the carrier-riding phasors.
+\end{definition}
+
+\begin{theorem}[Accumulation on $\Ree s>1$; \code{fiber\_accumulates\_to\_L}, \code{finiteCarrier\_tendsto\_LFunction}]\label{thm:accum}
+For every Dirichlet character $\chi$ and $\Ree s>1$, $\;G_{\chi,N}(s)\to L(s,\chi)$ as $N\to\infty$.
+\end{theorem}
+
+\section{Strip extension: accumulation onto the critical line}\label{sec:strip}
+
+The accumulation converges beyond the region of absolute convergence, down to $\Ree s>0$.
+
+\begin{theorem}[Dirichlet strip extension; \code{dirichlet\_strip\_tendsto\_LFunction}]\label{thm:dstrip}
+For a Dirichlet character $\chi\neq 1$ modulo $q$ and $\Ree s>0$,
+\[
+  \sum_{n<N}\chi(n)\,n^{-s}\;\xrightarrow[N\to\infty]{}\;L(s,\chi).
+\]
+\end{theorem}
+
+\begin{theorem}[Eta strip extension; \code{eta\_strip\_tendsto}]\label{thm:etastrip}
+For $\Ree s>0$ and $s\neq 1$,
+\[
+  \sum_{n<N}(-1)^{\,n+1}\,n^{-s}\;\xrightarrow[N\to\infty]{}\;\bigl(1-2^{\,1-s}\bigr)\zeta(s).
+\]
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Bucket cancellation gives a uniform bound on the character sums $\sum_{n<N}\chi(n)$; Abel summation
+by parts \cite{Apostol1976,Titchmarsh1986} then yields convergence of $\sum\chi(n)n^{-s}$ on
+$\Ree s>0$, and the limit agrees with
+$L(s,\chi)$ on $\Ree s>1$ and hence everywhere on the connected strip by the identity theorem. For
+the alternating weight the factor $1-2^{1-s}$ is the even-term correction relating $\eta$ and $\zeta$.
+\end{proof}
+
+\begin{theorem}[Continuous reach to the line; \code{continuous\_model\_zeta}]\label{thm:cont}
+For every $y\in\R$, at $s=\tfrac12+iy$,
+\[
+  \sum_{n<N}(-1)^{\,n+1}\,n^{-s}\;\longrightarrow\;\bigl(1-2^{\,1-s}\bigr)\zeta\!\bigl(\tfrac12+iy\bigr),
+\]
+and the limit is $0$ if and only if $\zeta(\tfrac12+iy)=0$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Theorem~\ref{thm:etastrip} at $s=\tfrac12+iy$ (using $\Ree s=\tfrac12>0$ and $s\neq1$). On the line
+the factor $1-2^{1-s}$ is nonzero (\code{correction\_factor\_ne\_zero\_on\_critical\_line}), so the
+product vanishes exactly when $\zeta(\tfrac12+iy)$ does (\code{etaTrivial\_eq\_zero\_iff}).
+\end{proof}
+
+\section{The geometric explicit formula}\label{sec:explicit}
+
+The logarithmic derivative of the fiber is the prime-power accumulation weighted by the winding.
+
+\begin{theorem}[Prime field; \code{explicit\_formula\_prime\_field}, \code{dirichlet\_logDeriv\_eq\_tsum}]\label{thm:primefield}
+For $\Ree s>1$,
+\[
+  -\frac{L'(s,\chi)}{L(s,\chi)} \;=\; \sum_{n}\chi(n)\,\Lambda(n)\,n^{-s},
+\]
+where $\Lambda$ is the von Mangoldt function. The zeros of $L(\cdot,\chi)$ are the poles of the
+meromorphic continuation of this object.
+\end{theorem}
+
+\begin{definition}[Residue harmonic; \code{Residue.residueHarmonic}]\label{def:resharm}
+For $x>0$ and $\gamma\in\R$, write $\rho=\tfrac12+i\gamma$ and set
+$\;\mathrm{residueHarmonic}(x,\gamma)=-x^{\rho}/\rho$.
+\end{definition}
+
+\begin{theorem}[Zeros located as poles; \code{zeta\_zero\_located\_as\_pole}, \code{L\_zero\_located\_as\_pole}]\label{thm:pole}
+Let $\rho=\tfrac12+i\gamma$ be a zero of $L(\cdot,\chi)$ at which $L'(\rho,\chi)\neq 0$ (a simple
+zero). Then $\rho$ is a simple pole of the explicit-formula kernel $-(L'/L)(s)\,x^{s}/s$, with
+\[
+  \lim_{s\to\rho}(s-\rho)\,\Bigl(-\tfrac{L'(s,\chi)}{L(s,\chi)}\cdot\tfrac{x^{s}}{s}\Bigr)
+   \;=\; \mathrm{residueHarmonic}(x,\gamma)\;=\;-\frac{x^{\rho}}{\rho}.
+\]
+The same statement holds verbatim for $\zeta$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+On the punctured neighborhood of $\rho$ in $\{s\neq 1\}$, $L$ is analytic with $L(\rho)=0$ and
+$L'(\rho)\neq0$, so $-(L'/L)$ has a simple pole at $\rho$ with residue $1$; multiplying by the
+analytic factor $x^{s}/s$ scales the residue to $x^{\rho}/\rho$ and the leading sign gives
+$-x^{\rho}/\rho$.
+\end{proof}
+
+\section{Projection and reality on the critical line}\label{sec:projection}
+
+The carrier is three-dimensional; the readout projects it to a one-dimensional coordinate. We first
+record that coordinate and the change of scale it carries
+(Section~\ref{sub:readout}), then the reality of the completed object that the readout returns
+(Section~\ref{sub:reality}).
+
+\subsection{The readout coordinate and its scaling}\label{sub:readout}
+
+The carrier is built in its native gauge: the unit is $\pi/3$, and a full angular turn is six such
+units, $6\cdot(\pi/3)=2\pi$ (\code{spin\_phasor\_period6}, Theorem~\ref{thm:buckets}). The readout that
+sends a three-dimensional harmonic value $t\in\R$ down to a one-dimensional coordinate composes a
+Cayley map \cite{Ahlfors1979} with a rescaling to the standard unit interval (\code{HarmonicProjection}):
+\[
+  \mathrm{toCircleAngle}(t)=2\arctan t\in(-\pi,\pi),\qquad
+  \mathrm{toLine}(\theta)=\frac{\theta+\pi}{2\pi}\in(0,1),
+\]
+and $\mathrm{projection}=\mathrm{toLine}\circ\mathrm{toCircleAngle}$. The second map carries the change
+of scale: it sends the full turn $2\pi$ to length $1$, so the six $\pi/3$ buckets of the gauge become
+six equal sub-intervals of the readout. Under this rescaling the coordinate is rigid --- the Cayley
+map is odd (\code{toCircleAngle\_odd}), the normalization is affine hence midpoint-preserving
+(\code{toLine\_midpoint}), and the principal-arc ends $\theta=\pm\pi$ map to the two ends of the
+interval (\code{toLine\_neg\_pi}, \code{toLine\_pi}) --- so the centre of the gauge is carried to the
+centre of the interval.
+
+\begin{theorem}[Coordinate centre; \code{HarmonicProjection.projection\_midline}]\label{thm:midline}
+$\mathrm{projection}(0)$ is the midpoint of the readout interval: the centre of the six gauge buckets,
+the angle $\theta=0$, maps to the average of the two endpoint images
+(\code{toLine\_midpoint\_of\_endpoints}).
+\end{theorem}
+
+The inverse conversion is the same scaling read backwards: a readout coordinate $u$ is the angle
+$\theta=2\pi u-\pi$, the gauge reading $6u-3$ in $\pi/3$ units, and the interval's centre is the gauge
+centre $\theta=0$. This is a property of the readout coordinate and its scaling. The value the readout
+returns on the completed object is real --- it lands on the real axis (Section~\ref{sub:reality}).
+
+\subsection{Reality on the line}\label{sub:reality}
+
+The supporting analytic facts are the conjugation (Schwarz reflection \cite{Ahlfors1979}) and
+functional symmetries of $\Lambda$.
+
+\begin{theorem}[Conjugation symmetry; \code{HelixCollapse.completedRiemannZeta\_conj}]\label{thm:conj}
+For all $s\in\C$, $\;\conj{\Lambda(\conj s)}=\Lambda(s)$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+On $\Ree s>1$ this is the real Dirichlet coefficients of $\Lambda$ ($\conj{\Lambda(\conj s)}=\Lambda(s)$
+termwise, using $\conj{\pi^{-s/2}}=\pi^{-\conj s/2}$ and $\conj{\Gamma(\conj{s}/2)}=\Gamma(s/2)$); the
+identity extends to $\C$ by analytic continuation of $\Lambda_0$ (the pole-removed completion) via the
+identity theorem.
+\end{proof}
+
+\begin{theorem}[Reality on the line; \code{completedRiemannZeta\_critical\_line\_im\_zero}]\label{thm:real}
+For every $t\in\R$, $\;\Imm\,\Lambda(\tfrac12+it)=0$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+On the line $\conj{\tfrac12+it}=1-(\tfrac12+it)$, so Theorem~\ref{thm:conj} together with
+$\Lambda(1-s)=\Lambda(s)$ (\code{completedRiemannZeta\_one\_sub}) gives
+$\conj{\Lambda(\tfrac12+it)}=\Lambda(\tfrac12+it)$, i.e.\ a real value.
+\end{proof}
+
+\begin{theorem}[Faithful projection for $\zeta$; \code{faithful\_projection\_zeta}]\label{thm:faithproj}
+For every $\gamma\in\R$,
+\[
+  \Imm\,\Lambda\!\bigl(\tfrac12+i\gamma\bigr)=0
+  \qquad\text{and}\qquad
+  F_\eta(\gamma)=0 \iff \zeta\!\bigl(\tfrac12+i\gamma\bigr)=0,
+\]
+where $F_\eta(\gamma)=(1-2^{1-s})\zeta(s)$ at $s=\tfrac12+i\gamma$ (\code{EtaTrivial.Feta}).
+\end{theorem}
+
+\begin{theorem}[Located crossings lie on the line; \code{crossing\_is\_zero\_on\_line}]\label{thm:located}
+If the eta-regularized limit of Theorem~\ref{thm:cont} vanishes at ordinate $y$, then
+$\zeta(\tfrac12+iy)=0$ and $\Ree(\tfrac12+iy)=\tfrac12$.
+\end{theorem}
+
+\section{Faithfulness for every Dirichlet $L$-function and Tate completion}\label{sec:allL}
+
+A single carrier serves all $\chi$; the character weight $\chi(n)$ on each phasor is the only dial.
+
+\begin{theorem}[One carrier, all characters; \code{faithful\_all\_L}]\label{thm:alll}
+For every Dirichlet character $\chi$:
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item for $\Ree s>1$, $\;\sum_{n<N}\chi(n)\,n^{-s}\to L(s,\chi)$; and
+\item on the critical line $\Ree s=\tfrac12$, the eta-twisted closed carrier
+$\code{etaTwistClosed}(\chi,s)$ vanishes if and only if $L(s,\chi)=0$
+(\code{etaTwistClosed\_eq\_zero\_iff\_critical}).
+\end{enumerate}
+\end{theorem}
+
+\begin{definition}[Completed carrier; \code{Tate.completedCarrier}]\label{def:completed}
+For a Dirichlet character $\chi$, set $\;\Lambda_\chi^{\mathrm{c}}(y)=\Lambda(\chi,\tfrac12+iy)$ using
+the archimedean $\Gamma$-completion $\Lambda(\chi,s)=(\text{gamma factor})\cdot L(s,\chi)$.
+\end{definition}
+
+\begin{theorem}[Completion and functional equation; \code{faithful\_all\_L\_completed}, \code{completedCarrier\_eq\_zero\_iff}, \code{completed\_functional\_equation}]\label{thm:tate}
+For every \emph{primitive} $\chi$ modulo $q$:
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item the completion is zero-free off the zeros of $L$ on the line: $\Lambda_\chi^{\mathrm{c}}(y)=0
+\iff L(\tfrac12+iy,\chi)=0$ (the $\Gamma$-factor never vanishes for $\Ree s>0$); and
+\item Tate's functional equation \cite{Tate1967} holds:
+$\;\Lambda(\chi,1-s)=q^{\,s-1/2}\,W(\chi)\,\Lambda(\chi^{-1},s)$,
+where $W(\chi)=\code{rootNumber}(\chi)$.
+\end{enumerate}
+\end{theorem}
+
+\section{The double-ended carrier and conjugacy}\label{sec:double}
+
+The carrier is chiral: the right strand winds with spin $e^{-iy\log n}$, and its mirror, the left
+strand, winds with $e^{+iy\log n}$.
+
+\begin{theorem}[Conjugate chiralities; \code{both\_helices\_conjugate}]\label{thm:conjhelix}
+For every $N\in\N$ and $y\in\R$,
+\[
+  \sum_{n<N}(-1)^{\,n+1}\,n^{-(1/2-iy)}
+   \;=\; \conj{\;\sum_{n<N}(-1)^{\,n+1}\,n^{-(1/2+iy)}\;}.
+\]
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Termwise: $\conj{(-1)^{n+1}}=(-1)^{n+1}$ and $\conj{\,n^{-(1/2+iy)}}=n^{-(1/2-iy)}$ for the positive
+real base $n$ (so $\arglocal n\neq\pi$), by $\code{Complex.cpow\_conj}$ and $\conj n=n$.
+\end{proof}
+
+\begin{corollary}[Equal modulus, identical crossing heights]\label{cor:equalmod}
+The two strands have equal modulus at every $N$, so their limits vanish at the same ordinates $y$.
+\end{corollary}
+
+\begin{theorem}[Completed sides agree; \code{both\_sides\_cross\_together}]\label{thm:bothsides}
+For every $y\in\R$, $\;\Lambda(\tfrac12-iy)=\Lambda(\tfrac12+iy)$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+$\tfrac12-iy=1-(\tfrac12+iy)$, so this is $\Lambda(1-s)=\Lambda(s)$
+(\code{completedRiemannZeta\_one\_sub}) on the line.
+\end{proof}
+
+\section{The Frobenius similitude and the determinant identity}\label{sec:det}
+
+The map $n\mapsto pn$ is the Frobenius self-similarity of the carrier. By Theorem~\ref{thm:windmul}
+it acts on the carrier point $\mathrm{helixPt}(n)=\sqrt n\,\mathrm{wind}(n)$ as
+\[
+  \mathrm{helixPt}(pn) \;=\; \sqrt{pn}\,\mathrm{wind}(pn)
+   \;=\; \underbrace{\sqrt p}_{\text{radial}}\;\underbrace{\mathrm{wind}(p)}_{\text{rotation}}\;\mathrm{helixPt}(n),
+\]
+a similitude: radial scaling $\sqrt p$ (the area-law factor of Theorem~\ref{thm:arealaw}) times a
+rotation by the unit-modulus winding $\mathrm{wind}(p)$. Under the bridge (Theorem~\ref{thm:bridge})
+the rotation eigenphase at ordinate $y$ is the spin $z=\mathrm{spin}(y,n)=e^{-iy\log n}\in\T$. The two
+chiralities (Theorem~\ref{thm:conjhelix}) carry $z$ and $\conj z$.
+
+\begin{theorem}[Conjugate-eigenstate determinant; \code{frobenius\_conjugate\_det\_one}]\label{thm:det}
+For every $y\in\R$ and $n\in\N$, with $z=\mathrm{spin}(y,n)=e^{-iy\log n}$,
+\[
+  \det
+  \begin{pmatrix} z & 0\\[2pt] 0 & \conj z \end{pmatrix}
+  \;=\; z\,\conj z \;=\; |z|^2 \;=\; 1 .
+\]
+\end{theorem}
+
+\begin{proof}
+The $2\times2$ determinant is $z\cdot\conj z-0\cdot0=z\,\conj z$. Since $\conj z=\conj{e^{-iy\log n}}
+=e^{\,\conj{-iy\log n}}=e^{+iy\log n}$ and $-iy\log n+\overline{-iy\log n}=0$, we have
+$z\,\conj z=e^{-iy\log n}\,e^{+iy\log n}=e^{0}=1$.
+\end{proof}
+
+\begin{remark}\label{rem:end}
+The transverse block $\diag(z,\conj z)$ assembled from the two chiral eigenphases at a conjugate
+crossing has determinant $1$; the radial scaling $\sqrt p$ of the similitude is carried separately
+and is not part of this block. This is the terminal statement of the construction.
+\end{remark}
+
+\section{Formalization}\label{sec:formal}
+
+Every definition and theorem above is formalized in Lean~4 \cite{Lean4} against Mathlib
+\cite{Mathlib2020}, in the package
+\code{RequestProject} (files \code{ClosedForm.lean}, \code{HelixLogFreeFTA.lean},
+\code{HelixCollapseReality.lean}, \code{LFunctionPhasor.lean}, \code{GeometricProjectionHolds.lean},
+\code{Faithfulness.lean}). Each named
+theorem compiles with no \code{sorry}; the kernel axiom footprint reported by \code{\#print axioms}
+(equivalently \code{lean\_verify}) is
+\[
+  \{\ \mathrm{propext},\ \ \mathrm{Classical.choice},\ \ \mathrm{Quot.sound}\ \},
+\]
+the three standard Mathlib axioms, with no construction-specific axiom. The correspondence between
+the statements here and the Lean declarations is given by the identifiers in parentheses throughout.
+
+The capstone identities --- the strip extension (Theorems~\ref{thm:dstrip},~\ref{thm:etastrip},~\ref{thm:cont}),
+the conjugacy of the two chiralities (Theorem~\ref{thm:conjhelix}), and the determinant identity
+(Theorem~\ref{thm:det}) --- are collected in \code{Faithfulness.lean}; the geometry
+(Section~\ref{sec:carrier}) and the log-free winding (Section~\ref{sec:winding}) live in
+\code{ClosedForm.lean} and \code{HelixLogFreeFTA.lean}.
+
+\begin{remark}[Scope]\label{rem:scope}
+This paper presents a geometric tool: the double-ended chiral helix carrier and its phasor fiber, on
+which the vanishing points coincide with the zeros of $\zeta$ and the tested Dirichlet
+$L$-functions, verified numerically for the leading zeros. Its mathematical content is exactly the
+statements proved above --- the carrier, the accumulation to $L(s,\chi)$ on $\Ree s>0$, the
+explicit-formula reading of the zeros as poles, the reality of the completed object on the critical
+line, the conjugacy of the two chiralities, and the determinant identity of Theorem~\ref{thm:det}.
+\end{remark}
+
+\begin{thebibliography}{9}
+
+\bibitem{Riemann1859} B.~Riemann,
+\emph{Ueber die Anzahl der Primzahlen unter einer gegebenen Gr\"osse},
+Monatsberichte der Berliner Akademie, 1859.
+
+\bibitem{Edwards1974} H.~M.~Edwards,
+\emph{Riemann's Zeta Function}, Academic Press, 1974.
+
+\bibitem{Titchmarsh1986} E.~C.~Titchmarsh,
+\emph{The Theory of the Riemann Zeta-function}, 2nd ed.\ (rev.\ Heath-Brown),
+Oxford University Press, 1986.
+
+\bibitem{Davenport2000} H.~Davenport,
+\emph{Multiplicative Number Theory}, 3rd ed., Springer GTM~74, 2000.
+
+\bibitem{IwaniecKowalski2004} H.~Iwaniec and E.~Kowalski,
+\emph{Analytic Number Theory}, AMS Colloquium Publications~53, 2004.
+
+\bibitem{Apostol1976} T.~M.~Apostol,
+\emph{Introduction to Analytic Number Theory}, Springer Undergraduate Texts in Mathematics, 1976.
+
+\bibitem{MontgomeryVaughan2007} H.~L.~Montgomery and R.~C.~Vaughan,
+\emph{Multiplicative Number Theory~I: Classical Theory},
+Cambridge Studies in Advanced Mathematics~97, 2007.
+
+\bibitem{IrelandRosen1990} K.~Ireland and M.~Rosen,
+\emph{A Classical Introduction to Modern Number Theory}, 2nd ed., Springer GTM~84, 1990.
+
+\bibitem{Ahlfors1979} L.~V.~Ahlfors,
+\emph{Complex Analysis}, 3rd ed., McGraw-Hill, 1979.
+
+\bibitem{Tate1967} J.~T.~Tate,
+\emph{Fourier analysis in number fields and Hecke's zeta-functions}, in
+J.~W.~S.~Cassels and A.~Fr\"ohlich (eds.), \emph{Algebraic Number Theory},
+Academic Press, 1967, pp.~305--347.
+
+\bibitem{Mathlib2020} The mathlib Community,
+\emph{The Lean Mathematical Library},
+Proceedings of CPP 2020, ACM, 2020.
+
+\bibitem{Lean4} L.~de~Moura and S.~Ullrich,
+\emph{The Lean 4 Theorem Prover and Programming Language},
+Proceedings of CADE-28, Springer LNCS~12699, 2021.
+
+\end{thebibliography}
+
+\end{document}

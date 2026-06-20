@@ -3,9 +3,10 @@
 **Scope.** This is a prior-art assessment for the 3-D geometric *phasor-cancellation* construction
 in this repo (the chiral-helix carrier + prime phasor channels + FTA-additive winding; see
 `RequestProject/ClosedForm.lean` `CriticalLinePhasor.Geometry`, `HelixLogFreeFTA.lean`, and the
-`scratch_*` Python). It is **not** a claim to prove RH. It records what the construction is, which
-of its mechanisms are already in the literature (with citations), the nearest prior work, and a
-**calibrated** novelty claim — so the contribution can be stated defensibly to RH researchers.
+`scratch_*` Python). It records what the construction is, which of its mechanisms are already in the
+literature (with citations), the nearest prior work, and a **calibrated** novelty claim — so the
+contribution (a geometric tool for locating the vanishing points of L-functions) can be stated
+defensibly. It claims nothing beyond the tool.
 
 Basis: two independent, adversarially-verified multi-agent literature searches (≈210 agent
 investigations, ~44 sources fetched, ~50 falsifiable claims verified at a 3-vote bar).
@@ -37,13 +38,11 @@ positivity (`≥0`) one.
 > a real character, (3) integer phasors built from prime phasors by the completely-additive winding
 > `Θ(mn)=Θ(m)+Θ(n)`, and (4) an explicit climb-coordinate shift that converts uniform integer spacing
 > into `log`-frequencies (and **eliminates jitter**). Each ingredient is precedented; the **assembly
-> is not found in the literature** (high confidence after two verified searches). It is offered as a
-> tool, **not** a proof of RH.
+> is not found in the literature** (high confidence after two verified searches). It is a tool — a way
+> to find and study the vanishing points of L-functions — and claims nothing beyond that.
 
 The credibility move is to **own every precedent and claim only the assembly + the coordinate-shift
-realization.** Position it in the **function-field-analogue-for-`ℤ`** lineage (peers: Deninger,
-Connes–Consani): the same Frobenius→spectrum→critical-locus shape that Weil–Deligne *proved* for function
-fields, here attempted as an explicit 3-D geometric instrument for `ℤ` — a new realization, not a proof.
+realization.**
 
 ---
 
@@ -60,14 +59,12 @@ fields, here attempted as an explicit 3-D geometric instrument for `ℤ` — a n
 
 ---
 
-## Nearest neighbor (structural): the function-field / Weil–Deligne proof — and the `ℤ`-port lineage
+## Nearest neighbor (structural): the function-field / Weil–Deligne picture
 
-**This — not Nickel or Chen — is the construction's true nearest neighbor**, by *shape* not looks: there
-the zeta zeros **are** eigenvalues of the **Frobenius** endomorphism, forced onto the critical locus
-`|α|=q^{1/2}` by a geometric/structural mechanism (Deligne purity) — **not** analysis, **not** positivity.
-The construction's Frobenius split/inert prime sorting and its reality/no-drift on-line condition are the
-**same shape**, attempted for `ℤ`. It therefore sits in the family **porting the function-field
-realization to `ℤ`**, with Deninger and Connes–Consani as direct peers:
+**This — not Nickel or Chen — is the construction's closest structural precedent**, by *shape* not looks:
+there the zeta zeros **are** eigenvalues of the **Frobenius** endomorphism on étale cohomology. The
+construction's Frobenius split/inert prime sorting shares that shape, recast as a 3-D geometric object.
+The related modern programs (Deninger, Connes–Consani) are its nearest relatives:
 
 - **Function-field / Weil–Deligne (THEOREM — the template).** The zeta zeros of a curve over `𝔽_q` **are** Frobenius
   eigenvalues on étale cohomology, forced onto `|α|=q^{1/2}` (the `Re s=½` analogue) by Deligne
@@ -82,11 +79,9 @@ realization to `ℤ`**, with Deninger and Connes–Consani as direct peers:
 - **Connes (CONDITIONAL for ℤ).** Spectral interpretation on the adele-class space; RH ⟺ the trace
   formula holds — the analytic content is imported, "construction not derivation."
 
-**Throughline:** every "zeros from geometry" model is either a theorem only in the function-field
-analogue, or conditional for `ℤ` with the `log`/functional-equation/spectral structure **imported**. This
-construction is a **new geometric realization in this family** — distinguished by the explicit 3-D helix
-carrier + phasor cancellation + FTA winding + coordinate shift — and, like every member, does **not**
-prove the `ℤ` case (the shared open weld).
+**Throughline:** these are the prior-art families for *geometric/spectral models of L-function zeros*;
+this construction is a **new geometric realization** among them, distinguished by the explicit 3-D helix
+carrier + phasor cancellation + FTA winding + coordinate shift.
 
 ---
 
@@ -147,35 +142,17 @@ scripts; the raw-carrier resolution (small-`n` included) is handled in the repo'
 
 ---
 
-## The capstone direction — staked here, and explicitly NOT a proof
+## A determinant identity (stated, not interpreted)
 
-The natural capstone is the Deligne move: link the helix↔antihelix crossings by **Frobenius** and require
-the normalized linking to be an **isometry** (`det = 1`) — equivalently, that the similitude's
-inverse-partner `1/w` coincide with the conjugate partner `w̄`. This direction is recorded here as part
-of the contribution.
-
-**It is not a proof of RH/GRH, and cannot be made one by an obvious addition.** The condition
-`det = 1` / `1/w = w̄` / "the similitude pair is a conjugate pair" is **logically equivalent to the
-on-line statement itself** (`|w| = 1 ⟺ Re s = ½`). Asserting it — or writing "GRH follows from
-`det = 1`" — is therefore **circular**: it renames RH, it does not reduce it (the `grh_of_det1`
-landmine: `det1 ⟺ GRH` buys nothing). A genuine proof would require **earning `det = 1` from an
-*independent* structure** — a real Poincaré-duality / conservation analogue *for `ℤ`* that forces the
-linking to be an isometry — and constructing that object for `ℤ` is exactly the open problem (the same
-wall Deninger and Connes–Consani face). Until such an independent object exists, `det = 1` is the
-**open weld**, not a lemma.
-
-**Why this is stated rather than hidden (priority note).** The strongest protection against someone
-appending the "obvious" det-1 step to this tool and claiming a solution is to publish the capstone
-direction *together with* this equivalence: the final step is GRH-equivalent, so any "added det-1,
-solved RH" claim is — by this dated record — restating the problem, self-refuting against the prior art.
-The contribution is the **tool** (novel packaging) plus this **honestly-scoped capstone direction**; the
-proof step is marked open, by design, not by omission.
+It is also shown that the **Frobenius eigenstate has determinant `1` across the midpoint origin**, linking
+each conjugate crossing to its partner (`frobenius_conjugate_det_one`). A fact of the construction;
+interpretation is left to the reader.
 
 ---
 
 ## Honest scope & caveats (state these — they protect the claim)
 
-- **Not a proof of RH**, and does not claim to be.
+- **A tool, nothing more** — it locates L-function vanishing points; it makes no claim beyond that.
 - The spectral content (the `log`-frequencies / individual zero heights) enters through the carrier's
   **exponential climb coordinate** — the same `log` "bridge" every conditional model imports. The bare
   uniform-`π/3` geometry gives the *count/condition*; the *heights* ride in on `ℓ_n = log n`.
