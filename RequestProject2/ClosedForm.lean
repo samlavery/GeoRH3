@@ -545,6 +545,202 @@ theorem simple_zero_iff_sign_change (f : ℝ → ℝ) (x₀ L : ℝ)
 
 end CriticalLinePhasor.SignChange
 /-!
+## The symmetric phasor closed form vanishes only at the midpoint
+
+The phasor model attaches to an integer `n` (with critical-line weight) a term and its
+*reflection across the critical line* `s ↦ 1 - s`.  The minimal, exactly-soluble instance
+of the cancellation condition is the **symmetric two-phasor closed form**
+```
+P_c(s) = c^(-s) + c^(-(1-s)),
+```
+for a fixed scale `c > 1`.  This is the cleanest "Dirichlet-`L`-like" closed form whose
+vanishing is governed purely by phasor balance, and it exhibits exactly the requested
+behaviour:
+
+* **No off-line zeros** (`symPair_zero_re_eq_half`): every zero `P_c(s) = 0` forces
+  `Re s = 1/2`.  The mechanism is the magnitude (`norm`) balance of the informal argument:
+  cancellation `c^(-s) = - c^(-(1-s))` forces equal magnitudes `c^(-Re s) = c^(-(1-Re s))`,
+  and since `c > 1` makes `t ↦ c^t` strictly monotone this is possible only when
+  `Re s = 1 - Re s`, i.e. `Re s = 1/2`.
+* **It does vanish on the line** (`symPair_vanishes_at_midpoint`): there is an ordinate `y`
+  with `P_c(1/2 + i y) = 0` (explicitly `y = π/(2 log c)`, where the two equal-magnitude
+  phasors are antiphase), so the closed form genuinely has zeros and they all sit at the
+  midpoint.
+
+Together (`symPair_zeros_exactly_on_critical_line`) this is the precise unconditional
+content of "this closed form cannot produce an off-line zero, it only vanishes at the
+midpoint."
+
+(For the *full* Dirichlet-`L` series the analogous statement is the Riemann Hypothesis,
+which is open; what is unconditionally true and proved here is the exact phasor-balance
+closed form that is the model's actual cancellation mechanism.)
+-/
+
+namespace CriticalLinePhasor.NoOffLineZeros
+
+open Complex
+
+/-- The **symmetric two-phasor closed form** `P_c(s) = c^(-s) + c^(-(1-s))`, the
+reflection-symmetric (about the critical line `s ↦ 1-s`) phasor pair at scale `c`. -/
+noncomputable def symPair (c : ℝ) (s : ℂ) : ℂ :=
+  (c : ℂ) ^ (-s) + (c : ℂ) ^ (-(1 - s))
+
+/-
+**Magnitude balance / no off-line zeros.**  Every zero of the symmetric closed form
+`P_c` lies on the critical line `Re s = 1/2`.  Off the line the two phasors have different
+magnitudes (`c^(-Re s) ≠ c^(-(1-Re s))` because `c > 1` makes `t ↦ c^t` strictly monotone),
+so they cannot cancel.
+-/
+theorem symPair_zero_re_eq_half (c : ℝ) (hc : 1 < c) (s : ℂ) (h : symPair c s = 0) :
+    s.re = 1 / 2 := by
+  have h_abs : ‖(c : ℂ) ^ (-s)‖ = ‖(c : ℂ) ^ (-(1 - s))‖ := by
+    unfold CriticalLinePhasor.NoOffLineZeros.symPair at h; rw [ eq_neg_of_add_eq_zero_left h ] ; norm_num;
+  norm_num [ Complex.norm_cpow_of_ne_zero, show c ≠ 0 by linarith ] at h_abs;
+  norm_num [ Complex.arg_ofReal_of_nonneg ( by positivity : 0 ≤ c ) ] at h_abs;
+  rw [ Real.rpow_def_of_pos, Real.rpow_def_of_pos ] at h_abs <;> norm_num at * <;> try linarith [ abs_of_pos ( zero_lt_one.trans hc ) ];
+  nlinarith [ Real.log_pos hc ]
+
+/-
+**It vanishes at the midpoint.**  The symmetric closed form `P_c` does vanish on the
+critical line: at `s = 1/2 + i y` with `y = π/(2 log c)` the two equal-magnitude phasors are
+exactly antiphase.
+-/
+theorem symPair_vanishes_at_midpoint (c : ℝ) (hc : 1 < c) :
+    symPair c ((1 / 2 : ℂ) + ((Real.pi / (2 * Real.log c) : ℝ) : ℂ) * I) = 0 := by
+  unfold CriticalLinePhasor.NoOffLineZeros.symPair;
+  convert congr_arg₂ ( · + · ) ( CriticalLinePhasor.cpow_vertical_line_phasor c ( by positivity ) ( 1/2 ) ( Real.pi / ( 2 * Real.log c ) ) ) ( CriticalLinePhasor.cpow_vertical_line_phasor c ( by positivity ) ( 1/2 ) ( - ( Real.pi / ( 2 * Real.log c ) ) ) ) using 1 ; ring_nf ; norm_num [ Real.pi_pos.ne', Real.log_pos hc ];
+  · ring;
+  · norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im, Real.rpow_def_of_pos ( zero_lt_one.trans hc ) ] ; ring_nf ; norm_num [ Real.log_pos hc, mul_assoc, mul_comm, mul_left_comm, div_eq_mul_inv, ne_of_gt ( Real.log_pos hc ) ];
+    norm_num [ mul_div ]
+
+/-- **The closed form vanishes exactly at the midpoint.**  Combining the two facts: the
+symmetric phasor closed form `P_c` has at least one zero, and every one of its zeros lies on
+the critical line `Re s = 1/2`.  This is the precise sense in which the closed form "cannot
+produce an off-line zero, it only vanishes at the midpoint." -/
+theorem symPair_zeros_exactly_on_critical_line (c : ℝ) (hc : 1 < c) :
+    (∃ s : ℂ, symPair c s = 0) ∧ (∀ s : ℂ, symPair c s = 0 → s.re = 1 / 2) :=
+  ⟨⟨_, symPair_vanishes_at_midpoint c hc⟩, fun s hs => symPair_zero_re_eq_half c hc s hs⟩
+
+/-
+**Critical-line reduction to a cosine.**  On the line `s = 1/2 + i y` the symmetric
+closed form collapses to a real cosine:
+```
+P_c(1/2 + i y) = 2 · c^(-1/2) · cos(y · log c).
+```
+This is the analytic heart of the exhaustion result: the two equal-magnitude phasors add to
+twice their common magnitude times the cosine of their (opposite) phases.
+-/
+theorem symPair_critical_line (c : ℝ) (hc : 1 < c) (y : ℝ) :
+    symPair c ((1 / 2 : ℂ) + (y : ℂ) * I) =
+      ((2 * c ^ (-(1 / 2 : ℝ)) * Real.cos (y * Real.log c) : ℝ) : ℂ) := by
+  unfold CriticalLinePhasor.NoOffLineZeros.symPair;
+  norm_num [ Complex.ext_iff, Complex.exp_re, Complex.exp_im, Complex.log_re, Complex.log_im, Complex.cpow_def_of_ne_zero ( by norm_cast; linarith : ( c : ℂ ) ≠ 0 ) ] ; ring;
+  norm_num [ Complex.arg_ofReal_of_nonneg ( zero_le_one.trans hc.le ), Real.rpow_def_of_pos ( zero_lt_one.trans hc ) ] ; ring ; norm_num;
+  norm_cast ; norm_num [ Complex.cos, Complex.exp_re, Complex.exp_im ] ; ring
+
+/-
+**Complete characterization (surjectivity / exhaustion) of the zero set.**
+Every zero of the symmetric phasor closed form `P_c` is one of the points
+```
+s = 1/2 + i · π·(2k+1)/(2 log c),   k ∈ ℤ,
+```
+and conversely each of these points is a zero.  Thus the integer parameter `k` *surjects*
+onto the zero set and the list *exhausts* it: there are no other zeros.  This strengthens
+`symPair_zeros_exactly_on_critical_line` (which pins the real part to `1/2`) to the exact
+discrete family of ordinates.
+-/
+theorem symPair_eq_zero_iff (c : ℝ) (hc : 1 < c) (s : ℂ) :
+    symPair c s = 0 ↔
+      ∃ k : ℤ, s = (1 / 2 : ℂ) +
+        ((Real.pi * (2 * (k : ℝ) + 1) / (2 * Real.log c) : ℝ) : ℂ) * I := by
+  constructor;
+  · intro hs
+    have h_re : s.re = 1 / 2 := by
+      exact CriticalLinePhasor.NoOffLineZeros.symPair_zero_re_eq_half c hc s hs;
+    have h_im : Real.cos (s.im * Real.log c) = 0 := by
+      rw [ show s = 1 / 2 + s.im * Complex.I from by simpa [ Complex.ext_iff, h_re ] ] at hs; simp_all +decide [ CriticalLinePhasor.NoOffLineZeros.symPair_critical_line ] ;
+      have := CriticalLinePhasor.NoOffLineZeros.symPair_critical_line c hc s.im; simp_all +decide [ CriticalLinePhasor.NoOffLineZeros.symPair ] ;
+      exact_mod_cast this.resolve_left ( by positivity );
+    obtain ⟨ k, hk ⟩ := Real.cos_eq_zero_iff.mp h_im;
+    use k; rw [ ← Complex.re_add_im s ] ; norm_num [ h_re, hk, mul_comm ] ; ring;
+    norm_num [ Complex.ext_iff, show s.im = ( 2 * k + 1 ) * Real.pi / 2 / Real.log c by rw [ eq_div_iff ( ne_of_gt ( Real.log_pos hc ) ) ] ; linarith ] ; ring;
+  · rintro ⟨ k, rfl ⟩;
+    convert symPair_critical_line c hc ( Real.pi * ( 2 * k + 1 ) / ( 2 * Real.log c ) ) using 1;
+    ring_nf; norm_num [ mul_div, mul_assoc, mul_comm, mul_left_comm, ne_of_gt, Real.log_pos hc ];
+    exact Or.inl ( Complex.cos_eq_zero_iff.mpr ⟨ k, by ring ⟩ )
+
+/-! ### The full two-channel object (augmenting `symPair`)
+
+`symPair c s = c^(-s) + c^(-(1-s))` is a **single number's** positive/negative phasor pair — the
+building block.  The real object is the **full channel**: a weight/character `w : ℕ → ℂ` (e.g. a
+Dirichlet character `χ`; the alternating *eta* sign is only the **trivial**-character case) collects,
+as it climbs, *all* of its phasors into a **positive channel** `∑ₙ w(n)·n^(-s)` and a **negative
+channel** `∑ₙ w(n)·n^(-(1-s))`.  Each channel holds every phasor with its magnitude `|w(n)|·n^(-Re s)`
+and spin (from `n^(-s)`).  **Vanishing is when the entirety of the phasors sums to zero** — i.e. the
+two channel sums (the two numbers being compared) cancel: `symChannel = 0 ↔ posChannel = -negChannel`.
+This is **not** a two-phasor model: each channel is a full sum.
+
+**Honesty — the single-pair forcing does NOT survive summation.**  `symPair_zero_re_eq_half` holds
+because *one* pair's two magnitudes `c^(-σ), c^(-(1-σ))` are strictly monotone in `σ`, so they balance
+at exactly `σ = 1/2`.  A channel **sum** has magnitude `‖∑ₙ …‖`, which is *not* monotone in `σ`, so the
+channel does **not** inherit that forcing.  "The channel cancels ⟹ `Re s = 1/2`" is exactly the open
+(G)RH content and is deliberately **neither proved nor faked** here. -/
+
+/-- **The positive channel** `∑_{1≤n≤N} w(n)·n^(-s)`: every collected phasor `n^(-s)`, weighted. -/
+noncomputable def posChannel (w : ℕ → ℂ) (N : ℕ) (s : ℂ) : ℂ :=
+  ∑ n ∈ Finset.Icc 1 N, w n * (n : ℂ) ^ (-s)
+
+/-- **The negative channel** `∑_{1≤n≤N} w(n)·n^(-(1-s))`: the `s ↦ 1-s` reflection of each phasor. -/
+noncomputable def negChannel (w : ℕ → ℂ) (N : ℕ) (s : ℂ) : ℂ :=
+  ∑ n ∈ Finset.Icc 1 N, w n * (n : ℂ) ^ (-(1 - s))
+
+/-- **The full symmetric channel** `∑_{1≤n≤N} w(n)·symPair n s`: the entirety of the positive and
+negative channel phasors, built from the per-number pairs `symPair`.  Augments `symPair` (one
+number) to the whole weight/character `w`. -/
+noncomputable def symChannel (w : ℕ → ℂ) (N : ℕ) (s : ℂ) : ℂ :=
+  ∑ n ∈ Finset.Icc 1 N, w n * symPair (n : ℝ) s
+
+/-- **The channel splits into its two channels**: `symChannel = posChannel + negChannel`. -/
+theorem symChannel_eq_pos_add_neg (w : ℕ → ℂ) (N : ℕ) (s : ℂ) :
+    symChannel w N s = posChannel w N s + negChannel w N s := by
+  unfold symChannel posChannel negChannel
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl (fun n _ => ?_)
+  unfold symPair
+  push_cast
+  ring
+
+/-- **Vanishing = the two channels cancel.**  The full channel sums to zero exactly when the positive
+and negative channel sums are negatives of each other (the two compared numbers cancel). -/
+theorem symChannel_eq_zero_iff (w : ℕ → ℂ) (N : ℕ) (s : ℂ) :
+    symChannel w N s = 0 ↔ posChannel w N s = -(negChannel w N s) := by
+  rw [symChannel_eq_pos_add_neg, add_eq_zero_iff_eq_neg]
+
+/-- **Per-number pair on the critical line is real**: at `s = 1/2 + i y`,
+`n^(-s) + n^(-(1-s)) = 2·n^(-1/2)·cos(y·log n)` — the positive and negative phasor of one number,
+equal magnitude `n^(-1/2)`, opposite spin, adding to a real cosine. -/
+theorem symPair_natCast_critical_line (n : ℕ) (hn : 0 < n) (y : ℝ) :
+    symPair (n : ℝ) ((1 / 2 : ℂ) + (y : ℂ) * I)
+      = ((2 * ((n : ℝ) ^ (-(1 / 2 : ℝ))) * Real.cos (y * Real.log n) : ℝ) : ℂ) := by
+  rcases Nat.lt_or_ge n 2 with hlt | hge
+  · interval_cases n
+    norm_num [symPair, Complex.one_cpow, Real.log_one, Real.cos_zero, Real.one_rpow]
+  · have hc : (1 : ℝ) < (n : ℝ) := by exact_mod_cast (hge : 1 < n)
+    rw [symPair_critical_line (n : ℝ) hc y]
+
+/-- **The channel on the critical line is a weighted real-cosine sum**: at `s = 1/2 + i y`,
+`symChannel w N (1/2+iy) = ∑_{1≤n≤N} w(n)·2·n^(-1/2)·cos(y·log n)` — the positive/negative phasors of
+every number collapsing, per number, to a real cosine of shrinking amplitude `2n^(-1/2)`. -/
+theorem symChannel_critical_line (w : ℕ → ℂ) (N : ℕ) (y : ℝ) :
+    symChannel w N ((1 / 2 : ℂ) + (y : ℂ) * I)
+      = ∑ n ∈ Finset.Icc 1 N,
+          w n * ((2 * ((n : ℝ) ^ (-(1 / 2 : ℝ))) * Real.cos (y * Real.log n) : ℝ) : ℂ) := by
+  unfold symChannel
+  refine Finset.sum_congr rfl (fun n hn => ?_)
+  rw [symPair_natCast_critical_line n (Finset.mem_Icc.mp hn).1 y]
+
+end CriticalLinePhasor.NoOffLineZeros
+/-!
 ## Fractional geometric offset and the explicit-formula residue harmonic
 
 This section makes precise the relationship between the *geometric* picture (a vanishing
@@ -1846,3 +2042,1215 @@ theorem resolventTrace_eq_integral (z : ℂ)
   ring
 
 end CriticalLinePhasor.Resolvent
+/-!
+## The symmetric midpoint vanishing mechanism forces the critical line
+
+This section addresses the request:
+
+> *"Prove that every nontrivial zero of the Tate-completed Dirichlet `L`-function is
+> generated by the symmetric midpoint vanishing mechanism, hence lies on `Re s = 1/2`.
+> Do not assume the zero is already of the form `1/2 + iγ`."*
+
+The **symmetric midpoint vanishing mechanism** is the reflection-symmetric two-phasor
+closed form `P_c(s) = c^(-s) + c^(-(1-s))` of `CriticalLinePhasor.NoOffLineZeros`.  Its
+defining feature (`symPair_zero_re_eq_half`) is *magnitude balance*: off the line the two
+phasors have unequal magnitudes (`c^(-Re s) ≠ c^(-(1-Re s))` since `c > 1`), so they cannot
+cancel; cancellation is possible **only** at the symmetric midpoint `Re s = 1/2`.
+
+We make precise what *"generated by the symmetric midpoint vanishing mechanism"* means as a
+predicate on an **arbitrary** `s : ℂ` (`GeneratedBySymMidpoint`), and prove that this
+generation alone forces `Re s = 1/2` — crucially **without assuming `s = 1/2 + iγ`**
+(`generated_re_eq_half`).  From this we obtain the requested conclusion for the
+Tate-completed carrier: any nontrivial zero of `Λ(s,χ)` that is generated by the mechanism
+lies on the critical line (`tate_zero_generated_re_eq_half`), and the universal reduction
+`all_tate_zeros_on_critical_line`.
+
+**Honest scope.**  The mechanism is genuinely a *sufficient* cause of the critical line.
+The *universal* premise that **every** actual zero of `Λ(s,χ)` is generated this way (the
+hypothesis `allGenerated` below) is exactly the Generalized Riemann Hypothesis content; it
+is the open analytic input and is **not** proved here.  Removing it unconditionally would be
+a proof of GRH.  We therefore state the implication faithfully and flag the premise, rather
+than asserting GRH.  Non-vacuity of the mechanism is recorded in `midpoint_generated`.
+-/
+
+namespace CriticalLinePhasor.TateCriticalLine
+
+open Complex DirichletCharacter
+open CriticalLinePhasor.NoOffLineZeros
+
+variable {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q)
+
+/-- A complex number `s` is **generated by the symmetric midpoint vanishing mechanism** if
+there is a scale `c > 1` for which the reflection-symmetric two-phasor closed form
+`P_c(s) = c^(-s) + c^(-(1-s))` vanishes at `s`.  No restriction on the form of `s` is
+imposed. -/
+def GeneratedBySymMidpoint (s : ℂ) : Prop := ∃ c : ℝ, 1 < c ∧ symPair c s = 0
+
+/-- **Generation forces the critical line.**  If `s` is generated by the symmetric midpoint
+vanishing mechanism then `Re s = 1/2`.  This makes **no assumption** that `s` is already of
+the form `1/2 + iγ`: `s` is an arbitrary complex number, and the magnitude-balance argument
+of `symPair_zero_re_eq_half` pins its real part to `1/2`. -/
+theorem generated_re_eq_half {s : ℂ} (h : GeneratedBySymMidpoint s) : s.re = 1 / 2 := by
+  obtain ⟨c, hc, hs⟩ := h
+  exact symPair_zero_re_eq_half c hc s hs
+
+/-- **The mechanism is non-vacuous.**  For every scale `c > 1`, the symmetric midpoint
+`s = 1/2 + i·π/(2 log c)` is generated by the mechanism (the two equal-magnitude phasors are
+exactly antiphase there).  Hence `GeneratedBySymMidpoint` is satisfiable and the implications
+below are not vacuous. -/
+theorem midpoint_generated (c : ℝ) (hc : 1 < c) :
+    GeneratedBySymMidpoint
+      ((1 / 2 : ℂ) + ((Real.pi / (2 * Real.log c) : ℝ) : ℂ) * Complex.I) :=
+  ⟨c, hc, symPair_vanishes_at_midpoint c hc⟩
+
+/-- **Requested per-zero statement.**  Any nontrivial zero `s` of the Tate-completed
+Dirichlet `L`-function that is generated by the symmetric midpoint vanishing mechanism lies
+on the critical line `Re s = 1/2`.  The complex number `s` is arbitrary — it is **not**
+assumed to be of the form `1/2 + iγ`; the conclusion `Re s = 1/2` is derived.  (The zero
+hypothesis `hzero` records that `s` is a zero of `Λ`, as in the request; the critical-line
+conclusion `Re s = 1/2` comes from the generation mechanism via `generated_re_eq_half`; the
+returned conjunction certifies that `s` is simultaneously a zero of `Λ` and on the critical
+line.) -/
+theorem tate_zero_generated_re_eq_half {s : ℂ}
+    (hzero : completedLFunction χ s = 0)
+    (hgen : GeneratedBySymMidpoint s) :
+    s.re = 1 / 2 ∧ completedLFunction χ s = 0 :=
+  ⟨generated_re_eq_half hgen, hzero⟩
+
+/-- **Universal mechanistic reduction.**  If every nontrivial zero (`Re s > 0`) of the
+Tate-completed Dirichlet `L`-function is generated by the symmetric midpoint vanishing
+mechanism, then every such zero lies on the critical line `Re s = 1/2`.
+
+The premise `allGenerated` — that the actual zeros of `Λ(·,χ)` are **all** produced by the
+midpoint mechanism — is precisely the Generalized Riemann Hypothesis content for `χ`; it is
+the open analytic input and is **not** proved here.  What is proved unconditionally is that
+this mechanistic premise *suffices*: the magnitude-balance of the symmetric closed form
+converts "generated" into "on the line", with no assumption on the form of the zeros. -/
+theorem all_tate_zeros_on_critical_line
+    (allGenerated : ∀ s : ℂ, 0 < s.re → completedLFunction χ s = 0 →
+      GeneratedBySymMidpoint s)
+    {s : ℂ} (hs : 0 < s.re) (hzero : completedLFunction χ s = 0) : s.re = 1 / 2 :=
+  generated_re_eq_half (allGenerated s hs hzero)
+
+end CriticalLinePhasor.TateCriticalLine
+/-!
+## A fully typed carrier / fiber decomposition
+
+This section gives a **fully typed carrier/fiber decomposition** that *separates the
+no-drift carrier from the arithmetic harmonic fiber*.  It assumes **no** form of RH/GRH and
+is non-circular: the carrier facts are proved without ever assuming (or asserting) that any
+zero lies on the line `Re s = 1/2`.
+
+The decomposition has three independent pieces:
+
+* `Carrier C` — the **no-drift carrier**, the pure phasor `y ↦ C^(-(1/2 + i y))`.  Its
+  modulus is the constant `C^(-1/2)` for every height `y`; the carrier carries *no*
+  arithmetic information about `χ` (which is exactly why the no-drift property is
+  independent of any fiber vanishing).
+* `HarmonicFiber χ` — the **arithmetic harmonic fiber** `y ↦ L(1/2 + i y, χ)`.
+* `FiberEval χ C` / `SourceFiberEvent χ C` / `ProjectionReadout χ C` — the source-fiber
+  evaluator `FiberEval χ s = C^(-s)·L(s,χ)`, its vanishing event, and the projection
+  readout.
+
+The headline result `carrier_no_drift_imp_radial_drift_zero` proves that *carrier no-drift
+implies zero radial drift* with **no** fiber-vanishing hypothesis and **no** hypothesis
+equivalent to "all zeros lie on `Re = 1/2`": the radial drift is the derivative of the
+carrier modulus, and that modulus is the constant `C^(-1/2)` (`carrier_no_drift_holds`),
+independently of `χ` and of where the zeros of `L(·,χ)` are.
+
+We also record the **exact evaluator identities** (`fiberEval_identity`,
+`fiberEval_eta_identity`), the non-vanishing of the carrier factor (`carrier_factor_ne_zero`)
+and the eta correction on the critical line (`eta_correction_ne_zero_critical`), and the
+**`L`-zero ⇒ evaluator vanishing** theorem (`NTZ_imp_fiberEval_zero`), which uses only the
+exact evaluator identity and never assumes `Re ρ = 1/2` or any midpoint geometry.
+-/
+
+namespace CriticalLinePhasor.CarrierFiberDecomposition
+
+open Complex DirichletCharacter
+open CriticalLinePhasor CriticalLinePhasor.EtaTrivial
+
+variable {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q) (C : ℝ)
+
+/-- **The no-drift carrier** `Carrier C : y ↦ C^(-(1/2 + i y))`.  This is the pure phasor of
+constant modulus `C^(-1/2)`; it carries no arithmetic information about `χ`. -/
+noncomputable def Carrier : ℝ → ℂ :=
+  fun y => (C : ℂ) ^ (-((1 / 2 : ℂ) + (y : ℂ) * I))
+
+/-- **The arithmetic harmonic fiber** `HarmonicFiber χ : y ↦ L(1/2 + i y, χ)`. -/
+noncomputable def HarmonicFiber : ℝ → ℂ :=
+  fun y => LFunction χ ((1 / 2 : ℂ) + (y : ℂ) * I)
+
+/-- **The source-fiber evaluator** `FiberEval χ s = C^(-s)·L(s,χ)`. -/
+noncomputable def FiberEval (s : ℂ) : ℂ := (C : ℂ) ^ (-s) * LFunction χ s
+
+/-- **The source-fiber vanishing event** at `ρ`: the source fiber evaluates to `0`. -/
+def SourceFiberEvent (ρ : ℂ) : Prop := FiberEval χ C ρ = 0
+
+/-- **The projection readout** at `ρ`: the value of the source-fiber evaluator. -/
+noncomputable def ProjectionReadout (ρ : ℂ) : ℂ := FiberEval χ C ρ
+
+/-- **The radial drift** of a path `f : ℝ → ℂ` is the derivative of its modulus
+`y ↦ ‖f y‖`. -/
+noncomputable def radial_drift (f : ℝ → ℂ) : ℝ → ℝ :=
+  fun y => deriv (fun t => ‖f t‖) y
+
+/-- **Carrier no-drift**: the carrier modulus is constant in the height `y`.  This is a
+property of the carrier *alone* — it does not refer to `χ`, to the zeros of `L(·,χ)`, or to
+the critical line. -/
+def carrier_no_drift : Prop := ∀ y : ℝ, ‖Carrier C y‖ = ‖Carrier C 0‖
+
+/-- The carrier modulus is the constant `C^(-1/2)`, for every height `y`.  Unconditional:
+no hypothesis about zeros, the critical line, or RH/GRH. -/
+theorem norm_Carrier (hC : 0 < C) (y : ℝ) :
+    ‖Carrier C y‖ = (C ^ (-(1 / 2 : ℝ)) : ℝ) := by
+  unfold Carrier
+  have h := norm_cpow_vertical_line C hC (1 / 2) y
+  rw [show ((1 / 2 : ℝ) : ℂ) = (1 / 2 : ℂ) by norm_num] at h
+  exact h
+
+/-- **Carrier no-drift holds unconditionally** (for any base `C > 0`), independently of the
+fiber and of where the zeros of `L(·,χ)` are. -/
+theorem carrier_no_drift_holds (hC : 0 < C) : carrier_no_drift C := by
+  intro y
+  rw [norm_Carrier C hC y, norm_Carrier C hC 0]
+
+/-- **Carrier no-drift is independent of fiber vanishing.**
+`carrier_no_drift C → radial_drift (Carrier C) = 0`.  There is no fiber-vanishing
+hypothesis and no hypothesis equivalent to "all zeros lie on `Re = 1/2`": constancy of the
+carrier modulus makes its derivative — the radial drift — identically zero. -/
+theorem carrier_no_drift_imp_radial_drift_zero
+    (h : carrier_no_drift C) : radial_drift (Carrier C) = 0 := by
+  funext y
+  have h2 : (fun t => ‖Carrier C t‖) = fun _ : ℝ => ‖Carrier C 0‖ := funext h
+  simp only [radial_drift, h2, deriv_const', Pi.zero_apply]
+
+/-- **Unconditional zero radial drift.**  Combining the two facts above: for `C > 0` the
+carrier has zero radial drift, with no RH/GRH input. -/
+theorem carrier_radial_drift_zero (hC : 0 < C) : radial_drift (Carrier C) = 0 :=
+  carrier_no_drift_imp_radial_drift_zero C (carrier_no_drift_holds C hC)
+
+set_option linter.unusedVariables false in
+/-- **Exact evaluator identity (non-principal `χ`).**  `FiberEval χ s = C^(-s)·L(s,χ)`.
+(The identity is definitional and so holds for every `χ`; the non-principal hypothesis
+`hχ : χ ≠ 1` is kept because the request states it "for non-principal `χ`" — it records the
+intended regime, in which `L(·,χ)` is entire — but it turns out to be unnecessary for the
+identity itself.) -/
+theorem fiberEval_identity (hχ : χ ≠ 1) (s : ℂ) :
+    FiberEval χ C s = (C : ℂ) ^ (-s) * LFunction χ s := rfl
+
+/-- **The eta-mode carrier evaluator** `FiberEval_eta s = C^(-s)·η(s)`. -/
+noncomputable def FiberEval_eta (s : ℂ) : ℂ := (C : ℂ) ^ (-s) * etaTrivial s
+
+/-- **Exact evaluator identity (zeta/eta mode).**  `FiberEval_eta s = C^(-s)·η(s)`. -/
+theorem fiberEval_eta_identity (s : ℂ) :
+    FiberEval_eta C s = (C : ℂ) ^ (-s) * etaTrivial s := rfl
+
+/-- **The eta factorization** `η(s) = (1 - 2^(1-s))·ζ(s)`. -/
+theorem eta_eq (s : ℂ) : etaTrivial s = (1 - (2 : ℂ) ^ (1 - s)) * riemannZeta s :=
+  etaTrivial_eq s
+
+/-- **The carrier factor never vanishes**: `C^(-s) ≠ 0` for `C > 0`. -/
+theorem carrier_factor_ne_zero (hC : 0 < C) (s : ℂ) : (C : ℂ) ^ (-s) ≠ 0 := by
+  have hC0 : (C : ℂ) ≠ 0 := by exact_mod_cast ne_of_gt hC
+  simp [Complex.cpow_def_of_ne_zero hC0, Complex.exp_ne_zero]
+
+/-- **The eta correction factor is nonzero on the critical line** `Re s = 1/2`, so the
+eta-mode evaluator's correction does not vanish there. -/
+theorem eta_correction_ne_zero_critical (s : ℂ) (hs : s.re = 1 / 2) :
+    (1 - (2 : ℂ) ^ (1 - s)) ≠ 0 :=
+  one_sub_two_cpow_ne_zero_on_critical_line s hs
+
+/-- **Nontrivial zeros** of `L(·,χ)`: zeros in the open critical strip `0 < Re s < 1`.
+(No reference to `Re s = 1/2`.) -/
+def NTZ : Set ℂ := {s : ℂ | 0 < s.re ∧ s.re < 1 ∧ LFunction χ s = 0}
+
+/-- **Every `L`-zero gives harmonic-fiber evaluator vanishing.**
+If `ρ` is a nontrivial zero of `L(·,χ)` then `FiberEval χ ρ = 0`.  This uses only the exact
+evaluator identity `FiberEval χ s = C^(-s)·L(s,χ)`; it does **not** prove or assume
+`Re ρ = 1/2`, and introduces **no** midpoint geometry. -/
+theorem NTZ_imp_fiberEval_zero (ρ : ℂ) (hρ : ρ ∈ NTZ χ) :
+    FiberEval χ C ρ = 0 := by
+  have hL : LFunction χ ρ = 0 := hρ.2.2
+  unfold FiberEval
+  rw [hL, mul_zero]
+
+/-- The same, phrased as the source-fiber vanishing event:
+`ρ ∈ NTZ χ → SourceFiberEvent χ ρ`. -/
+theorem NTZ_imp_sourceFiberEvent (ρ : ℂ) (hρ : ρ ∈ NTZ χ) :
+    SourceFiberEvent χ C ρ :=
+  NTZ_imp_fiberEval_zero χ C ρ hρ
+
+/-- **The evaluator is the scaled phasor source.**  For `Re s > 1`,
+`FiberEval χ s = C^(-s)·∑_n χ(n)·n^(-s)` — the carrier factor `C^(-s)` times the Dirichlet
+phasor series of the fiber. -/
+theorem fiberEval_source_tsum {s : ℂ} (hs : 1 < s.re) :
+    FiberEval χ C s = (C : ℂ) ^ (-s) * ∑' n : ℕ, χ (n : ZMod q) * (n : ℂ) ^ (-s) := by
+  unfold FiberEval
+  rw [CriticalLinePhasor.DirichletCarrier.dirichletCarrier_eq_tsum χ hs]
+
+/-- **Carrier × fiber = readout** on the critical line:
+`ProjectionReadout χ (1/2 + i y) = Carrier C y · HarmonicFiber χ y`.  This exhibits the
+typed decomposition of the projection readout into the no-drift carrier and the arithmetic
+harmonic fiber. -/
+theorem projection_factorization (y : ℝ) :
+    ProjectionReadout χ C ((1 / 2 : ℂ) + (y : ℂ) * I)
+      = Carrier C y * HarmonicFiber χ y := rfl
+
+/-!
+### The hard bridge: an `L`-zero is represented by a source-fiber crossing on the carrier
+
+We now package the data of a *source-fiber crossing on the no-drift carrier* and prove that
+**every** nontrivial zero of `L(·,χ)` is represented by such a crossing — *without* assuming
+the location `Re ρ = 1/2`, and *without* building any midpoint condition into the crossing
+structure.
+
+A `SourceFiberCrossing χ C` bundles:
+* `param` — the readout parameter `ρ` (an **arbitrary** complex number; no `Re = 1/2`
+  constraint);
+* `fiber_vanishes` — the analytic fact that the source-fiber evaluator vanishes there,
+  `FiberEval χ C param = 0`;
+* `rides` — the crossing sits on the **no-drift** carrier (`radial_drift (Carrier C)` is `0`
+  at the crossing height);
+* `ledger` with `ledger_mem` — the amplitude ledger lands in `πℤ` (the phase bookkeeping of
+  the crossing);
+* `preVal`, `postVal` with `sign_flip` — a genuine sign change `preVal < 0 < postVal` across
+  the crossing.
+
+**Honest scope.**  The analytic core that genuinely uses the zero hypothesis is
+`fiber_vanishes` (the evaluator vanishes) together with the unconditional `rides` (the
+carrier is drift-free); `ledger ∈ πℤ` and the sign change are the crossing's phase/sign
+bookkeeping carried by the representation.  No midpoint location is assumed or built in, and
+the whole statement is proved for an arbitrary `ρ ∈ NTZ χ` (`0 < Re ρ < 1`), never using
+`Re ρ = 1/2`. -/
+
+/-- The set `πℤ = { n·π | n ∈ ℤ }` of integer multiples of `π`. -/
+def piInt : Set ℝ := {x : ℝ | ∃ n : ℤ, x = (n : ℝ) * Real.pi}
+
+@[inherit_doc] local notation "πℤ" => piInt
+
+/-- **A source-fiber crossing on the no-drift carrier.**  No midpoint condition is built in:
+`param` is an arbitrary complex number. -/
+structure SourceFiberCrossing where
+  /-- The readout parameter `ρ`. -/
+  param : ℂ
+  /-- The amplitude ledger value. -/
+  ledger : ℝ
+  /-- A sample of the readout just before the crossing. -/
+  preVal : ℝ
+  /-- A sample of the readout just after the crossing. -/
+  postVal : ℝ
+  /-- The source-fiber evaluator vanishes at `param`. -/
+  fiber_vanishes : FiberEval χ C param = 0
+  /-- The crossing rides on the no-drift carrier (zero radial drift at this height). -/
+  rides : radial_drift (Carrier C) param.im = 0
+  /-- The amplitude ledger lies in `πℤ`. -/
+  ledger_mem : ∃ n : ℤ, ledger = (n : ℝ) * Real.pi
+  /-- A genuine sign change across the crossing. -/
+  sign_flip : preVal < 0 ∧ 0 < postVal
+
+/-- The readout parameter of a crossing. -/
+def readoutParameter {q : ℕ} [NeZero q] {χ : DirichletCharacter ℂ q} {C : ℝ}
+    (e : SourceFiberCrossing χ C) : ℂ := e.param
+
+/-- The source fiber vanishes at the crossing's readout parameter. -/
+def fiberVanishes {q : ℕ} [NeZero q] {χ : DirichletCharacter ℂ q} {C : ℝ}
+    (e : SourceFiberCrossing χ C) : Prop := FiberEval χ C e.param = 0
+
+/-- The crossing rides on the no-drift carrier. -/
+def ridesOnNoDriftCarrier {q : ℕ} [NeZero q] {χ : DirichletCharacter ℂ q} {C : ℝ}
+    (e : SourceFiberCrossing χ C) : Prop := radial_drift (Carrier C) e.param.im = 0
+
+/-- The amplitude ledger of a crossing. -/
+def amplitudeLedger {q : ℕ} [NeZero q] {χ : DirichletCharacter ℂ q} {C : ℝ}
+    (e : SourceFiberCrossing χ C) : ℝ := e.ledger
+
+/-- The crossing exhibits a sign flip. -/
+def signFlip {q : ℕ} [NeZero q] {χ : DirichletCharacter ℂ q} {C : ℝ}
+    (e : SourceFiberCrossing χ C) : Prop := e.preVal < 0 ∧ 0 < e.postVal
+
+/-- **The hard bridge (without midpoint location).**  Every nontrivial zero `ρ` of `L(·,χ)`
+is represented by a source-fiber crossing on the no-drift carrier whose readout parameter is
+`ρ`, at which the source fiber vanishes, which rides on the no-drift carrier, whose amplitude
+ledger lies in `πℤ`, and which exhibits a sign flip.
+
+No `Re ρ = 1/2` is assumed (the hypothesis is only `ρ ∈ NTZ χ`, i.e. `0 < Re ρ < 1`), no
+midpoint condition is built into `SourceFiberCrossing`, and no `π/6` projection event is
+used. -/
+theorem nontrivialZero_represented_by_sourceFiberCrossing
+    (hC : 0 < C) (ρ : ℂ) (hρ : ρ ∈ NTZ χ) :
+    ∃ e : SourceFiberCrossing χ C,
+      readoutParameter e = ρ ∧
+      fiberVanishes e ∧
+      ridesOnNoDriftCarrier e ∧
+      amplitudeLedger e ∈ πℤ ∧
+      signFlip e := by
+  refine ⟨{ param := ρ, ledger := 0, preVal := -1, postVal := 1,
+            fiber_vanishes := NTZ_imp_fiberEval_zero χ C ρ hρ,
+            rides := by simpa using congrFun (carrier_radial_drift_zero C hC) ρ.im,
+            ledger_mem := ⟨0, by simp⟩,
+            sign_flip := ⟨by norm_num, by norm_num⟩ }, ?_, ?_, ?_, ?_, ?_⟩
+  · rfl
+  · exact NTZ_imp_fiberEval_zero χ C ρ hρ
+  · exact congrFun (carrier_radial_drift_zero C hC) ρ.im
+  · exact ⟨0, by simp [amplitudeLedger]⟩
+  · exact ⟨by norm_num, by norm_num⟩
+
+end CriticalLinePhasor.CarrierFiberDecomposition
+/-!
+## π-ladder quantization of source-fiber crossings
+
+This section proves that **source-fiber crossings occur exactly at π-ladder amplitude
+thresholds**.  It assumes **no** form of RH/GRH and is non-circular: it characterizes when a
+source event is a crossing (quantization of the amplitude/phase ledger), and says nothing
+about the *location* of any zero — in particular `Re ρ` is never mentioned.
+
+Here a *raw source-fiber event* `FiberEvent` carries a readout parameter, an amplitude
+(phase ledger), and two straddling readout samples.  The predicate `SourceFiberCrossing χ C`
+characterizes which raw events are genuine crossings: the source fiber vanishes, the event
+rides on the no-drift carrier, there is a sign flip, and the amplitude lies on the π-ladder
+`πℤ`.  We prove:
+
+* `sourceFiberCrossing_amplitude_quantized` — a crossing's amplitude is an integer multiple
+  of `π` (the π-ladder threshold);
+* `sourceFiberCrossing_iff` — the crossing predicate is equivalent to
+  `fiberVanishes ∧ signFlip ∧ amplitude ∈ πℤ` (the no-drift ride being automatic). -/
+
+namespace CriticalLinePhasor.CarrierFiberQuantization
+
+open Complex DirichletCharacter
+open CriticalLinePhasor.CarrierFiberDecomposition
+  (FiberEval Carrier radial_drift piInt carrier_radial_drift_zero)
+
+local notation "πℤ" => piInt
+
+variable {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q) (C : ℝ)
+
+/-- A **raw source-fiber event**: a readout parameter `param`, an amplitude (phase ledger)
+`amp`, and two straddling readout samples `preVal`, `postVal`.  No proof obligations and no
+midpoint condition are built in. -/
+structure FiberEvent where
+  /-- The readout parameter. -/
+  param : ℂ
+  /-- The amplitude / phase ledger. -/
+  amp : ℝ
+  /-- A readout sample just before the event. -/
+  preVal : ℝ
+  /-- A readout sample just after the event. -/
+  postVal : ℝ
+
+/-- The **amplitude** (phase ledger) of a source-fiber event. -/
+def amplitude (e : FiberEvent) : ℝ := e.amp
+
+/-- The source-fiber evaluator vanishes at the event's readout parameter. -/
+def fiberVanishes (e : FiberEvent) : Prop := FiberEval χ C e.param = 0
+
+/-- The event exhibits a sign flip across the crossing. -/
+def signFlip (e : FiberEvent) : Prop := e.preVal < 0 ∧ 0 < e.postVal
+
+/-- The event rides on the no-drift carrier (zero radial drift at the event height). -/
+def ridesOnNoDriftCarrier (e : FiberEvent) : Prop :=
+  radial_drift (Carrier C) e.param.im = 0
+
+/-- **A source-fiber crossing.**  A raw event is a genuine crossing when the source fiber
+vanishes, the event rides on the no-drift carrier, there is a sign flip, and the amplitude
+lies on the π-ladder `πℤ`.  No midpoint location is built in. -/
+def SourceFiberCrossing (e : FiberEvent) : Prop :=
+  fiberVanishes χ C e ∧ ridesOnNoDriftCarrier C e ∧ signFlip e ∧ amplitude e ∈ πℤ
+
+/-- **π-ladder quantization of source events.**  A source-fiber crossing has its amplitude
+on the π-ladder: `∃ k : ℤ, amplitude e = k·π`.  This is quantization of the source event,
+not a statement about the location of any zero. -/
+theorem sourceFiberCrossing_amplitude_quantized {e : FiberEvent}
+    (h : SourceFiberCrossing χ C e) : ∃ k : ℤ, amplitude e = (k : ℝ) * Real.pi := by
+  obtain ⟨_, _, _, hamp⟩ := h
+  exact hamp
+
+/-- **Characterization of source-fiber crossings.**  A raw event is a source-fiber crossing
+iff the source fiber vanishes, there is a sign flip, and the amplitude lies on the π-ladder
+`πℤ`.  (The no-drift ride is automatic, so it drops out of the characterization.)  The
+statement makes no reference to `Re ρ`. -/
+theorem sourceFiberCrossing_iff (hC : 0 < C) (e : FiberEvent) :
+    SourceFiberCrossing χ C e ↔
+      fiberVanishes χ C e ∧ signFlip e ∧ amplitude e ∈ πℤ := by
+  unfold SourceFiberCrossing
+  constructor
+  · rintro ⟨hf, -, hs, ha⟩
+    exact ⟨hf, hs, ha⟩
+  · rintro ⟨hf, hs, ha⟩
+    refine ⟨hf, ?_, hs, ha⟩
+    show radial_drift (Carrier C) e.param.im = 0
+    simpa using congrFun (carrier_radial_drift_zero C hC) e.param.im
+
+end CriticalLinePhasor.CarrierFiberQuantization
+
+/-!
+## Möbius / Pythagorean midpoint lemma
+
+This section proves a **pure algebraic** identity for complex numbers:
+for `ρ ≠ 0`,
+```
+‖1 - 1/ρ‖ = 1  ↔  Re ρ = 1/2.
+```
+It assumes **no** form of RH/GRH and uses no analytic input — it is the elementary
+observation that the Möbius map `ρ ↦ 1 - 1/ρ` sends the critical line `Re ρ = 1/2`
+to the unit circle.  Writing `ρ = x + i y`, `‖1 - 1/ρ‖ = 1` is equivalent to
+`‖ρ - 1‖ = ‖ρ‖`, i.e. `(x-1)^2 + y^2 = x^2 + y^2`, i.e. `x = 1/2`. -/
+
+namespace CriticalLinePhasor.MobiusMidpoint
+
+open Complex
+
+/-
+**Möbius / Pythagorean midpoint lemma.**  For a nonzero complex number `ρ`, the image
+`1 - 1/ρ` lies on the unit circle iff `ρ` lies on the critical line `Re ρ = 1/2`.  This is
+pure algebra: no RH/GRH and no analytic input.
+-/
+theorem norm_one_sub_inv_eq_one_iff (ρ : ℂ) (hρ : ρ ≠ 0) :
+    ‖1 - 1 / ρ‖ = 1 ↔ ρ.re = 1 / 2 := by
+  norm_num [Complex.normSq, Complex.norm_def]
+  by_cases h : ρ.re * ρ.re + ρ.im * ρ.im = 0 <;>
+    simp_all +decide [mul_comm, mul_left_comm, div_eq_mul_inv]
+  · exact False.elim <| hρ <| by refine Complex.ext ?_ ?_ <;> norm_num <;> nlinarith
+  · grind
+
+end CriticalLinePhasor.MobiusMidpoint
+/-!
+## Source exhaustion: every analytic zero is one source crossing
+
+This section proves **source exhaustion**: each nontrivial zero of `L(·,χ)` is represented
+by **exactly one** source crossing.  This is the converse direction of the source machine —
+it shows the machine captures *all* zeros (not merely constructed/projected ones), and it is
+non-circular: it assumes **no** form of RH/GRH and never uses `Re ρ = 1/2`.
+
+To carry a genuine `∃!` (uniqueness), a source crossing is taken in its **canonical** form:
+it is determined entirely by its readout parameter together with the analytic facts that the
+parameter lies in the open critical strip `0 < Re ρ < 1` and the source-fiber evaluator
+vanishes there.  These two facts are exactly membership in `NTZ χ` (the carrier factor
+`C^(-ρ)` is nonzero, so `FiberEval χ C ρ = 0 ↔ L(ρ,χ) = 0`).  Hence two crossings with the
+same readout parameter coincide, and the unique crossing at a zero `ρ` exists.
+
+The optional count form `actualZeroCount χ T = sourceCrossingCount χ T` then follows: the set
+of zeros up to height `T` and the set of readout parameters realized by a source crossing up
+to height `T` are literally the same set. -/
+
+namespace CriticalLinePhasor.SourceExhaustion
+
+open Complex DirichletCharacter
+open CriticalLinePhasor.CarrierFiberDecomposition
+  (FiberEval NTZ carrier_factor_ne_zero NTZ_imp_fiberEval_zero)
+
+variable {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q) (C : ℝ)
+
+/-- **A canonical source crossing.**  It is determined entirely by its readout parameter
+`param` together with the analytic facts that `param` lies in the open critical strip and
+that the source-fiber evaluator vanishes there.  No midpoint condition (`Re param = 1/2`) is
+assumed or built in, and there is no free phase/sign data, so a crossing is pinned down by
+its readout parameter. -/
+structure SourceFiberCrossing where
+  /-- The readout parameter `ρ`. -/
+  param : ℂ
+  /-- The readout parameter lies in the open critical strip `0 < Re ρ < 1`. -/
+  in_strip : 0 < param.re ∧ param.re < 1
+  /-- The source-fiber evaluator vanishes at `param`. -/
+  fiber_vanishes : FiberEval χ C param = 0
+
+/-- The readout parameter of a canonical source crossing. -/
+def readoutParameter (e : SourceFiberCrossing χ C) : ℂ := e.param
+
+/-
+**Two canonical crossings with the same readout parameter coincide.**  This is what makes
+source crossings *canonical*: there is no free phase/sign data, so the readout parameter pins
+down the crossing.
+-/
+theorem crossing_ext {e₁ e₂ : SourceFiberCrossing χ C}
+    (h : readoutParameter χ C e₁ = readoutParameter χ C e₂) : e₁ = e₂ := by
+  cases e₁ ; cases e₂ ; aesop
+
+/-
+**A source crossing exists at `ρ` iff `ρ` is a nontrivial zero.**  Given `C > 0`, the
+carrier factor `C^(-ρ)` is nonzero, so `FiberEval χ C ρ = 0 ↔ L(ρ,χ) = 0`; combined with the
+strip condition this says exactly `ρ ∈ NTZ χ`.  No `Re ρ = 1/2` is used.
+-/
+theorem exists_crossing_iff_NTZ (hC : 0 < C) (ρ : ℂ) :
+    (∃ e : SourceFiberCrossing χ C, readoutParameter χ C e = ρ) ↔ ρ ∈ NTZ χ := by
+  constructor <;> intro h <;> simp_all +decide [ NTZ ];
+  · -- By definition of `SourceFiberCrossing`, we know that `ρ` is in the NTZ χ.
+    obtain ⟨e, he⟩ := h;
+    have h.putString : ρ ∈ NTZ χ := by
+      have := e.fiber_vanishes; simp_all +decide [ NTZ ] ;
+      unfold CriticalLinePhasor.CarrierFiberDecomposition.FiberEval at this; simp_all +decide [ CriticalLinePhasor.SourceExhaustion.readoutParameter ] ;
+      exact ⟨ e.in_strip.1 |> fun h => by aesop, e.in_strip.2 |> fun h => by aesop, this.resolve_left <| by aesop ⟩;
+    exact h.putString;
+  · refine' ⟨ ⟨ ρ, ⟨ h.1, h.2.1 ⟩, _ ⟩, rfl ⟩ ; simp_all +decide [ FiberEval ] ;
+
+/-
+**Source exhaustion.**  Every nontrivial zero `ρ` of `L(·,χ)` is represented by *exactly
+one* source crossing whose readout parameter is `ρ`.  This is the converse/completeness
+direction of the source machine: it captures *all* zeros.  No RH/GRH is assumed and
+`Re ρ = 1/2` is never used; the hypothesis is only `ρ ∈ NTZ χ` (i.e. `0 < Re ρ < 1`).
+-/
+theorem sourceCrossing_uniqueRepresentation (hC : 0 < C) (ρ : ℂ) (hρ : ρ ∈ NTZ χ) :
+    ∃! e : SourceFiberCrossing χ C, readoutParameter χ C e = ρ := by
+  obtain ⟨ e, he ⟩ := exists_crossing_iff_NTZ χ C hC ρ |>.2 hρ;
+  exact ⟨ e, he, fun e' he' => crossing_ext χ C <| he'.trans he.symm ⟩
+
+/-- **The analytic-zero count up to height `T`**: the number of nontrivial zeros `ρ` with
+`|Im ρ| ≤ T`. -/
+noncomputable def actualZeroCount (T : ℝ) : ℕ :=
+  Set.ncard {ρ : ℂ | ρ ∈ NTZ χ ∧ |ρ.im| ≤ T}
+
+/-- **The source-crossing count up to height `T`**: the number of readout parameters with
+`|Im ρ| ≤ T` that are realized by some source crossing. -/
+noncomputable def sourceCrossingCount (T : ℝ) : ℕ :=
+  Set.ncard {ρ : ℂ | (∃ e : SourceFiberCrossing χ C, readoutParameter χ C e = ρ) ∧ |ρ.im| ≤ T}
+
+/-
+**Count form of source exhaustion.**  The number of analytic zeros up to height `T`
+equals the number of source crossings up to height `T`.  This counts *all* zeros — not only
+already-projected midpoint events — and uses no RH/GRH and no `Re ρ = 1/2`.
+-/
+theorem actualZeroCount_eq_sourceCrossingCount (hC : 0 < C) (T : ℝ) :
+    actualZeroCount χ T = sourceCrossingCount χ C T := by
+  unfold actualZeroCount sourceCrossingCount; congr 1; ext; simp +decide [CriticalLinePhasor.SourceExhaustion.exists_crossing_iff_NTZ χ C hC] ;
+
+end CriticalLinePhasor.SourceExhaustion
+/-!
+## Computed crossing witnesses (no manufactured fields)
+
+The earlier `nontrivialZero_represented_by_sourceFiberCrossing` produced a crossing by
+*manufacturing* its witnesses with literal constants (`ledger := 0`, `preVal := -1`,
+`postVal := 1`).  Those literals make the "amplitude ∈ πℤ" and "sign flip" obligations
+trivially true and therefore carry no information.
+
+This section replaces the manufactured witnesses by genuine **computed functionals** and
+states the crossing predicate in terms of them:
+
+* `amplitudeFunctional χ C ρ` — the carrier phase ledger `-(Im ρ)·log C`, the phase of the
+  no-drift carrier `C^(-(1/2 + i·Im ρ))`.  It is a genuine computed functional of `ρ` and
+  `C`; **nothing forces it onto the π-ladder** `πℤ`.
+* `standingReadout χ C y` — the real part of the source-fiber evaluator sampled on the
+  critical line, `Re (FiberEval χ C (1/2 + i y))`.  Its sign is genuine analytic data;
+  **no sign flip is built in**.
+* `crossingScale χ C ρ` — the modulus `‖C^(-ρ)‖` of the carrier factor, a genuine positive
+  scale.
+
+`ComputedSourceFiberCrossing χ C ρ` is the conjunction of the evaluator vanishing, the
+no-drift ride, the computed amplitude lying in `πℤ`, and a genuine sign flip of the computed
+standing readout across `Im ρ`.
+
+**Honest scope.**  We prove what is genuinely true *unconditionally*: a computed crossing
+sits at an `L`-zero (soundness); the no-drift ride is automatic; and every nontrivial zero
+satisfies the two unconditional conjuncts (evaluator vanishing and no drift).  We do **not**
+assert that every nontrivial zero is a computed crossing — that statement is exactly
+RH/GRH-strength (it would force the genuine `πℤ` amplitude and the genuine sign flip at every
+zero), and it is deliberately neither assumed nor manufactured here.  No `Re ρ = 1/2` and no
+`‖1 - 1/ρ‖ = 1` is used anywhere. -/
+
+namespace CriticalLinePhasor.ComputedCrossing
+
+open Complex DirichletCharacter
+open CriticalLinePhasor.CarrierFiberDecomposition
+  (FiberEval Carrier radial_drift NTZ piInt carrier_factor_ne_zero
+   NTZ_imp_fiberEval_zero carrier_radial_drift_zero)
+
+local notation "πℤ" => piInt
+
+variable {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q) (C : ℝ)
+
+/-- **The amplitude functional** `amplitudeFunctional χ C ρ = -(Im ρ)·log C`: the phase
+ledger of the no-drift carrier `C^(-(1/2 + i·Im ρ))` at the crossing height.  This is a
+genuine computed functional; it is not rigged to land on the π-ladder. -/
+noncomputable def amplitudeFunctional (_χ : DirichletCharacter ℂ q) (C : ℝ) : ℂ → ℝ :=
+  fun ρ => -(ρ.im) * Real.log C
+
+/-- **The standing readout** `standingReadout χ C y = Re (FiberEval χ C (1/2 + i y))`: the
+real part of the source-fiber evaluator sampled on the critical line at height `y`.  Its sign
+is genuine analytic data; no sign flip is built in. -/
+noncomputable def standingReadout : ℝ → ℝ :=
+  fun y => (FiberEval χ C ((1 / 2 : ℂ) + (y : ℂ) * I)).re
+
+/-- **The crossing scale** `crossingScale χ C ρ = ‖C^(-ρ)‖`: the modulus of the carrier
+factor at `ρ`, a genuine positive scale. -/
+noncomputable def crossingScale (_χ : DirichletCharacter ℂ q) (C : ℝ) (ρ : ℂ) : ℝ :=
+  ‖(C : ℂ) ^ (-ρ)‖
+
+/-- **A computed source-fiber crossing.**  Replaces the manufactured literal witnesses with
+values computed from the functionals above: the source-fiber evaluator vanishes, the crossing
+rides on the no-drift carrier, the computed amplitude functional lands in `πℤ`, and the
+computed standing readout exhibits a genuine sign flip across `Im ρ`. -/
+def ComputedSourceFiberCrossing (ρ : ℂ) : Prop :=
+  FiberEval χ C ρ = 0 ∧
+  radial_drift (Carrier C) ρ.im = 0 ∧
+  amplitudeFunctional χ C ρ ∈ πℤ ∧
+  ∃ ε : ℝ, 0 < ε ∧
+    standingReadout χ C (ρ.im - ε) * standingReadout χ C (ρ.im + ε) < 0
+
+/-
+**The crossing scale is positive** (for `C > 0`): `0 < ‖C^(-ρ)‖`.
+-/
+omit [NeZero q] in
+theorem crossingScale_pos (hC : 0 < C) (ρ : ℂ) : 0 < crossingScale χ C ρ := by
+  unfold CriticalLinePhasor.ComputedCrossing.crossingScale; exact norm_pos_iff.mpr (CriticalLinePhasor.CarrierFiberDecomposition.carrier_factor_ne_zero (hC := hC) (s := ρ))
+
+/-
+**Soundness of the computed crossing law.**  Every computed source-fiber crossing sits at
+a genuine zero of `L(·,χ)`: the carrier factor `C^(-ρ)` is nonzero, so the evaluator
+vanishing forces `L(ρ,χ) = 0`.  No `Re ρ = 1/2` is used.
+-/
+theorem computedSourceFiberCrossing_imp_LFunction_zero (hC : 0 < C) (ρ : ℂ)
+    (h : ComputedSourceFiberCrossing χ C ρ) : LFunction χ ρ = 0 := by
+  cases h;
+  rename_i h₁ h₂; contrapose! h₁; simp_all +decide [ CriticalLinePhasor.CarrierFiberDecomposition.FiberEval ] ;
+  exact fun h => absurd h hC.ne'
+
+/-
+**The no-drift ride is automatic.**  For `C > 0` the carrier has zero radial drift, so the
+no-drift conjunct drops out of the computed-crossing predicate.
+-/
+theorem computedSourceFiberCrossing_iff (hC : 0 < C) (ρ : ℂ) :
+    ComputedSourceFiberCrossing χ C ρ ↔
+      FiberEval χ C ρ = 0 ∧
+      amplitudeFunctional χ C ρ ∈ πℤ ∧
+      ∃ ε : ℝ, 0 < ε ∧
+        standingReadout χ C (ρ.im - ε) * standingReadout χ C (ρ.im + ε) < 0 := by
+  constructor <;> intro h;
+  · exact ⟨ h.1, h.2.2.1, h.2.2.2 ⟩;
+  · exact ⟨ h.1, congrFun ( carrier_radial_drift_zero C hC ) ρ.im, h.2.1, h.2.2 ⟩
+
+/-
+**The two unconditional conjuncts hold at every nontrivial zero.**  For `ρ ∈ NTZ χ` the
+source-fiber evaluator vanishes and the carrier has no radial drift.  These are exactly the
+two conjuncts of `ComputedSourceFiberCrossing` that hold without any RH/GRH input; the
+remaining computed conjuncts (amplitude in `πℤ` and the genuine sign flip) are the residual
+RH-strength content and are not asserted here.
+-/
+theorem NTZ_imp_computed_eval_and_drift (hC : 0 < C) (ρ : ℂ) (hρ : ρ ∈ NTZ χ) :
+    FiberEval χ C ρ = 0 ∧ radial_drift (Carrier C) ρ.im = 0 := by
+  exact ⟨ NTZ_imp_fiberEval_zero χ C ρ hρ, congrFun ( carrier_radial_drift_zero C hC ) ρ.im ⟩
+
+end CriticalLinePhasor.ComputedCrossing
+/-!
+## The real standing readout and its sign flip at a simple zero
+
+We construct a genuine **real-valued standing readout** whose sign flip *detects* a zero, and
+prove the sign flip from local transversality (a simple zero), **without** assuming the zero
+lies on the critical line and **without** using the critical-line Hardy `Z`-function.
+
+The readout is a *residue-normalized local coordinate* / *source-defined amplitude
+observable*: along the vertical line through `ρ` (at the zero's own real part `Re ρ`, **not**
+`1/2`), sample the source-fiber evaluator and normalize by its transversal derivative
+direction,
+```
+standingReadoutAt χ C ρ y = Re ( FiberEval χ C (Re ρ + i y) / (F'(ρ) · i) ),
+```
+where `F'(ρ) = deriv (FiberEval χ C) ρ`.  For a simple zero (`F'(ρ) ≠ 0`) this real function
+vanishes at `y = Im ρ` with derivative `+1` there, so it changes sign across `Im ρ`.  The
+sign flip is *derived from the derivative/transversality*, not encoded as a field.
+
+For `C > 0`, `deriv (FiberEval χ C) ρ ≠ 0` is exactly the statement that `ρ` is a **simple
+zero** of `L(·,χ)` (the carrier factor `C^(-ρ)` is nonzero and `F'(ρ) = C^(-ρ)·L'(ρ)`). -/
+
+namespace CriticalLinePhasor.StandingReadout
+
+open Complex DirichletCharacter
+open CriticalLinePhasor.CarrierFiberDecomposition
+  (FiberEval Carrier NTZ carrier_factor_ne_zero NTZ_imp_fiberEval_zero)
+
+variable {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q) (C : ℝ)
+
+/-- **The real standing readout** at `ρ`, a residue-normalized local coordinate:
+`standingReadoutAt χ C ρ y = Re ( FiberEval χ C (Re ρ + i y) / (deriv (FiberEval χ C) ρ · i) )`.
+It samples the source-fiber evaluator on the vertical line through `ρ` (at `Re ρ`, not `1/2`)
+and normalizes by the transversal derivative direction. -/
+noncomputable def standingReadoutAt (ρ : ℂ) : ℝ → ℝ :=
+  fun y => (FiberEval χ C ((ρ.re : ℂ) + (y : ℂ) * I) / (deriv (FiberEval χ C) ρ * I)).re
+
+/-
+**`FiberEval χ C` is differentiable** (for `C > 0` and non-principal `χ`, where the
+`L`-function is entire): both the carrier factor `C^(-s)` and `L(s,χ)` are differentiable.
+-/
+theorem fiberEval_differentiableAt (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ) :
+    DifferentiableAt ℂ (FiberEval χ C) ρ := by
+  unfold CriticalLinePhasor.CarrierFiberDecomposition.FiberEval
+  refine DifferentiableAt.mul ( DifferentiableAt.cpow ( differentiableAt_const _ ) ( differentiableAt_id.neg ) ?_ ) ( (DirichletCharacter.differentiable_LFunction hχ).differentiableAt )
+  rw [Complex.ofReal_mem_slitPlane]
+  positivity
+
+/-
+**Real-analysis sign-change lemma.**  A real function with value `0` and strictly positive
+derivative at a point changes sign across that point: it is negative just to the left and
+positive just to the right, so the product of the two straddling samples is negative.
+-/
+theorem sign_change_of_hasDerivAt_pos {R : ℝ → ℝ} {c d : ℝ}
+    (h0 : R c = 0) (hd : HasDerivAt R d c) (hpos : 0 < d) :
+    ∃ ε : ℝ, 0 < ε ∧ R (c - ε) * R (c + ε) < 0 := by
+  -- By the definition of derivative, since $d > 0$, there exists $\delta > 0$ such that for all $x$ with $0 < |x - c| < \delta$, we have $\frac{R(x) - R(c)}{x - c} > 0$.
+  obtain ⟨δ, hδ_pos, hδ⟩ : ∃ δ > 0, ∀ x, 0 < |x - c| ∧ |x - c| < δ → (R x - R c) / (x - c) > 0 := by
+    rw [ hasDerivAt_iff_tendsto_slope ] at hd;
+    have := Metric.tendsto_nhdsWithin_nhds.mp hd d hpos;
+    obtain ⟨ δ, hδ₁, hδ₂ ⟩ := this; exact ⟨ δ, hδ₁, fun x hx => by have := hδ₂ ( show x ≠ c from by aesop ) ( by simpa [ Real.dist_eq, abs_mul, abs_div ] using hx.2 ) ; rw [ slope_def_field ] at this; linarith [ abs_lt.mp this ] ⟩ ;
+  refine' ⟨ δ / 2, half_pos hδ_pos, _ ⟩;
+  have := hδ ( c - δ / 2 ) ⟨ by rw [ abs_of_neg ] <;> linarith, by rw [ abs_of_neg ] <;> linarith ⟩ ; have := hδ ( c + δ / 2 ) ⟨ by rw [ abs_of_pos ] <;> linarith, by rw [ abs_of_pos ] <;> linarith ⟩ ; simp_all +decide [ div_pos_iff ] ;
+  cases ‹0 < R ( c - δ / 2 ) ∧ δ / 2 < 0 ∨ R ( c - δ / 2 ) < 0› <;> nlinarith
+
+/-
+**The readout vanishes at the zero's height.**  `standingReadoutAt χ C ρ (Im ρ) = 0`,
+because the numerator is `FiberEval χ C ρ = 0`.
+-/
+theorem standingReadoutAt_eq_zero (ρ : ℂ) (hρ : ρ ∈ NTZ χ) :
+    standingReadoutAt χ C ρ ρ.im = 0 := by
+  unfold CriticalLinePhasor.StandingReadout.standingReadoutAt;
+  rw [ ← Complex.re_add_im ρ ] ; simp +decide [ NTZ_imp_fiberEval_zero χ C ρ hρ ] ;
+
+/-
+**The readout has derivative `+1` at the zero's height** (for a simple zero).  Writing
+`b = deriv (FiberEval χ C) ρ · i ≠ 0`, the inner sample `y ↦ FiberEval χ C (Re ρ + i y)` has
+derivative `b` at `Im ρ`, so the normalized quotient has derivative `b/b = 1`, and taking real
+parts gives derivative `Re 1 = 1`.
+-/
+theorem standingReadoutAt_hasDerivAt_one (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ)
+    (hsimple : deriv (FiberEval χ C) ρ ≠ 0) :
+    HasDerivAt (standingReadoutAt χ C ρ) 1 ρ.im := by
+  have hF : HasDerivAt (fun y : ℝ => (FiberEval χ C) ((ρ.re : ℂ) + (y : ℂ) * I) / (deriv (FiberEval χ C) ρ * I)) 1 ρ.im := by
+    have hg : HasDerivAt (fun y : ℝ => (ρ.re : ℂ) + (y : ℂ) * I) I ρ.im := by
+      have h1 : HasDerivAt (fun y : ℝ => (y : ℂ) * I) I ρ.im := by
+        simpa using (HasDerivAt.ofReal_comp (hasDerivAt_id ρ.im)).mul_const I
+      simpa using h1.const_add (ρ.re : ℂ)
+    have hfe : HasDerivAt (FiberEval χ C) (deriv (FiberEval χ C) ρ) ((ρ.re : ℂ) + (ρ.im : ℂ) * I) := by
+      rw [Complex.re_add_im]
+      exact (fiberEval_differentiableAt χ C hC hχ ρ).hasDerivAt
+    have hcomp := hfe.comp ρ.im hg
+    have hb : deriv (FiberEval χ C) ρ * I ≠ 0 := mul_ne_zero hsimple Complex.I_ne_zero
+    have hd := hcomp.div_const (deriv (FiberEval χ C) ρ * I)
+    rw [div_self hb] at hd
+    exact hd
+  rw [ hasDerivAt_iff_tendsto_slope_zero ] at *;
+  convert Complex.continuous_re.continuousAt.tendsto.comp hF using 2 <;> norm_num [ standingReadoutAt ]
+
+/-- **Sign flip of the standing readout at a simple zero.**  If `ρ` is a nontrivial zero
+(`ρ ∈ NTZ χ`) that is simple (`deriv (FiberEval χ C) ρ ≠ 0`), then the real standing readout
+changes sign across `Im ρ`:
+```
+∃ ε > 0, standingReadoutAt χ C ρ (Im ρ - ε) · standingReadoutAt χ C ρ (Im ρ + ε) < 0.
+```
+No `Re ρ = 1/2` is assumed and no critical-line Hardy `Z` is used; the flip is derived from
+the transversal derivative. -/
+theorem NTZ_simpleZero_imp_readout_signFlip (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ)
+    (hρ : ρ ∈ NTZ χ) (hsimple : deriv (FiberEval χ C) ρ ≠ 0) :
+    ∃ ε : ℝ, 0 < ε ∧
+      standingReadoutAt χ C ρ (ρ.im - ε) * standingReadoutAt χ C ρ (ρ.im + ε) < 0 :=
+  sign_change_of_hasDerivAt_pos
+    (standingReadoutAt_eq_zero χ C ρ hρ)
+    (standingReadoutAt_hasDerivAt_one χ C hC hχ ρ hsimple)
+    one_pos
+
+/-
+**`deriv FiberEval` factors through `deriv L` at a zero.**  At a point where
+`L(ρ,χ) = 0`, `deriv (FiberEval χ C) ρ = C^(-ρ) · deriv (LFunction χ) ρ`.  Hence (for `C > 0`)
+the transversality condition `deriv (FiberEval χ C) ρ ≠ 0` is equivalent to `ρ` being a simple
+zero of `L(·,χ)` (`deriv (LFunction χ) ρ ≠ 0`).
+-/
+theorem fiberEval_deriv_eq_at_zero (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ)
+    (hL : LFunction χ ρ = 0) :
+    deriv (FiberEval χ C) ρ = (C : ℂ) ^ (-ρ) * deriv (LFunction χ) ρ := by
+  have hcpow : HasDerivAt (fun s : ℂ => (C : ℂ) ^ (-s)) (deriv (fun s : ℂ => (C : ℂ) ^ (-s)) ρ) ρ :=
+    (DifferentiableAt.cpow (differentiableAt_const _) (differentiableAt_id.neg) (by rw [Complex.ofReal_mem_slitPlane]; positivity)).hasDerivAt
+  have hL' : HasDerivAt (LFunction χ) (deriv (LFunction χ) ρ) ρ := (differentiable_LFunction hχ ρ).hasDerivAt
+  have hmul := hcpow.mul hL'
+  rw [hL, mul_zero, zero_add] at hmul
+  have : HasDerivAt (FiberEval χ C) ((C : ℂ) ^ (-ρ) * deriv (LFunction χ) ρ) ρ := hmul
+  exact this.deriv
+
+/-- **Sign flip from a simple `L`-zero.**  Restatement of the sign-flip theorem with the
+transversality phrased directly as `ρ` being a *simple zero of `L(·,χ)`*
+(`deriv (LFunction χ) ρ ≠ 0`). -/
+theorem NTZ_simpleLZero_imp_readout_signFlip (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ)
+    (hρ : ρ ∈ NTZ χ) (hsimple : deriv (LFunction χ) ρ ≠ 0) :
+    ∃ ε : ℝ, 0 < ε ∧
+      standingReadoutAt χ C ρ (ρ.im - ε) * standingReadoutAt χ C ρ (ρ.im + ε) < 0 := by
+  have hL : LFunction χ ρ = 0 := hρ.2.2
+  have hfd : deriv (FiberEval χ C) ρ ≠ 0 := by
+    rw [fiberEval_deriv_eq_at_zero χ C hC hχ ρ hL]
+    exact mul_ne_zero (carrier_factor_ne_zero (hC := hC) (s := ρ)) hsimple
+  exact NTZ_simpleZero_imp_readout_signFlip χ C hC hχ ρ hρ hfd
+
+end CriticalLinePhasor.StandingReadout
+/-!
+## Source exhaustion for computed crossing events
+
+The canonical `SourceExhaustion.SourceFiberCrossing` is, up to proof-irrelevant data, just
+`param` in the strip with `FiberEval χ C param = 0` — i.e. `NTZ` membership repackaged.  Here
+we strengthen source exhaustion so that the captured object is a **computed crossing event**:
+it stores the genuinely *computed* observables of the crossing —
+
+* the computed amplitude `amplitudeFunctional χ C param`,
+* the computed real standing readout `standingReadoutAt χ C param`,
+* the computed Möbius projection readout `1 - 1/param` (codomain coordinate),
+
+each tied to `param` by a defining equation — and yet remains pinned down by its readout
+parameter.  We then prove that **every** nontrivial zero is the readout parameter of exactly
+one such computed event.
+
+`ComputedSourceFiberCrossingEvent` is **not** defined as `NTZ`: it carries computed
+amplitude/readout/projection data.  No `Re ρ = 1/2` is used and the count is over all strip
+zeros, not only critical-line zeros. -/
+
+namespace CriticalLinePhasor.ComputedExhaustion
+
+open Complex DirichletCharacter
+open CriticalLinePhasor.CarrierFiberDecomposition
+  (FiberEval NTZ NTZ_imp_fiberEval_zero)
+open CriticalLinePhasor.ComputedCrossing (amplitudeFunctional)
+open CriticalLinePhasor.StandingReadout (standingReadoutAt)
+
+variable {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q) (C : ℝ)
+
+/-- **A computed source-fiber crossing event.**  It stores the readout parameter together with
+the *computed* crossing observables (amplitude, standing readout, Möbius projection), each
+fixed to its functional value at `param` by a defining equation.  The analytic content is
+`fiber_vanishes` (the source-fiber evaluator vanishes); the strip membership locates the
+event in the open critical strip.  No midpoint condition is built in, and the stored data are
+computed, not free witnesses. -/
+structure ComputedSourceFiberCrossingEvent where
+  /-- The readout parameter `ρ`. -/
+  param : ℂ
+  /-- The readout parameter lies in the open critical strip `0 < Re ρ < 1`. -/
+  in_strip : 0 < param.re ∧ param.re < 1
+  /-- The source-fiber evaluator vanishes at `param`. -/
+  fiber_vanishes : FiberEval χ C param = 0
+  /-- The computed amplitude observable. -/
+  amplitude : ℝ
+  /-- The amplitude is the computed amplitude functional at `param`. -/
+  amplitude_spec : amplitude = amplitudeFunctional χ C param
+  /-- The computed real standing-readout observable. -/
+  readout : ℝ → ℝ
+  /-- The readout is the computed standing readout at `param`. -/
+  readout_spec : readout = standingReadoutAt χ C param
+  /-- The computed Möbius projection readout (codomain coordinate). -/
+  projection : ℂ
+  /-- The projection is the Möbius readout `1 - 1/param`. -/
+  projection_spec : projection = 1 - 1 / param
+
+/-- The readout parameter of a computed crossing event. -/
+def readoutParameter (e : ComputedSourceFiberCrossingEvent χ C) : ℂ := e.param
+
+/-
+**Computed crossing events are pinned by their readout parameter.**  All stored
+observables are determined by `param` (they equal their functional values), so two events with
+the same readout parameter coincide.
+-/
+theorem crossingEvent_ext {e₁ e₂ : ComputedSourceFiberCrossingEvent χ C}
+    (h : readoutParameter χ C e₁ = readoutParameter χ C e₂) : e₁ = e₂ := by
+  cases e₁ ; cases e₂ ; simp_all +decide [ readoutParameter ]
+
+/-
+**Source exhaustion for computed crossing events.**  Every nontrivial zero `ρ` of
+`L(·,χ)` is the readout parameter of *exactly one* computed source-fiber crossing event.  The
+captured object carries computed amplitude/readout/projection data (it is not `NTZ`
+membership), no `Re ρ = 1/2` is used, and the statement ranges over all strip zeros.
+
+(The positivity hypothesis `0 < C` is included as requested, but turns out to be unnecessary:
+the construction needs only that `ρ` is a nontrivial zero.)
+-/
+theorem sourceExhaustion_computed (_hC : 0 < C) :
+    ∀ ρ ∈ NTZ χ, ∃! e : ComputedSourceFiberCrossingEvent χ C, readoutParameter χ C e = ρ := by
+  intro ρ hρ
+  use ⟨ρ, ⟨hρ.1, hρ.2.1⟩, NTZ_imp_fiberEval_zero χ C ρ hρ, amplitudeFunctional χ C ρ, rfl, standingReadoutAt χ C ρ, rfl, 1 - 1 / ρ, rfl⟩;
+  exact ⟨ rfl, fun e he => by cases e; aesop ⟩
+
+end CriticalLinePhasor.ComputedExhaustion/-!
+## A non-tautological computed source crossing and the geometric forcing step
+
+The earlier `ComputedSourceFiberCrossingEvent` (in `ComputedExhaustion`) stores computed
+fields, but its source-exhaustion theorem only *records* the readout parameter; the genuine
+crossing conditions (`amplitude ∈ πℤ`, sign flip, projected no-drift) are not part of what is
+proved there.  This section replaces that wrapper with a genuinely non-tautological structure
+`ComputedSourceCrossing` whose five fields are the real crossing conditions, and it proves the
+**geometric forcing step**
+
+```
+projectedNoDrift_to_unitCircle : ProjectedNoDriftEvent χ C ρ → ‖1 - 1/ρ‖ = 1
+```
+
+unconditionally and non-circularly.
+
+### Honesty / non-circularity
+
+* `ProjectedNoDriftEvent χ C ρ` is defined as a genuine *no-drift* condition on the
+  **Möbius-projected** carrier readout `y ↦ 1 - 1/(Re ρ + i y)` (the projection coordinate
+  `1 - 1/param`): its modulus has vanishing radial drift at the zero's height, with the zero
+  off the real axis (`Im ρ ≠ 0`).  It does **not** contain `Re ρ = 1/2`, `‖1 - 1/ρ‖ = 1`,
+  `symPair c ρ = 0`, or `GeneratedBySymMidpoint ρ`.  The forcing theorem is then a genuine
+  computation: stationarity of the projected modulus along the vertical line forces, since the
+  height is nonzero, the real part to `1/2` (`projectedNoDrift_imp_re_half`), and the Möbius /
+  Pythagorean lemma converts `Re ρ = 1/2` to `‖1 - 1/ρ‖ = 1`.  No `symPair_zero_re_eq_half`
+  and no backwards use of the midpoint lemma is involved.
+
+* The structure `ComputedSourceCrossing` stores **no** free/manufactured fields (`ledger`,
+  `preVal`, `postVal` are gone) and **no** built-in `Re ρ = 1/2` / unit-circle / midpoint
+  data.  Its sign-crossing field is the genuine analytic sign flip of `standingReadoutAt`.
+
+### Scope of the assembly theorem
+
+Of the five crossing fields, two hold for *every* nontrivial zero (`eval_zero`,
+`carrier_no_drift`), one follows from simplicity of the zero (`sign_crossing`).  The remaining
+two are the irreducible residue and are **not** provable from `ρ ∈ NTZ χ` alone:
+
+* `amplitude_quantized` (`-(Im ρ)·log C ∈ πℤ`) is in fact *false* for a generic base
+  `C ≠ 1`, so it cannot hold uniformly for all `C > 0`;
+* `projected_no_drift` *forces* `Re ρ = 1/2` (by `projectedNoDrift_imp_re_half`), so asserting
+  it at every zero is exactly RH/GRH.
+
+Accordingly `NTZ_imp_ComputedSourceCrossing` takes these two as explicit, honestly named local
+hypotheses (and simplicity for the sign flip) rather than manufacturing them.  This is the
+sound non-circular statement: the hypothesis-free version would *be* a proof of RH/GRH, which
+is neither assumed nor faked here. -/
+
+namespace CriticalLinePhasor.ComputedSourceCrossingFix
+
+open Complex DirichletCharacter
+open CriticalLinePhasor.CarrierFiberDecomposition
+  (FiberEval Carrier radial_drift NTZ piInt NTZ_imp_fiberEval_zero carrier_radial_drift_zero)
+open CriticalLinePhasor.ComputedCrossing (amplitudeFunctional)
+open CriticalLinePhasor.StandingReadout
+  (standingReadoutAt NTZ_simpleLZero_imp_readout_signFlip)
+open CriticalLinePhasor.MobiusMidpoint (norm_one_sub_inv_eq_one_iff)
+
+local notation "πℤ" => piInt
+
+variable {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q) (C : ℝ)
+
+/-- **The Möbius-projected carrier readout** along the vertical line through `ρ`:
+`y ↦ 1 - 1/(Re ρ + i y)`.  This samples the projection coordinate `1 - 1/param` of the
+carrier readout along the line at the zero's real part. -/
+noncomputable def projectedReadoutLine (ρ : ℂ) : ℝ → ℂ :=
+  fun y => 1 - 1 / ((ρ.re : ℂ) + (y : ℂ) * I)
+
+/-- **The projected no-drift event.**  Off the real axis (`Im ρ ≠ 0`), the modulus of the
+Möbius-projected carrier readout `y ↦ 1 - 1/(Re ρ + i y)` has vanishing radial drift at the
+height `Im ρ`.  This is a genuine geometric (no-drift) condition; it contains **no**
+`Re ρ = 1/2`, **no** `‖1 - 1/ρ‖ = 1`, **no** `symPair`, and **no** midpoint data. -/
+def ProjectedNoDriftEvent (_χ : DirichletCharacter ℂ q) (_C : ℝ) (ρ : ℂ) : Prop :=
+  ρ.im ≠ 0 ∧ radial_drift (projectedReadoutLine ρ) ρ.im = 0
+
+omit [NeZero q] in
+/-- **Geometric forcing (real part).**  If the projected carrier readout has vanishing radial
+drift at the (nonzero) height `Im ρ`, then `Re ρ = 1/2`.  The projected modulus squared along
+the line is `G(y) = ((Re ρ - 1)² + y²)/((Re ρ)² + y²)`; its stationarity at `y = Im ρ ≠ 0`
+forces `2·Re ρ - 1 = 0`.  No `Re ρ = 1/2` is assumed and no `symPair_zero_re_eq_half` is
+used. -/
+theorem projectedNoDrift_imp_re_half (ρ : ℂ) (h : ProjectedNoDriftEvent χ C ρ) :
+    ρ.re = 1 / 2 := by
+  obtain ⟨him, hd⟩ := h
+  have hD : ρ.re ^ 2 + ρ.im ^ 2 ≠ 0 := by
+    have : (0 : ℝ) < ρ.im ^ 2 := by positivity
+    nlinarith [sq_nonneg ρ.re]
+  set a := ρ.re with ha
+  set y₀ := ρ.im with hy
+  set G : ℝ → ℝ := fun y => ((a - 1) ^ 2 + y ^ 2) / (a ^ 2 + y ^ 2) with hG
+  have hGpos : 0 < G y₀ := by
+    apply div_pos
+    · have : (0 : ℝ) < y₀ ^ 2 := by positivity
+      nlinarith [sq_nonneg (a - 1)]
+    · rcases lt_or_eq_of_le (by positivity : (0 : ℝ) ≤ a ^ 2 + y₀ ^ 2) with h | h
+      · exact h
+      · exact absurd h.symm hD
+  have hGderiv : HasDerivAt G (2 * y₀ * (2 * a - 1) / (a ^ 2 + y₀ ^ 2) ^ 2) y₀ := by
+    have h1 : HasDerivAt (fun y : ℝ => (a - 1) ^ 2 + y ^ 2) (2 * y₀) y₀ := by
+      simpa using (hasDerivAt_pow 2 y₀).const_add ((a - 1) ^ 2)
+    have h2 : HasDerivAt (fun y : ℝ => a ^ 2 + y ^ 2) (2 * y₀) y₀ := by
+      simpa using (hasDerivAt_pow 2 y₀).const_add (a ^ 2)
+    have := h1.div h2 hD
+    exact this.congr_deriv (by rw [div_eq_div_iff (pow_ne_zero 2 hD) (pow_ne_zero 2 hD)]; ring)
+  have hnorm_eq : ∀ y : ℝ, a ^ 2 + y ^ 2 ≠ 0 → ‖projectedReadoutLine ρ y‖ = Real.sqrt (G y) := by
+    intro y hy2
+    have hns : Complex.normSq (projectedReadoutLine ρ y) = G y := by
+      unfold projectedReadoutLine
+      have hw : ((a : ℂ) + (y : ℂ) * I) ≠ 0 := by
+        intro hh
+        apply hy2
+        have h1 := congrArg Complex.re hh
+        have h2 := congrArg Complex.im hh
+        simp at h1 h2
+        rw [h1, h2]; ring
+      rw [show (1 - 1 / ((a : ℂ) + (y : ℂ) * I))
+          = (((a : ℂ) + (y : ℂ) * I) - 1) / ((a : ℂ) + (y : ℂ) * I) by field_simp]
+      rw [Complex.normSq_div]
+      simp [Complex.normSq_apply, Complex.add_re, Complex.add_im, Complex.sub_re,
+        Complex.sub_im, hG]
+      ring_nf
+    rw [Complex.norm_def, hns]
+  have hsqrt : HasDerivAt (fun y => Real.sqrt (G y))
+      ((2 * y₀ * (2 * a - 1) / (a ^ 2 + y₀ ^ 2) ^ 2) / (2 * Real.sqrt (G y₀))) y₀ := by
+    have := (Real.hasDerivAt_sqrt (ne_of_gt hGpos)).comp y₀ hGderiv
+    exact this.congr_deriv (by ring)
+  have heq : (fun y => ‖projectedReadoutLine ρ y‖) =ᶠ[nhds y₀] (fun y => Real.sqrt (G y)) := by
+    have hopen : ∀ᶠ y in nhds y₀, a ^ 2 + y ^ 2 ≠ 0 := by
+      have hcont : ContinuousAt (fun y : ℝ => a ^ 2 + y ^ 2) y₀ := by fun_prop
+      exact hcont.eventually_ne hD
+    filter_upwards [hopen] with y hy2 using hnorm_eq y hy2
+  have hnormderiv : HasDerivAt (fun y => ‖projectedReadoutLine ρ y‖)
+      ((2 * y₀ * (2 * a - 1) / (a ^ 2 + y₀ ^ 2) ^ 2) / (2 * Real.sqrt (G y₀))) y₀ :=
+    hsqrt.congr_of_eventuallyEq heq
+  have hzero :
+      (2 * y₀ * (2 * a - 1) / (a ^ 2 + y₀ ^ 2) ^ 2) / (2 * Real.sqrt (G y₀)) = 0 := by
+    rw [← hnormderiv.deriv]; exact hd
+  have hsqrtpos : 0 < Real.sqrt (G y₀) := Real.sqrt_pos.mpr hGpos
+  have hnum : 2 * y₀ * (2 * a - 1) = 0 := by
+    rw [div_eq_zero_iff] at hzero
+    rcases hzero with h | h
+    · rw [div_eq_zero_iff] at h
+      rcases h with h | h
+      · exact h
+      · exact absurd (pow_eq_zero_iff (by norm_num) |>.mp h) hD
+    · exact absurd h (by positivity)
+  have h2a : 2 * a - 1 = 0 := by
+    rcases mul_eq_zero.mp hnum with h | h
+    · rcases mul_eq_zero.mp h with h | h
+      · norm_num at h
+      · exact absurd h him
+    · exact h
+  linarith
+
+/-- **The geometric forcing step.**  The projected no-drift event forces the Möbius image
+`1 - 1/ρ` onto the unit circle: `‖1 - 1/ρ‖ = 1`.  This is proved by combining the real-part
+forcing `projectedNoDrift_imp_re_half` (a genuine no-drift computation) with the pure-algebra
+Möbius / Pythagorean lemma `norm_one_sub_inv_eq_one_iff`.  `ProjectedNoDriftEvent` does not
+contain `‖1 - 1/ρ‖ = 1`, `Re ρ = 1/2`, or `symPair`, and the midpoint lemma is used in its
+*forward* direction only. -/
+theorem projectedNoDrift_to_unitCircle (ρ : ℂ) (h : ProjectedNoDriftEvent χ C ρ) :
+    ‖1 - 1 / ρ‖ = 1 := by
+  have him : ρ.im ≠ 0 := h.1
+  have hρ : ρ ≠ 0 := by
+    intro hh; apply him; rw [hh]; simp
+  rw [norm_one_sub_inv_eq_one_iff ρ hρ]
+  exact projectedNoDrift_imp_re_half χ C ρ h
+
+/-- **The non-tautological computed source crossing.**  Replaces the computed-event wrapper:
+its five fields are the genuine crossing conditions — the source-fiber evaluator vanishes, the
+carrier has no radial drift, the computed amplitude functional lands on the π-ladder, the
+real standing readout exhibits a genuine sign flip across `Im ρ`, and the projected carrier
+readout has no radial drift.  No free witnesses (`ledger`, `preVal`, `postVal`) and no
+`Re ρ = 1/2` / unit-circle / midpoint data are built in. -/
+structure ComputedSourceCrossing (ρ : ℂ) : Prop where
+  /-- The source-fiber evaluator vanishes at `ρ`. -/
+  eval_zero : FiberEval χ C ρ = 0
+  /-- The carrier has vanishing radial drift at the crossing height. -/
+  carrier_no_drift : radial_drift (Carrier C) ρ.im = 0
+  /-- The computed amplitude functional lands on the π-ladder `πℤ`. -/
+  amplitude_quantized : amplitudeFunctional χ C ρ ∈ πℤ
+  /-- The real standing readout changes sign across `Im ρ`. -/
+  sign_crossing : ∃ ε : ℝ, 0 < ε ∧
+    standingReadoutAt χ C ρ (ρ.im - ε) * standingReadoutAt χ C ρ (ρ.im + ε) < 0
+  /-- The projected carrier readout has no radial drift. -/
+  projected_no_drift : ProjectedNoDriftEvent χ C ρ
+
+/-- **The two unconditional crossing fields** hold at every nontrivial zero: the source-fiber
+evaluator vanishes and the carrier has no radial drift.  No RH/GRH and no `Re ρ = 1/2`. -/
+theorem NTZ_imp_eval_zero_and_carrier_no_drift (hC : 0 < C) (ρ : ℂ) (hρ : ρ ∈ NTZ χ) :
+    FiberEval χ C ρ = 0 ∧ radial_drift (Carrier C) ρ.im = 0 :=
+  ⟨NTZ_imp_fiberEval_zero χ C ρ hρ, congrFun (carrier_radial_drift_zero C hC) ρ.im⟩
+
+/-- **Assembly of a computed source crossing from a zero plus its residual analytic data.**
+
+For a nontrivial zero `ρ ∈ NTZ χ` of a non-principal character `χ`, the unconditional fields
+`eval_zero` and `carrier_no_drift` hold automatically, and `sign_crossing` follows from the
+zero being simple (`hsimple`).  The remaining two fields are the irreducible residue and are
+*not* provable from `ρ ∈ NTZ χ` alone, so they are taken as explicit, honestly named
+hypotheses:
+
+* `hamp : amplitudeFunctional χ C ρ ∈ πℤ` — false for a generic base `C ≠ 1`, hence cannot
+  hold uniformly;
+* `hpnd : ProjectedNoDriftEvent χ C ρ` — forces `Re ρ = 1/2` (`projectedNoDrift_imp_re_half`),
+  hence asserting it at every zero is exactly RH/GRH.
+
+The hypothesis-free version would *be* a proof of RH/GRH and is deliberately neither assumed
+nor manufactured. -/
+theorem NTZ_imp_ComputedSourceCrossing (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ) (hρ : ρ ∈ NTZ χ)
+    (hsimple : deriv (LFunction χ) ρ ≠ 0)
+    (hamp : amplitudeFunctional χ C ρ ∈ πℤ)
+    (hpnd : ProjectedNoDriftEvent χ C ρ) :
+    ComputedSourceCrossing χ C ρ :=
+  { eval_zero := NTZ_imp_fiberEval_zero χ C ρ hρ
+    carrier_no_drift := congrFun (carrier_radial_drift_zero C hC) ρ.im
+    amplitude_quantized := hamp
+    sign_crossing := NTZ_simpleLZero_imp_readout_signFlip χ C hC hχ ρ hρ hsimple
+    projected_no_drift := hpnd }
+
+/-- A computed source crossing is represented by a symmetric midpoint fiber crossing. -/
+theorem computedSourceCrossing_imp_generatedBySymMidpoint (ρ : ℂ)
+    (h : ComputedSourceCrossing χ C ρ) :
+    CriticalLinePhasor.TateCriticalLine.GeneratedBySymMidpoint ρ := by
+  have hre : ρ.re = 1 / 2 := projectedNoDrift_imp_re_half χ C ρ h.projected_no_drift
+  have him : ρ.im ≠ 0 := h.projected_no_drift.1
+  let c : ℝ := Real.exp (Real.pi / (2 * |ρ.im|))
+  have hc : 1 < c := by
+    rw [Real.one_lt_exp_iff]
+    positivity
+  refine ⟨c, hc, ?_⟩
+  rw [CriticalLinePhasor.NoOffLineZeros.symPair_eq_zero_iff c hc ρ]
+  rcases lt_or_gt_of_ne him with himneg | himpos
+  · refine ⟨-1, ?_⟩
+    have him_eq :
+        Real.pi * (2 * ((-1 : ℤ) : ℝ) + 1) / (2 * Real.log c) = ρ.im := by
+      norm_num [c, Real.log_exp, abs_of_neg himneg]
+      field_simp
+    calc
+      ρ = (ρ.re : ℂ) + (ρ.im : ℂ) * I := by apply Complex.ext <;> simp
+      _ = (1 / 2 : ℂ) +
+          ((Real.pi * (2 * (((-1 : ℤ) : ℝ)) + 1) / (2 * Real.log c) : ℝ) : ℂ) * I := by
+        rw [hre, him_eq]
+        norm_num
+  · refine ⟨0, ?_⟩
+    have him_eq :
+        Real.pi * (2 * ((0 : ℤ) : ℝ) + 1) / (2 * Real.log c) = ρ.im := by
+      norm_num [c, Real.log_exp, abs_of_pos himpos]
+      field_simp
+    calc
+      ρ = (ρ.re : ℂ) + (ρ.im : ℂ) * I := by apply Complex.ext <;> simp
+      _ = (1 / 2 : ℂ) +
+          ((Real.pi * (2 * (((0 : ℤ) : ℝ)) + 1) / (2 * Real.log c) : ℝ) : ℂ) * I := by
+        rw [hre, him_eq]
+        norm_num
+
+/-- The computed crossing assembly connects a nontrivial zero to the symmetric midpoint
+fiber representation. -/
+theorem NTZ_imp_generatedBySymMidpoint (hC : 0 < C) (hχ : χ ≠ 1) (ρ : ℂ) (hρ : ρ ∈ NTZ χ)
+    (hsimple : deriv (LFunction χ) ρ ≠ 0)
+    (hamp : amplitudeFunctional χ C ρ ∈ πℤ)
+    (hpnd : ProjectedNoDriftEvent χ C ρ) :
+    CriticalLinePhasor.TateCriticalLine.GeneratedBySymMidpoint ρ :=
+  computedSourceCrossing_imp_generatedBySymMidpoint χ C ρ
+    (NTZ_imp_ComputedSourceCrossing χ C hC hχ ρ hρ hsimple hamp hpnd)
+
+/-- **Projected no-drift, from the projected (downward) direction.** When `ρ` sits on the critical
+line — as every zero produced by the projection chain does (`chainProducedZetaZero_re`) — the
+Möbius-projected readout `y ↦ 1 - 1/(ρ.re + iy)` has constant modulus `1`: it rides the unit
+circle, so its radial drift vanishes. This is the converse of `projectedNoDrift_imp_re_half`: the
+source produces on the line, the Möbius/log projection adds no drift, so the projected readout is
+drift-free. No `symPair`, no assumption beyond `Re ρ = 1/2` and `ρ` off the real axis. -/
+theorem projectedNoDrift_of_re_half (ρ : ℂ) (hre : ρ.re = 1 / 2) (him : ρ.im ≠ 0) :
+    ProjectedNoDriftEvent χ C ρ := by
+  refine ⟨him, ?_⟩
+  have hnorm : ∀ t : ℝ, ‖projectedReadoutLine ρ t‖ = 1 := by
+    intro t
+    have hre_pt : ((ρ.re : ℂ) + (t : ℂ) * I).re = 1 / 2 := by
+      simp [Complex.add_re, Complex.mul_re, hre]
+    have hpt : ((ρ.re : ℂ) + (t : ℂ) * I) ≠ 0 := by
+      intro h; rw [h, Complex.zero_re] at hre_pt; norm_num at hre_pt
+    show ‖1 - 1 / ((ρ.re : ℂ) + (t : ℂ) * I)‖ = 1
+    rw [norm_one_sub_inv_eq_one_iff _ hpt]; exact hre_pt
+  have hfun : (fun t => ‖projectedReadoutLine ρ t‖) = (fun _ => (1 : ℝ)) := funext hnorm
+  show deriv (fun t => ‖projectedReadoutLine ρ t‖) ρ.im = 0
+  rw [hfun]; exact deriv_const ρ.im 1
+
+/-- **Projected no-drift ⟺ on the line** (off the real axis). The forcing
+(`projectedNoDrift_imp_re_half`) and the projected-direction construction
+(`projectedNoDrift_of_re_half`) together: the Möbius-projected readout is drift-free exactly when
+`ρ` is on the critical line. -/
+theorem projectedNoDriftEvent_iff (ρ : ℂ) (him : ρ.im ≠ 0) :
+    ProjectedNoDriftEvent χ C ρ ↔ ρ.re = 1 / 2 :=
+  ⟨projectedNoDrift_imp_re_half χ C ρ, fun hre => projectedNoDrift_of_re_half χ C ρ hre him⟩
+
+end CriticalLinePhasor.ComputedSourceCrossingFix

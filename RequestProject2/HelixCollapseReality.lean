@@ -4,12 +4,17 @@ import Mathlib
 # The dimensional collapse, reality axis: the completed ζ is real on the critical line
 
 `completedRiemannZeta (½ + it)` is **real** — its imaginary part is `0`. Geometrically: the 3-D helix,
-seen down the collapse axis, reads as a **real 1-D wave** `Z(t)`. It comes purely from the functional
-equation `Λ(1−s) = Λ(s)` together with the Schwarz-reflection conjugation symmetry
+seen down the collapse axis, reads as a **real 1-D wave** `Z(t)` (the Hardy `Z`). This is the *reality*
+forcing axis — **not** Li/Weil positivity (Hilbert–Pólya needs no `≥0`): it comes purely from the
+functional equation `Λ(1−s) = Λ(s)` together with the Schwarz-reflection conjugation symmetry
 `conj (Λ (conj s)) = Λ s`, since on the line `conj(½+it) = 1−(½+it)`.
 
 This lives on the **analytic / bridge** side (it is a fact about the `L`-function `Λ`, which carries `log`
 via `Γ` and `π^{-s/2}`), not inside the log-free 3-D helix. It is the *wave the collapse produces*.
+
+**Honest scope (Rule Four).** This is the collapse-to-real-wave fact ONLY. It does **not** locate the
+zeros — that is the cylinder / area-law inheritance (a separate brick). Do not conflate "real on the
+line" with "zeros on the line."
 
 **Dirichlet-`L` caveat.** The same proof transfers, but realness is *not* automatic: `Λ(χ,1−s) =
 ε(χ)·Λ(χ⁻¹,s)` pairs `χ` with `χ⁻¹` through a root number `ε(χ)` of modulus `1` (generally complex).

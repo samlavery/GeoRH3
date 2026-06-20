@@ -1241,3 +1241,138 @@ theorem helixDriftFreeAndFTA {N : ℕ} [NeZero N] (χ : DirichletCharacter ℂ N
     fun θ {_} {_} hm hn => HelixMult.helixChar_mul χ θ hm hn,
     fun C hC {_} hs => HelixMult.helixSource_eq_eulerProduct χ C hC hs,
     fun {_} hs => HelixMult.helix_no_zero_re_ge_one χ hχ hs⟩
+
+/-! ## The Frobenius screw / monodromy on the helix (the `helix_frobenius_build.py` realisation)
+
+`CriticalLinePhasor.HilbertPolya.vonNeumannOp γ = γ·id` is the self-adjoint **generator** `H_γ`
+(real eigenvalue `γ` — the von Neumann side).  The **Frobenius** object is its monodromy / return
+map: the *screw* that advances the carrier one step along the helix, `U = e^{iθ}` — a rotation
+(unitary), not multiplication by a real scalar.  Over the `γ`-eigenstate the advance by carrier-step
+`t` is the screw with phase `θ = γ·t`, i.e. `frobeniusScrew (γt) = e^{i t H_γ}`.  Its eigenphase is
+the unit-modulus `e^{iγt}` — the Weil-II `|α| = q^{1/2}` purity, realised as no-radial-drift of the
+carrier.  Real generator eigenvalue `γ` ⇒ pure (unit-modulus) Frobenius eigenphase ⇒ on-line readout
+via `spectralZero`.  All unconditional. -/
+
+/-- The **Frobenius screw** (monodromy / return map): advance the carrier state by phase `θ`, the
+rotation `z ↦ e^{iθ}·z`.  On the helix `θ` is the winding accrued over a carrier step; over the
+`γ`-eigenstate of the generator `H_γ` it is `θ = γ·t`. -/
+noncomputable def frobeniusScrew (θ : ℝ) : Module.End ℂ ℂ :=
+  (Complex.exp ((θ : ℂ) * Complex.I)) • LinearMap.id
+
+theorem frobeniusScrew_apply (θ : ℝ) (z : ℂ) :
+    frobeniusScrew θ z = Complex.exp ((θ : ℂ) * Complex.I) * z := by
+  simp [frobeniusScrew]
+
+/-- **Frobenius purity** (the Weil-II `|α| = q^{1/2}` analogue): the screw eigenphase `e^{iθ}` has
+unit modulus — the screw is a no-drift isometry, for every real phase `θ`. -/
+theorem frobeniusScrew_eigenphase_unit (θ : ℝ) :
+    ‖Complex.exp ((θ : ℂ) * Complex.I)‖ = 1 :=
+  Complex.norm_exp_ofReal_mul_I θ
+
+/-- `e^{iθ}` is the eigenvalue of the Frobenius screw (eigenvector `1`). -/
+theorem frobeniusScrew_hasEigenvalue (θ : ℝ) :
+    Module.End.HasEigenvalue (frobeniusScrew θ) (Complex.exp ((θ : ℂ) * Complex.I)) := by
+  simp only [frobeniusScrew]
+  exact Module.End.hasEigenvalue_of_hasEigenvector
+    ⟨Module.End.mem_eigenspace_iff.mpr (by simp), one_ne_zero⟩
+
+/-- **The Frobenius is the monodromy (exponential) of the von Neumann generator.**  Advancing the
+`γ`-eigenstate by carrier-step `t` is the Frobenius screw with phase `γt` — the exponential
+`e^{i t H_γ}` of the self-adjoint generator `H_γ = vonNeumannOp γ`. -/
+theorem frobeniusScrew_eq_exp_generator (γ t : ℝ) :
+    frobeniusScrew (γ * t)
+      = (Complex.exp ((t : ℂ) * Complex.I * (γ : ℂ))) • LinearMap.id := by
+  unfold frobeniusScrew
+  congr 1
+  push_cast
+  ring_nf
+
+/-- The **Frobenius screw matrix** — the real transverse rotation block of the helix screw, the
+rotation by the carrier phase `θ`.  This is the geometric monodromy that advances the carrier;
+its complex eigenvalues are the unit-modulus eigenphases `e^{±iθ}`. -/
+noncomputable def frobeniusScrewMatrix (θ : ℝ) : Matrix (Fin 2) (Fin 2) ℝ :=
+  !![Real.cos θ, -Real.sin θ; Real.sin θ, Real.cos θ]
+
+/-- **The Frobenius determinant is `1`** (unconditional).  The screw is unimodular /
+volume-preserving — `det = cos²θ + sin²θ = 1` — the `det = 1` of the Frobenius eigenstate (the
+SL / symplectic purity of the function-field analogue, here with no hypothesis at all). -/
+theorem frobeniusScrew_det (θ : ℝ) : (frobeniusScrewMatrix θ).det = 1 := by
+  rw [frobeniusScrewMatrix, Matrix.det_fin_two_of]
+  nlinarith [Real.sin_sq_add_cos_sq θ]
+
+/-- **The Frobenius eigen-event, UNCONDITIONAL.**  For *every* height `γ` and carrier step `Δ`,
+with no hypothesis whatsoever, advancing by one screw step produces:
+* **`det = 1`** — the screw `frobeniusScrewMatrix (γΔ)` is unimodular (`cos²+sin²=1`), the
+  volume-preserving `det = 1` of the Frobenius eigenstate;
+* **unit eigenphase** — `‖e^{iγΔ}‖ = 1`, the screw's complex eigenvalue is pure (no radial drift),
+  and `e^{iγΔ}` is genuinely an eigenvalue of the screw;
+* a **self-adjoint generator** `H_γ = vonNeumannOp γ` carrying the *real* eigenvalue `γ`, whose
+  `spectralZero` reads out on the critical line `Re = 1/2` (von Neumann reality).
+Every height yields a `det = 1`, unit-eigenphase, real-generator eigen-event read on the line —
+the generative production, with nothing assumed. -/
+theorem frobenius_eigenEvent (γ Δ : ℝ) :
+    (frobeniusScrewMatrix (γ * Δ)).det = 1
+      ∧ ‖Complex.exp (((γ * Δ : ℝ)) * Complex.I)‖ = 1
+      ∧ Module.End.HasEigenvalue (frobeniusScrew (γ * Δ)) (Complex.exp (((γ * Δ : ℝ)) * Complex.I))
+      ∧ (CriticalLinePhasor.HilbertPolya.vonNeumannOp γ).IsSymmetric
+      ∧ Module.End.HasEigenvalue (CriticalLinePhasor.HilbertPolya.vonNeumannOp γ) (γ : ℂ)
+      ∧ (spectralZero (γ : ℂ)).re = 1 / 2 := by
+  refine ⟨frobeniusScrew_det (γ * Δ), frobeniusScrew_eigenphase_unit (γ * Δ),
+    frobeniusScrew_hasEigenvalue (γ * Δ),
+    CriticalLinePhasor.HilbertPolya.vonNeumannOp_isSymmetric γ,
+    CriticalLinePhasor.HilbertPolya.vonNeumannOp_hasEigenvalue γ, ?_⟩
+  rw [spectralZero_re]; simp
+
+/-! ## The fiber is on the helix — inductive coverage of the continuum
+
+The fiber `v_n` is not a separate object identified with `L` after the fact: it lives on the
+helix, the phasor channel over the numbers `numberSite p r n`.  By **induction** over the numbers
+it covers the continuum (empty at the origin, one number at a time, union over all stages = every
+number), and its partial carrier completes to `L`.  At every produced height the Frobenius
+eigen-event then fires — `det = 1`, on the line.  No hypothesis. -/
+
+theorem helix_fiber_induction {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q) (Δ : ℝ) :
+    -- the fiber is on the helix and covers the continuum by induction over the numbers:
+    CriticalLinePhasor.HelixExhaustion.fiber 0 = ∅
+      ∧ Monotone CriticalLinePhasor.HelixExhaustion.fiber
+      ∧ (⋃ N, (CriticalLinePhasor.HelixExhaustion.fiber N : Set ℕ)) = Set.univ
+    -- the on-helix phasor carrier completes to `L` over the continuum (`Re s > 1`):
+      ∧ (∀ s : ℂ, 1 < s.re →
+          Filter.Tendsto (CriticalLinePhasor.DirichletPhasorCarrier.finiteCarrier χ s)
+            Filter.atTop (nhds (DirichletCharacter.LFunction χ s)))
+    -- every produced height fires a `det = 1` Frobenius eigen-event on the line:
+      ∧ (∀ n : ℕ,
+          (frobeniusScrewMatrix ((producedNTZ n).im * Δ)).det = 1
+            ∧ (producedNTZ n).re = 1 / 2) :=
+  ⟨CriticalLinePhasor.HelixExhaustion.fiber_origin,
+    CriticalLinePhasor.HelixExhaustion.fiber_mono,
+    CriticalLinePhasor.HelixExhaustion.fiber_iUnion,
+    fun _ hs => CriticalLinePhasor.DirichletPhasorCarrier.finiteCarrier_tendsto_LFunction (χ := χ) hs,
+    fun n => ⟨frobeniusScrew_det _, producedNTZ_re n⟩⟩
+
+/-! ## Source exhaustion: the fiber's cancellations are exactly the zeros (unconditional)
+
+Wiring `ClosedForm`'s source-exhaustion theorems into the chain.  On the no-drift carrier
+(`C > 0`), the fiber's cancellations are **exactly** the nontrivial zeros: every nontrivial zero
+is represented by a *unique* fiber crossing, a crossing sits at `ρ` iff `ρ` is a nontrivial zero,
+and the counts agree up to every height `T`.  No RH/GRH input; the only hypothesis is `0 < C`.
+Combined with `helix_fiber_induction` (the fiber covers the continuum and completes to `L`), this
+says the inductively-built on-helix fiber neither misses a zero nor invents one. -/
+
+theorem helix_fiber_exhausts_zeros {q : ℕ} [NeZero q] (χ : DirichletCharacter ℂ q)
+    (C : ℝ) (hC : 0 < C) :
+    -- every nontrivial zero is represented by a unique fiber crossing
+    (∀ ρ ∈ CriticalLinePhasor.CarrierFiberDecomposition.NTZ χ,
+        ∃! e : CriticalLinePhasor.SourceExhaustion.SourceFiberCrossing χ C,
+          CriticalLinePhasor.SourceExhaustion.readoutParameter χ C e = ρ)
+    -- a crossing exists at `ρ` ↔ `ρ` is a nontrivial zero (the fiber cancels exactly at the zeros)
+      ∧ (∀ ρ : ℂ,
+          (∃ e : CriticalLinePhasor.SourceExhaustion.SourceFiberCrossing χ C,
+              CriticalLinePhasor.SourceExhaustion.readoutParameter χ C e = ρ)
+            ↔ ρ ∈ CriticalLinePhasor.CarrierFiberDecomposition.NTZ χ)
+    -- the counts agree: #(zeros up to `T`) = #(fiber crossings up to `T`)
+      ∧ (∀ T : ℝ, CriticalLinePhasor.SourceExhaustion.actualZeroCount χ T
+          = CriticalLinePhasor.SourceExhaustion.sourceCrossingCount χ C T) :=
+  ⟨fun ρ hρ => CriticalLinePhasor.SourceExhaustion.sourceCrossing_uniqueRepresentation χ C hC ρ hρ,
+   fun ρ => CriticalLinePhasor.SourceExhaustion.exists_crossing_iff_NTZ χ C hC ρ,
+   fun T => CriticalLinePhasor.SourceExhaustion.actualZeroCount_eq_sourceCrossingCount χ C hC T⟩

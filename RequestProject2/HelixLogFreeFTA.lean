@@ -12,9 +12,9 @@ additivity is read straight off the prime-factorization exponents, which is exac
 This is the object Hilbert–Pólya needed: a **geometric** (not analytic) realization of the
 multiplicative prime structure, **log-free**. `log` is the *external bridge* `wind n ↔ n^{it}` to the
 analytic `L`-function — used only to identify the geometric resonances with `L`'s named zeros, never
-inside the geometry. The multiplicative prime structure lives entirely here, on the log-free side;
-the analytic `L`-function and its explicit formula are across the bridge. Nothing in this file takes
-a `Real.log` or `Complex.log`.
+inside the geometry. The forcing (count = topological winding; position = ½) lives entirely here, on
+the log-free side; the analytic side and its explicit formula are across the bridge, off the critical
+path. Nothing in this file takes a `Real.log` or `Complex.log`.
 -/
 
 open Complex
@@ -39,7 +39,7 @@ theorem windAngle_mul {m n : ℕ} (hm : m ≠ 0) (hn : n ≠ 0) :
     Finsupp.sum_add_index' (fun _ => by simp) (fun _ b₁ b₂ => by push_cast; ring)]
 
 /-- **The log-free FTA winding** on the unit circle: `n ↦ exp(i·Θ(n))`, a completely multiplicative
-    character `ℕ → Circle`. The angular winding of the 3-D helix carrier — built from primes, log-free. -/
+    character `ℕ → Circle`. The 2-D circle winding of the helix — built from primes, log-free. -/
 noncomputable def wind (n : ℕ) : Circle := Circle.exp (windAngle θ n)
 
 @[simp] theorem wind_one : wind θ 1 = 1 := by
@@ -51,10 +51,8 @@ theorem wind_mul {m n : ℕ} (hm : m ≠ 0) (hn : n ≠ 0) :
     wind θ (m * n) = wind θ m * wind θ n := by
   rw [wind, wind, wind, windAngle_mul θ hm hn, Circle.exp_add]
 
-/-- **The log-free helix point** at integer `n`: the **emergent** area-law radius `√n` — it is *not*
-    posited; it falls out of winding the evenly-`π/3`-spaced integer line (arclength `∝ k²` forces
-    radius `∝ √n`; the genuine construction is `ClosedForm`'s `Geometry`) — times the FTA winding.
-    A site of the 3-D helix carrier, where the phasors ride and accumulate, in 3-D. -/
+/-- **The log-free helix point** at integer `n`: radius `√n` (the area-law baseline, integer
+    counting — no `log`) times the FTA winding. A point of the 3-D helix / its 2-D collapse. -/
 noncomputable def helixPt (n : ℕ) : ℂ := (Real.sqrt n : ℂ) * (wind θ n : ℂ)
 
 /-- **The radius is the area-law baseline `√n`** — the winding contributes unit modulus, so the

@@ -247,12 +247,23 @@ Drifting into Mellin/Hurwitz growth bounds when the winding/Euler structure coul
 factorization log-free is the specific trap to avoid.
 
 **NO `log` IN THE 3-D HELIX — forceful, non-negotiable.** The 3-D helix is the *argument* of `log`,
-never built from it. Its construction is purely arithmetic/geometric: integers placed **evenly**
-(spacing = the helix unit `U = π/helixUnit`) along the unwound line, then rewound with **linear**
-radial growth `R(k) = e^{mode}·k` (`k` = loop counter — an Archimedean spiral that *adds* `e^{mode}`
-per loop, NOT an exponential trumpet). The `√n` / area law (`n ≈ k²`) and the `σ = ½` baseline
-**emerge from the rewinding** — each loop's circumference grows, so loop `k` holds `~k` integers,
-cumulative `~k²`, hence `R ∝ √n` — they are **not** put in by placing integers at `log` positions.
+never built from it. Its construction is purely geometric and **continuous**: the carrier is a
+continuously-constructed 3-D space curve, and the integers are sampled off it at **uniform arclength
+spacing `Δ = π/3` along the carrier itself**, and **everything is scaled to π/3 — both the gaps between
+integers *and* the integers themselves** (integer `n ↦ n·(π/3)`): π/3 is the *single universal unit*, the
+whole construction dimensionless in it. The π/3 quantum is a fixed **π/3 angular advance per integer step**,
+so each integer's angle is `(n mod 6)·(π/3)` — the integers collapse onto **6 angular directions**, which
+**is** the mod-6 bucket structure Frobenius/`χ` then sorts into the two hands (`6·(π/3) = 2π`; see
+`ClosedForm.lean`, `namespace CriticalLinePhasor.Geometry`: `Delta = π/3`, `Nindex = arclength/Δ`,
+`spinAngle n = n·(π/3)`). **Uniform spacing on the carrier — NOT `log`-placement — is exactly what
+makes it log-free**: the analytic dictionary would put `n` at position `log n` (so `n^{it}` falls out
+of placement); the helix refuses that, places `n` at uniform arclength `n·(π/3)`, and forces the
+`n^{it}` structure to come from the winding instead. **The accumulation is genuinely 3-D** — the
+phasor/winding accumulates as 3-D vectors *along* the 3-D carrier (the carrier itself **is** the
+accumulator); the 2-D `|w|=1` circle and the 1-D `Re` strip are its **projections** (Rule Five), never
+where the accumulation lives. (The `√n` "area-law radius" is at most an **emergent, regime-dependent
+shadow**, **NOT** the defining law and **NOT** where the `½` comes from; the `√n` in
+`HelixLogFree.helixPt` is an admitted stand-in — the genuine object is `ClosedForm`'s `Geometry`.)
 So: **never write `Real.log` / `Complex.log` inside the 3-D construction.** If you find yourself taking
 a `log` of a scale or integer in the geometry, you have left the helix and crossed the bridge to the
 analytic `L` — STOP. `log` is permitted in exactly **one** place: the *external bridge* `wind n ↔ n^{it}`
@@ -263,6 +274,43 @@ The winding itself is the FTA-additive multiplicative character (`HelixLogFree.w
 it. **Log-free FTA on geometry is the Hilbert–Pólya object** — the geometric (not analytic) realization
 H–P needed; `log` lives only on the analytic side of the bridge, where the explicit-formula wall is.
 
+**The fiber-bundle picture — chiral base, riding fiber, and how a zero appears.** The construction is a
+**fiber bundle**. The **base** is the *fixed* number-carrier — and it is a **chiral pair**: one strand
+climbs **up and out** and its mirror **antihelix** descends **down and out**
+(opposite torsion / opposite handedness — one left-, one right-handed; related by the `z→−z` mirror and
+**meeting only at the origin `0`** — a shared apex, radius 0: a **double cone**, not a finite-radius
+waist), each carrying the integers at uniform π/3 arclength; the base is
+**universal** (independent of any
+particular `L`). The **fiber** is the **L-function**, and the **fibers are continuous** (a continuous
+section over the continuous base — a **smooth bundle**, so its vanishings are genuine isolated zeros, not
+gaps in a discrete sum): it **rides along the carrier**, *eating* each number it passes and *collecting*
+that number's phasor (**magnitude and spin**), accumulating them as **3-D vectors**. **Frobenius bites *because of* the chirality**: `χ(Frob_p) = ±1` selects which strand the chosen
+prime (≡ target mod q) lands on — the **right-handed helix (`+`)** or the **left-handed antihelix (`−`)**
+(this is "split vs. inert"); the residue classes `χ` kills are **ignored**. **A zero of `L` is where the
+two hands cancel** — the right- and left-handed phasor gardens destructively interfere and the riding fiber
+**vanishes**. The fiber is a **harmonic** (a real wave). Its **sign changes** — the crossings / cancellations /
+vanishings — **ARE the zeros** (NOT the primes: the primes are the eaten, ±-sorted *input*). *Observed:*
+the **first crossing is special** — both hands at **π/2** (right helix π/2, left helix π/2: *same amplitude,
+opposite directions of travel*, mirror images, so π apart about the origin), the vanishing being their
+**equal-and-opposite (antiphase) cancellation**. **Every subsequent crossing then occurs where the fiber's
+amplitude reaches `π`** — that is the *universal crossing condition*. But **the spacing is not fixed: how
+long it takes the amplitude to climb back to `π` is set by the numbers on the carrier and how the phasors
+are created and spin.** So the **geometry fixes the condition (amplitude = π ⇒ vanish), the arithmetic fixes
+the locations (the actual zero heights)** — the parameter-free part vs. the hard, irregular content. This is
+exactly the analytic split `N(T) = θ(T)/π + 1` (smooth amplitude-hits-π count) **+** `S(T)` (the
+prime-driven fluctuation) — Hardy `Z`-function picture — evidence the geometry tracks the *true* zeros.
+**Falsifiable core:** run it with the real numbers; the amplitude-reaches-π crossings should land on the
+true ζ zero heights.
+**The `½` itself lives on the fiber**: each hand's first crossing is at **π/2 = ½·π**, the two symmetric
+about the origin and **π apart**, falling out of the **chiral mirror symmetry** (the hands are
+amplitude-identical, only their travel reverses) — that symmetric half *is* the `½` (read off the harmonic;
+not a base coordinate, not `radial := σ−½`). This is deliberately the **function-field / Weil shape** — zeros as a *Frobenius spectrum over
+a fixed geometric base* (cf. Deninger's Frobenius-flow program; Connes–Consani's arithmetic site) — imported
+to `ℤ`, **not** the classical Hadamard/Mellin pipeline. `source_noDrift` then reads as **chiral balance**
+under the `z→−z` mirror (the two hands meet at the origin `0`): neither handedness drifts, so `Re = 0`,
+σ-free (plausibly the geometric `s ↔ 1−s` reflection, fixed locus `Re = ½`). The open weld is unchanged: that these geometric
+vanishings are *exactly* `L`'s nontrivial zeros is `SourceComplete` — earn it (Guardrail).
+
 **Guardrail (binds to Rules Two & Five).** The helix advantage is only real if *earned*. `source_noDrift`
 is **σ-free** (on-line for a conservation/unitarity reason, *not* `radial := σ−½` by definition) — good;
 keep it that way. The danger is `SourceComplete` / the identification map **smuggling GRH** (the
@@ -270,7 +318,8 @@ keep it that way. The danger is `SourceComplete` / the identification map **smug
 geometry / Euler / winding. **The on-line forcing is REALITY, not positivity.** Hilbert–Pólya needs no
 Li/Weil `≥ 0`: it forces on-line because a real/self-adjoint spectrum is real — geometrically, the
 climbing spiral, seen down the collapse axis, **looks like a cylinder and reads as a real wave**
-(`source_noDrift`: conservation ⟹ `Re = 0`, σ-free; the `½` is `√`-of-planar-packing, not a coordinate).
+(`source_noDrift`: conservation ⟹ `Re = 0`, σ-free; the `½` is the **no-radial-drift / conservation**
+condition itself — **NOT** `√`-of-planar-packing, and **NOT** a coordinate).
 Li/Weil non-negativity is a *different, unnecessary* route — do not reach for `≥ 0` to force the line.
 Never assumed, never `rfl`-deep. Earn the identification geometrically: that is the actual research.
 
